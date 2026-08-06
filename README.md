@@ -1,4 +1,5 @@
 # Proyecto Base - PDISC 7° Año 4° División
+Alumnos: Benjamin Wirz y Moira Marin
 
 Este es un proyecto base en PHP pensado para que los alumnos trabajen con una aplicación simple de autenticación. Incluye:
 
