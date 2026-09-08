@@ -19,5 +19,4 @@ if (isset($_SESSION['user'])) {
  
   <div class="d-flex align-items-center justify-content-center vh-100">
     <div class="card shadow-sm" style="width: 100%; max-width: 380px;">
-      <div class="card-body p-4">
-  
+      <div class="card-body p-4"></div>
