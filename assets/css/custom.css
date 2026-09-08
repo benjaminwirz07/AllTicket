@@ -1,0 +1,576 @@
+/* ============================= */
+/* CONFIGURACIÓN GENERAL */
+/* ============================= */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+
+    /* Altura completa de la pantalla */
+    min-height: 100vh;
+
+    /* Fondo */
+    background:
+        radial-gradient(
+            circle at 20% 20%,
+            rgba(100, 20, 180, 0.35),
+            transparent 35%
+        ),
+        radial-gradient(
+            circle at 80% 60%,
+            rgba(0, 100, 255, 0.25),
+            transparent 40%
+        ),
+        linear-gradient(
+            135deg,
+            #16002f,
+            #10002a,
+            #001b4d
+        );
+
+    font-family: Arial, Helvetica, sans-serif;
+
+    color: white;
+
+    overflow-x: hidden;
+}
+
+
+/* ============================= */
+/* PÁGINA PRINCIPAL */
+/* ============================= */
+
+.login-page {
+
+    width: 100%;
+
+    min-height: 100vh;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    padding-top: 65px;
+
+    padding-bottom: 60px;
+}
+
+
+/* ============================= */
+/* LOGO */
+/* ============================= */
+
+.brand {
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    text-align: center;
+
+    margin-bottom: 35px;
+}
+
+
+/* Ícono del ticket */
+
+.ticket-icon {
+
+    width: 70px;
+
+    height: 70px;
+
+    border-radius: 18px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    margin-bottom: 5px;
+
+    background: linear-gradient(
+        135deg,
+        #b000ff,
+        #006cff
+    );
+
+    transform: rotate(-10deg);
+
+    box-shadow:
+        0 0 25px rgba(120, 0, 255, 0.6),
+        0 0 50px rgba(0, 100, 255, 0.3);
+}
+
+
+/* Ícono dentro del ticket */
+
+.ticket-icon i {
+
+    font-size: 38px;
+
+    color: white;
+
+    transform: rotate(10deg);
+}
+
+
+/* Nombre AllTicket */
+
+.brand h1 {
+
+    font-size: 82px;
+
+    font-weight: 800;
+
+    letter-spacing: -5px;
+
+    line-height: 0.9;
+
+    text-shadow:
+        0 0 15px rgba(255,255,255,0.25),
+        0 0 30px rgba(80,0,255,0.2);
+}
+
+
+/* "All" */
+
+.all {
+
+    background: linear-gradient(
+        90deg,
+        #b000ff,
+        #4f5cff,
+        #008cff
+    );
+
+    -webkit-background-clip: text;
+
+    -webkit-text-fill-color: transparent;
+}
+
+
+/* "Ticket" */
+
+.ticket {
+
+    color: white;
+
+    text-shadow:
+        0 0 15px rgba(255,255,255,0.7),
+        0 0 30px rgba(255,255,255,0.25);
+}
+
+
+/* Eslogan */
+
+.slogan {
+
+    margin-top: 20px;
+
+    font-size: 20px;
+
+    letter-spacing: 8px;
+
+    font-weight: 500;
+
+    background: linear-gradient(
+        90deg,
+        #c000ff,
+        #6b5cff,
+        #009dff
+    );
+
+    -webkit-background-clip: text;
+
+    -webkit-text-fill-color: transparent;
+}
+
+
+/* ============================= */
+/* TARJETA LOGIN */
+/* ============================= */
+
+.login-card {
+
+    width: 525px;
+
+    padding: 35px 45px 40px;
+
+    border-radius: 25px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(12, 10, 40, 0.92),
+            rgba(5, 15, 45, 0.82)
+        );
+
+    border: 1px solid rgba(120, 70, 255, 0.8);
+
+    box-shadow:
+        0 0 30px rgba(120, 0, 255, 0.25),
+        0 0 60px rgba(0, 100, 255, 0.12),
+        inset 0 0 25px rgba(100, 50, 255, 0.08);
+
+    backdrop-filter: blur(20px);
+
+    text-align: center;
+}
+
+
+/* ============================= */
+/* ÍCONO USUARIO */
+/* ============================= */
+
+.user-icon {
+
+    width: 65px;
+
+    height: 65px;
+
+    margin: 0 auto 15px;
+
+    border-radius: 50%;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border: 2px solid transparent;
+
+    background:
+        linear-gradient(#080a25, #080a25) padding-box,
+        linear-gradient(
+            135deg,
+            #b000ff,
+            #008cff
+        ) border-box;
+
+    box-shadow:
+        0 0 20px rgba(130, 0, 255, 0.4);
+}
+
+
+.user-icon i {
+
+    font-size: 28px;
+
+    color: white;
+}
+
+
+/* ============================= */
+/* TÍTULOS */
+/* ============================= */
+
+.login-card h2 {
+
+    font-size: 30px;
+
+    margin-bottom: 10px;
+}
+
+
+.description {
+
+    color: #aeb5d0;
+
+    font-size: 14px;
+
+    line-height: 1.6;
+
+    margin-bottom: 25px;
+}
+
+
+/* ============================= */
+/* INPUTS */
+/* ============================= */
+
+.input-box {
+
+    width: 100%;
+
+    height: 55px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 14px;
+
+    padding: 0 17px;
+
+    margin-bottom: 13px;
+
+    border-radius: 13px;
+
+    border: 1px solid #29396c;
+
+    background: rgba(5, 10, 30, 0.65);
+
+    transition: 0.3s;
+}
+
+
+/* Ícono */
+
+.input-box > i:first-child {
+
+    color: #aeb9df;
+
+    font-size: 17px;
+}
+
+
+/* Input */
+
+.input-box input {
+
+    flex: 1;
+
+    height: 100%;
+
+    border: none;
+
+    outline: none;
+
+    background: transparent;
+
+    color: white;
+
+    font-size: 14px;
+}
+
+
+.input-box input::placeholder {
+
+    color: #8e96b0;
+}
+
+
+/* Cuando seleccionamos el input */
+
+.input-box:focus-within {
+
+    border-color: #7c35ff;
+
+    box-shadow:
+        0 0 15px rgba(120, 0, 255, 0.2);
+}
+
+
+/* Ojo */
+
+.eye {
+
+    cursor: pointer;
+
+    color: #8e96b0 !important;
+
+    transition: 0.2s;
+}
+
+
+.eye:hover {
+
+    color: white !important;
+}
+
+
+/* ============================= */
+/* BOTÓN LOGIN */
+/* ============================= */
+
+.login-button {
+
+    width: 100%;
+
+    height: 55px;
+
+    border: none;
+
+    border-radius: 13px;
+
+    margin-top: 5px;
+
+    color: white;
+
+    font-size: 15px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+
+    background: linear-gradient(
+        90deg,
+        #8d00ff,
+        #006cff
+    );
+
+    box-shadow:
+        0 8px 25px rgba(70, 0, 255, 0.3);
+
+    transition: 0.3s;
+}
+
+
+.login-button i {
+
+    margin-left: 8px;
+}
+
+
+.login-button:hover {
+
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 10px 30px rgba(70, 0, 255, 0.5);
+}
+
+
+/* ============================= */
+/* SEPARADOR */
+/* ============================= */
+
+.separator {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    margin: 25px 0 18px;
+}
+
+
+.separator span {
+
+    height: 1px;
+
+    flex: 1;
+
+    background: #455070;
+}
+
+
+.separator p {
+
+    color: #aeb5d0;
+
+    font-size: 13px;
+
+    white-space: nowrap;
+}
+
+
+/* ============================= */
+/* CREAR CUENTA */
+/* ============================= */
+
+.register-button {
+
+    width: 100%;
+
+    height: 52px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 10px;
+
+    border-radius: 13px;
+
+    border: 1px solid #7d24ff;
+
+    color: white;
+
+    text-decoration: none;
+
+    font-size: 15px;
+
+    font-weight: bold;
+
+    background: rgba(10, 10, 40, 0.45);
+
+    transition: 0.3s;
+}
+
+
+.register-button:hover {
+
+    background: rgba(120, 0, 255, 0.15);
+
+    border-color: #009cff;
+
+    box-shadow:
+        0 0 20px rgba(120, 0, 255, 0.2);
+}
+
+
+/* ============================= */
+/* CELULARES */
+/* ============================= */
+
+@media (max-width: 650px) {
+
+    .login-page {
+
+        padding: 40px 20px;
+    }
+
+
+    .brand h1 {
+
+        font-size: 55px;
+
+        letter-spacing: -3px;
+    }
+
+
+    .ticket-icon {
+
+        width: 55px;
+
+        height: 55px;
+    }
+
+
+    .ticket-icon i {
+
+        font-size: 30px;
+    }
+
+
+    .slogan {
+
+        font-size: 11px;
+
+        letter-spacing: 4px;
+    }
+
+
+    .login-card {
+
+        width: 100%;
+
+        padding: 30px 25px;
+    }
+}
