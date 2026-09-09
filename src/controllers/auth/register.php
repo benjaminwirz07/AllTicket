@@ -89,14 +89,11 @@ try {
   ]);
 
   // Cargamos $_SESSION['user'], para poder pasar al index
-  $_SESSION['user'] = [
-    'id'    => $pdo->lastInsertId(),
-    'name'  => $data['name'],
-    'email' => $data['email'],
-  ];
 
-  // Pateado para el index
-  header('Location: /src/views/index.php');
+  // Pateado para el login automático después del registro
+  $stmt = $pdo->prepare('SELECT * FROM users WHERE email = :email LIMIT 1');
+  $stmt->execute(['email' => $data['email']]);  
+  header('Location: /src/views/login.php');
   exit;
 } catch (PDOException $e) {
   $_SESSION['errors'] = ['db' => 'Ocurrió un error al procesar el registro. Inténtalo más tarde.'];
