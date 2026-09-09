@@ -88,12 +88,11 @@ try {
     'password' => $hashedPassword,
   ]);
 
-  // Cargamos $_SESSION['user'], para poder pasar al index
+  // Mensaje de éxito para mostrar en el login (opcional, requiere que login.php lo lea)
+  $_SESSION['success'] = 'Cuenta creada correctamente. Iniciá sesión para continuar.';
 
-  // Pateado para el login automático después del registro
-  $stmt = $pdo->prepare('SELECT * FROM users WHERE email = :email LIMIT 1');
-  $stmt->execute(['email' => $data['email']]);  
-  header('Location: /src/views/login.php');
+  // Redirigimos al login para que el usuario inicie sesión con su nueva cuenta
+  header('Location: /src/views/auth/login.php');
   exit;
 } catch (PDOException $e) {
   $_SESSION['errors'] = ['db' => 'Ocurrió un error al procesar el registro. Inténtalo más tarde.'];
