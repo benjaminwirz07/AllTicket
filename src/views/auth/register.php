@@ -1,214 +1,112 @@
 <?php
 require_once __DIR__ . '/../../config/bootstrap.php';
 
-// Si ya inició sesión, lo mandamos al inicio
 if (isset($_SESSION['user'])) {
-    header('Location: /src/views/index.php');
+    header('Location: ' . BASE_URL . '/src/views/index.php');
     exit;
 }
-?>
 
+// Obtenemos errores y datos persistidos
+$errors = $_SESSION['errors'] ?? [];
+$old    = $_SESSION['old'] ?? [];
+
+// Limpiamos la sesión inmediatamente para no mantener alertas en futuras recargas
+unset($_SESSION['errors'], $_SESSION['old']);
+?>
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>AllTicket - Crear cuenta</title>
-
-    <!-- CSS de AllTicket -->
-    <link rel="stylesheet" href="/assets/css/custom.css">
-
-    <!-- Iconos -->
-    <link
-        rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
-    >
-
+    <title>AllTicket - Crear Cuenta</title>
+    <!-- Estilos de tu interfaz -->
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css">
 </head>
-
 <body>
 
-    <!-- Contenedor principal -->
-    <main class="login-page">
-
-        <!-- LOGO -->
-        <section class="brand">
-
-            <!-- Ícono del ticket -->
-            <div class="ticket-icon">
-                <i class="fa-solid fa-ticket"></i>
-            </div>
-
-            <!-- Nombre AllTicket -->
-            <h1>
-                <span class="all">All</span><span class="ticket">Ticket</span>
-            </h1>
-
-            <!-- Eslogan -->
-            <p class="slogan">
-                MOMENTOS INOLVIDABLES A SOLO UN CLICK
-            </p>
-
-        </section>
-
-
-        <!-- REGISTRO -->
-        <section class="login-card">
-
-            <!-- Ícono de usuario -->
-            <div class="user-icon">
-                <i class="fa-regular fa-user"></i>
-            </div>
-
-            <!-- Título -->
+<main class="auth-container">
+    <section class="login-card">
+        <div class="card-header">
+            <div class="user-icon">👤</div>
             <h2>Crear cuenta</h2>
+            <p>Creá tu cuenta en AllTicket para comenzar a disfrutar de tus próximos eventos.</p>
+        </div>
 
-            <!-- Descripción -->
-            <p class="description">
-                Creá tu cuenta en AllTicket para comenzar<br>
-                a disfrutar de tus próximos eventos.
-            </p>
+        <!-- Alerta General de Error si aplica -->
+        <?php if (isset($errors['general'])): ?>
+            <div class="alert alert-danger">
+                <?= htmlspecialchars($errors['general']) ?>
+            </div>
+        <?php endif; ?>
 
-
-            <!-- FORMULARIO -->
-            <form action="/src/controllers/auth/register.php" method="POST">
-
-                <!-- Email -->
-                <div class="input-box">
-
-                    <i class="fa-regular fa-envelope"></i>
-
-                    <input
-                        type="email"
-                        name="email"
-                        placeholder="Correo electrónico"
-                        required
-                    >
-
-                </div>
-
-
-                <!-- Usuario -->
-                <div class="input-box">
-
-                    <i class="fa-regular fa-user"></i>
-
-                    <input
-                        type="text"
-                        name="name"
-                        placeholder="Nombre de usuario"
-                        required
-                    >
-
-                </div>
-
-
-                <!-- Contraseña -->
-                <div class="input-box">
-
-                    <i class="fa-solid fa-lock"></i>
-
-                    <input
-                        type="password"
-                        name="password"
-                        id="password"
-                        placeholder="Contraseña"
-                        required
-                    >
-
-                    <i
-                        class="fa-regular fa-eye eye"
-                        onclick="mostrarPassword('password')">
-                    </i>
-
-                </div>
-
-
-                <!-- Repetir contraseña -->
-                <div class="input-box">
-
-                    <i class="fa-solid fa-lock"></i>
-
-                    <input
-                        type="password"
-                        name="repeatPassword"
-                        id="repeatPassword"
-                        placeholder="Repetí tu contraseña"
-                        required
-                    >
-
-                    <i
-                        class="fa-regular fa-eye eye"
-                        onclick="mostrarPassword('repeatPassword')">
-                    </i>
-
-                </div>
-
-
-                <!-- Botón crear cuenta -->
-                <button type="submit" class="login-button">
-
-                    Crear cuenta
-
-                    <i class="fa-solid fa-arrow-right"></i>
-
-                </button>
-
-            </form>
-
-
-            <!-- Separador -->
-            <div class="separator">
-
-                <span></span>
-
-                <p>¿Ya tenés una cuenta?</p>
-
-                <span></span>
-
+        <form action="<?= BASE_URL ?>/src/controllers/auth/register.php" method="POST" novalidate>
+            
+            <!-- Campo Email -->
+            <div class="input-group">
+                <input 
+                    type="email" 
+                    name="email" 
+                    placeholder="hola123@gmail.com" 
+                    value="<?= htmlspecialchars($old['email'] ?? '') ?>"
+                    class="<?= isset($errors['email']) ? 'input-error' : '' ?>"
+                    required
+                >
+                <?php if (isset($errors['email'])): ?>
+                    <span class="error-text"><?= htmlspecialchars($errors['email']) ?></span>
+                <?php endif; ?>
             </div>
 
+            <!-- Campo Usuario -->
+            <div class="input-group">
+                <input 
+                    type="text" 
+                    name="name" 
+                    placeholder="benjawz" 
+                    value="<?= htmlspecialchars($old['name'] ?? '') ?>"
+                    class="<?= isset($errors['name']) ? 'input-error' : '' ?>"
+                    required
+                >
+                <?php if (isset($errors['name'])): ?>
+                    <span class="error-text"><?= htmlspecialchars($errors['name']) ?></span>
+                <?php endif; ?>
+            </div>
 
-            <!-- Volver al login -->
-            <a href="/src/views/auth/login.php" class="register-button">
+            <!-- Campo Contraseña -->
+            <div class="input-group">
+                <input 
+                    type="password" 
+                    name="password" 
+                    placeholder="Contraseña"
+                    class="<?= isset($errors['password']) ? 'input-error' : '' ?>"
+                    required
+                >
+                <?php if (isset($errors['password'])): ?>
+                    <span class="error-text"><?= htmlspecialchars($errors['password']) ?></span>
+                <?php endif; ?>
+            </div>
 
-                <i class="fa-solid fa-arrow-left"></i>
+            <!-- Campo Repetir Contraseña -->
+            <div class="input-group">
+                <input 
+                    type="password" 
+                    name="repeatPassword" 
+                    placeholder="Repetir contraseña"
+                    class="<?= isset($errors['repeatPassword']) ? 'input-error' : '' ?>"
+                    required
+                >
+                <?php if (isset($errors['repeatPassword'])): ?>
+                    <span class="error-text"><?= htmlspecialchars($errors['repeatPassword']) ?></span>
+                <?php endif; ?>
+            </div>
 
-                Iniciar sesión
+            <button type="submit" class="btn-primary">Crear cuenta &rarr;</button>
+        </form>
 
-            </a>
-
-        </section>
-
-    </main>
-
-
-    <!-- JavaScript para mostrar contraseña -->
-    <script>
-
-        function mostrarPassword(id) {
-
-            const password = document.getElementById(id);
-
-            if (password.type === "password") {
-
-                password.type = "text";
-
-            } else {
-
-                password.type = "password";
-
-            }
-
-        }
-
-    </script>
+        <div class="card-footer">
+            <p>¿Ya tenés una cuenta?</p>
+            <a href="<?= BASE_URL ?>/src/views/auth/login.php" class="btn-secondary">&larr; Iniciar sesión</a>
+        </div>
+    </section>
+</main>
 
 </body>
-
 </html>
-
