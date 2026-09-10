@@ -3,7 +3,7 @@ require_once __DIR__ . '/../../config/bootstrap.php';
 require_once __DIR__ . '/../../config/database.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: ' . BASE_URL . '/src/views/auth/register.php');
+    header('Location: ../../views/auth/register.php');
     exit;
 }
 
@@ -28,9 +28,9 @@ if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
 if (empty($password)) {
     $errors['password'] = 'La contraseña es obligatoria.';
 } elseif (
-    strlen($password) < 8 || 
-    !preg_match('/[A-Z]/', $password) || 
-    !preg_match('/[0-9]/', $password) || 
+    strlen($password) < 8 ||
+    !preg_match('/[A-Z]/', $password) ||
+    !preg_match('/[0-9]/', $password) ||
     !preg_match('/[^A-Za-z0-9]/', $password)
 ) {
     $errors['password'] = 'La contraseña debe tener mínimo 8 caracteres, una mayúscula, un número y un símbolo.';
@@ -56,7 +56,7 @@ if (!empty($errors)) {
         'name'  => $name,
         'email' => $email
     ];
-    header('Location: ' . BASE_URL . '/src/views/auth/register.php');
+    header('Location: ../../views/auth/register.php');
     exit;
 }
 
@@ -71,12 +71,14 @@ try {
     ]);
 
     $_SESSION['success'] = '¡Cuenta creada con éxito! Ya podés iniciar sesión.';
-    header('Location: ' . BASE_URL . '/src/views/auth/login.php');
+    header('Location: ../../views/auth/login.php');
     exit;
 
 } catch (PDOException $e) {
+    error_log('Error al registrar usuario: ' . $e->getMessage());
+
     $_SESSION['errors'] = ['general' => 'Ocurrió un error en el servidor. Intentá nuevamente más tarde.'];
     $_SESSION['old']    = ['name' => $name, 'email' => $email];
-    header('Location: ' . BASE_URL . '/src/views/auth/register.php');
+    header('Location: ../../views/auth/register.php');
     exit;
 }

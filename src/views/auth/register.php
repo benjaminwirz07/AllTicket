@@ -2,7 +2,7 @@
 require_once __DIR__ . '/../../config/bootstrap.php';
 
 if (isset($_SESSION['user'])) {
-    header('Location: ' . BASE_URL . '/src/views/index.php');
+    header('Location: ../index.php');
     exit;
 }
 
@@ -19,17 +19,28 @@ unset($_SESSION['errors'], $_SESSION['old']);
     <meta charset="UTF-8">
     <title>AllTicket - Crear Cuenta</title>
     <!-- Estilos de tu interfaz -->
-    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css">
+    <link rel="stylesheet" href="../../../assets/css/custom.css">
+    <!-- Font Awesome para los íconos (usado por .ticket-icon i, .user-icon i, etc.) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
 
-<main class="auth-container">
-    <section class="login-card">
-        <div class="card-header">
-            <div class="user-icon">👤</div>
-            <h2>Crear cuenta</h2>
-            <p>Creá tu cuenta en AllTicket para comenzar a disfrutar de tus próximos eventos.</p>
+<div class="login-page">
+
+    <div class="brand">
+        <div class="ticket-icon">
+            <i class="fa-solid fa-ticket"></i>
         </div>
+        <h1><span class="all">All</span><span class="ticket">Ticket</span></h1>
+        <p class="slogan">TU PRÓXIMO EVENTO</p>
+    </div>
+
+    <section class="login-card">
+        <div class="user-icon">
+            <i class="fa-solid fa-user"></i>
+        </div>
+        <h2>Crear cuenta</h2>
+        <p class="description">Creá tu cuenta en AllTicket para comenzar a disfrutar de tus próximos eventos.</p>
 
         <!-- Alerta General de Error si aplica -->
         <?php if (isset($errors['general'])): ?>
@@ -38,75 +49,97 @@ unset($_SESSION['errors'], $_SESSION['old']);
             </div>
         <?php endif; ?>
 
-        <form action="<?= BASE_URL ?>/src/controllers/auth/register.php" method="POST" novalidate>
-            
+        <form action="../../controllers/auth/register.php" method="POST" novalidate>
+
             <!-- Campo Email -->
-            <div class="input-group">
-                <input 
-                    type="email" 
-                    name="email" 
-                    placeholder="hola123@gmail.com" 
+            <div class="input-box <?= isset($errors['email']) ? 'input-error' : '' ?>">
+                <i class="fa-solid fa-envelope"></i>
+                <input
+                    type="email"
+                    name="email"
+                    placeholder="hola123@gmail.com"
                     value="<?= htmlspecialchars($old['email'] ?? '') ?>"
-                    class="<?= isset($errors['email']) ? 'input-error' : '' ?>"
                     required
                 >
-                <?php if (isset($errors['email'])): ?>
-                    <span class="error-text"><?= htmlspecialchars($errors['email']) ?></span>
-                <?php endif; ?>
             </div>
+            <?php if (isset($errors['email'])): ?>
+                <span class="error-text"><?= htmlspecialchars($errors['email']) ?></span>
+            <?php endif; ?>
 
             <!-- Campo Usuario -->
-            <div class="input-group">
-                <input 
-                    type="text" 
-                    name="name" 
-                    placeholder="benjawz" 
+            <div class="input-box <?= isset($errors['name']) ? 'input-error' : '' ?>">
+                <i class="fa-solid fa-user"></i>
+                <input
+                    type="text"
+                    name="name"
+                    placeholder="benjawz"
                     value="<?= htmlspecialchars($old['name'] ?? '') ?>"
-                    class="<?= isset($errors['name']) ? 'input-error' : '' ?>"
                     required
                 >
-                <?php if (isset($errors['name'])): ?>
-                    <span class="error-text"><?= htmlspecialchars($errors['name']) ?></span>
-                <?php endif; ?>
             </div>
+            <?php if (isset($errors['name'])): ?>
+                <span class="error-text"><?= htmlspecialchars($errors['name']) ?></span>
+            <?php endif; ?>
 
             <!-- Campo Contraseña -->
-            <div class="input-group">
-                <input 
-                    type="password" 
-                    name="password" 
+            <div class="input-box <?= isset($errors['password']) ? 'input-error' : '' ?>">
+                <i class="fa-solid fa-lock"></i>
+                <input
+                    type="password"
+                    name="password"
                     placeholder="Contraseña"
-                    class="<?= isset($errors['password']) ? 'input-error' : '' ?>"
                     required
                 >
-                <?php if (isset($errors['password'])): ?>
-                    <span class="error-text"><?= htmlspecialchars($errors['password']) ?></span>
-                <?php endif; ?>
+                <i class="fa-solid fa-eye eye" data-target="password"></i>
             </div>
+            <?php if (isset($errors['password'])): ?>
+                <span class="error-text"><?= htmlspecialchars($errors['password']) ?></span>
+            <?php endif; ?>
 
             <!-- Campo Repetir Contraseña -->
-            <div class="input-group">
-                <input 
-                    type="password" 
-                    name="repeatPassword" 
+            <div class="input-box <?= isset($errors['repeatPassword']) ? 'input-error' : '' ?>">
+                <i class="fa-solid fa-lock"></i>
+                <input
+                    type="password"
+                    name="repeatPassword"
                     placeholder="Repetir contraseña"
-                    class="<?= isset($errors['repeatPassword']) ? 'input-error' : '' ?>"
                     required
                 >
-                <?php if (isset($errors['repeatPassword'])): ?>
-                    <span class="error-text"><?= htmlspecialchars($errors['repeatPassword']) ?></span>
-                <?php endif; ?>
+                <i class="fa-solid fa-eye eye" data-target="repeatPassword"></i>
             </div>
+            <?php if (isset($errors['repeatPassword'])): ?>
+                <span class="error-text"><?= htmlspecialchars($errors['repeatPassword']) ?></span>
+            <?php endif; ?>
 
-            <button type="submit" class="btn-primary">Crear cuenta &rarr;</button>
+            <button type="submit" class="login-button">
+                Crear cuenta <i class="fa-solid fa-arrow-right"></i>
+            </button>
         </form>
 
-        <div class="card-footer">
-            <p>¿Ya tenés una cuenta?</p>
-            <a href="<?= BASE_URL ?>/src/views/auth/login.php" class="btn-secondary">&larr; Iniciar sesión</a>
+        <div class="separator">
+            <span></span>
+            <p>o</p>
+            <span></span>
         </div>
+
+        <a href="login.php" class="register-button">
+            <i class="fa-solid fa-arrow-left"></i> Iniciar sesión
+        </a>
     </section>
-</main>
+</div>
+
+<script>
+    // Alterna mostrar/ocultar contraseña
+    document.querySelectorAll('.eye').forEach(icon => {
+        icon.addEventListener('click', () => {
+            const input = document.querySelector(`input[name="${icon.dataset.target}"]`);
+            const isPassword = input.type === 'password';
+            input.type = isPassword ? 'text' : 'password';
+            icon.classList.toggle('fa-eye');
+            icon.classList.toggle('fa-eye-slash');
+        });
+    });
+</script>
 
 </body>
 </html>
