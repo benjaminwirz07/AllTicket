@@ -63,8 +63,8 @@ try {
     unset($user['password']);
     $_SESSION['user'] = $user;
 
-    // Paso clave #7: Redireccionar al área privada / dashboard ---
-    header('Location: /src/views/dashboard.php'); // O tu ruta principal (ej: /index.php)
+    // Paso clave #7: Redireccionar al área privada ---------------
+    header('Location: /src/views/index.php');
     exit;
 
 } catch (PDOException $e) {
