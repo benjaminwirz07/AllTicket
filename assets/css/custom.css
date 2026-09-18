@@ -1,48 +1,204 @@
-/* ============================= */
-/* CONFIGURACIÓN GENERAL */
-/* ============================= */
+/* ==========================================================================
+
+   ALLTICKET - SYSTEM DESIGN & UI/UX STYLES (DARK/NEON EDITION)
+
+   Paleta: Violeta Neón, Azul Eléctrico, Negro Profundo
+
+   ========================================================================== */
+
+
+
+/* --------------------------------------------------------------------------
+
+   1. VARIABLES GLOBALES & DESIGN TOKENS
+
+   -------------------------------------------------------------------------- */
+
+:root {
+
+    /* Paleta Principal */
+
+    --bg-dark: #07070d;
+
+    --bg-card: rgba(13, 13, 26, 0.75);
+
+    --bg-card-border: rgba(139, 92, 246, 0.25);
+
+   
+
+    --primary-violet: #8b5cf6;
+
+    --primary-violet-glow: rgba(139, 92, 246, 0.45);
+
+    --secondary-blue: #3b82f6;
+
+    --secondary-blue-glow: rgba(59, 130, 246, 0.35);
+
+    --accent-cyan: #06b6d4;
+
+   
+
+    --text-main: #ffffff;
+
+    --text-muted: #94a3b8;
+
+    --text-placeholder: #64748b;
+
+   
+
+    --input-bg: rgba(9, 9, 20, 0.75);
+
+    --input-border: rgba(255, 255, 255, 0.12);
+
+    --input-focus-border: #8b5cf6;
+
+   
+
+    --danger-color: #ff4d4d;
+
+    --danger-glow: rgba(255, 77, 77, 0.3);
+
+   
+
+    /* Tipografía y Geometría */
+
+    --font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+
+    --radius-sm: 10px;
+
+    --radius-md: 14px;
+
+    --radius-lg: 24px;
+
+    --radius-full: 9999px;
+
+   
+
+    --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+    --transition-smooth: 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+
+}
+
+
+
+/* --------------------------------------------------------------------------
+
+   2. ESTILOS BASE Y FONDO DINÁMICO CON LUCES DE ESCENARIO
+
+   -------------------------------------------------------------------------- */
 
 * {
-    margin: 0;
-    padding: 0;
+
     box-sizing: border-box;
+
 }
+
+
 
 body {
 
-    /* Altura completa de la pantalla */
     min-height: 100vh;
 
-    /* Fondo */
-    background:
-        radial-gradient(
-            circle at 20% 20%,
-            rgba(100, 20, 180, 0.35),
-            transparent 35%
-        ),
-        radial-gradient(
-            circle at 80% 60%,
-            rgba(0, 100, 255, 0.25),
-            transparent 40%
-        ),
-        linear-gradient(
-            135deg,
-            #16002f,
-            #10002a,
-            #001b4d
-        );
+    font-family: var(--font-family);
 
-    font-family: Arial, Helvetica, sans-serif;
+    background-color: var(--bg-dark);
 
-    color: white;
+    background-image:
+
+        radial-gradient(circle at 15% 15%, rgba(139, 92, 246, 0.3) 0%, transparent 45%),
+
+        radial-gradient(circle at 85% 75%, rgba(59, 130, 246, 0.25) 0%, transparent 50%),
+
+        radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.08) 0%, transparent 60%);
+
+    background-attachment: fixed;
+
+    color: var(--text-main);
 
     overflow-x: hidden;
+
+    -webkit-font-smoothing: antialiased;
+
+    position: relative;
+
 }
 
 
-/* ============================= */
-/* PÁGINA PRINCIPAL */
-/* ============================= */
+
+/* Esferas luminosas flotantes (Ambiente de Recital) */
+
+body::before,
+
+body::after {
+
+    content: '';
+
+    position: fixed;
+
+    border-radius: 50%;
+
+    filter: blur(90px);
+
+    z-index: 0;
+
+    pointer-events: none;
+
+    animation: floatGlow 12s infinite alternate ease-in-out;
+
+}
+
+
+
+body::before {
+
+    width: 350px;
+
+    height: 350px;
+
+    top: -50px;
+
+    left: -50px;
+
+    background: rgba(139, 92, 246, 0.25);
+
+}
+
+
+
+body::after {
+
+    width: 400px;
+
+    height: 400px;
+
+    bottom: -80px;
+
+    right: -80px;
+
+    background: rgba(59, 130, 246, 0.2);
+
+    animation-delay: -6s;
+
+}
+
+
+
+@keyframes floatGlow {
+
+    0% { transform: translate(0, 0) scale(1); }
+
+    100% { transform: translate(30px, 40px) scale(1.1); }
+
+}
+
+
+
+/* --------------------------------------------------------------------------
+
+   3. CONTENEDOR PRINCIPAL (.login-page)
+
+   -------------------------------------------------------------------------- */
 
 .login-page {
 
@@ -56,191 +212,269 @@ body {
 
     align-items: center;
 
-    padding-top: 65px;
+    justify-content: center;
 
-    padding-bottom: 60px;
+    padding: 40px 15px;
+
+    position: relative;
+
+    z-index: 1;
+
 }
 
 
-/* ============================= */
-/* LOGO */
-/* ============================= */
 
-.brand {
+/* --------------------------------------------------------------------------
 
-    display: flex;
+   4. BRANDING & LOGO DE ALLTICKET (.brand)
 
-    flex-direction: column;
+   -------------------------------------------------------------------------- */
 
-    align-items: center;
-
-    text-align: center;
-
-    margin-bottom: 35px;
-}
-
-
-/* Ícono del ticket */
-
-.ticket-icon {
-
-    width: 70px;
-
-    height: 70px;
-
-    border-radius: 18px;
+.brand-logo-container {
 
     display: flex;
-
-    align-items: center;
 
     justify-content: center;
 
-    margin-bottom: 5px;
+    align-items: center;
 
-    background: linear-gradient(
-        135deg,
-        #b000ff,
-        #006cff
-    );
+    padding: 1.5rem 0 1rem 0;
 
-    transform: rotate(-10deg);
+    width: 100%;
 
-    box-shadow:
-        0 0 25px rgba(120, 0, 255, 0.6),
-        0 0 50px rgba(0, 100, 255, 0.3);
+    overflow: hidden;
+
 }
 
 
-/* Ícono dentro del ticket */
 
-.ticket-icon i {
+.brand-logo {
 
-    font-size: 38px;
+    width: 100%;
 
-    color: white;
+    max-width: 580px;
 
-    transform: rotate(10deg);
+    height: auto;
+
+    object-fit: contain;
+
+    margin: -3% 0;
+
 }
 
 
-/* Nombre AllTicket */
 
-.brand h1 {
+@keyframes logoFadeIn {
 
-    font-size: 82px;
+    from {
 
-    font-weight: 800;
+        opacity: 0;
 
-    letter-spacing: -5px;
+        transform: translateY(-10px);
 
-    line-height: 0.9;
+    }
 
-    text-shadow:
-        0 0 15px rgba(255,255,255,0.25),
-        0 0 30px rgba(80,0,255,0.2);
+    to {
+
+        opacity: 1;
+
+        transform: translateY(0);
+
+    }
+
 }
 
 
-/* "All" */
 
-.all {
+@media (max-width: 992px) {
 
-    background: linear-gradient(
-        90deg,
-        #b000ff,
-        #4f5cff,
-        #008cff
-    );
+    .brand-logo {
 
-    -webkit-background-clip: text;
+        max-width: 480px;
 
-    -webkit-text-fill-color: transparent;
+    }
+
 }
 
 
-/* "Ticket" */
 
-.ticket {
+@media (max-width: 576px) {
 
-    color: white;
+    .brand-logo {
 
-    text-shadow:
-        0 0 15px rgba(255,255,255,0.7),
-        0 0 30px rgba(255,255,255,0.25);
+        max-width: 360px;
+
+    }
+
 }
 
 
-/* Eslogan */
 
-.slogan {
+/* --------------------------------------------------------------------------
 
-    margin-top: 20px;
+   5. TARJETA CARD (GLASSMORPHISM) (.login-card)
 
-    font-size: 20px;
-
-    letter-spacing: 8px;
-
-    font-weight: 500;
-
-    background: linear-gradient(
-        90deg,
-        #c000ff,
-        #6b5cff,
-        #009dff
-    );
-
-    -webkit-background-clip: text;
-
-    -webkit-text-fill-color: transparent;
-}
-
-
-/* ============================= */
-/* TARJETA LOGIN */
-/* ============================= */
+   -------------------------------------------------------------------------- */
 
 .login-card {
 
-    width: 525px;
+    width: 100%;
 
-    padding: 35px 45px 40px;
+    max-width: 460px;
 
-    border-radius: 25px;
+    padding: 0;
 
-    background:
-        linear-gradient(
-            145deg,
-            rgba(12, 10, 40, 0.92),
-            rgba(5, 15, 45, 0.82)
-        );
+    border-radius: var(--radius-lg);
 
-    border: 1px solid rgba(120, 70, 255, 0.8);
+    background: transparent;
+
+    border: 1px solid var(--bg-card-border);
 
     box-shadow:
-        0 0 30px rgba(120, 0, 255, 0.25),
-        0 0 60px rgba(0, 100, 255, 0.12),
-        inset 0 0 25px rgba(100, 50, 255, 0.08);
 
-    backdrop-filter: blur(20px);
+        0 20px 50px rgba(0, 0, 0, 0.65),
 
-    text-align: center;
+        0 0 40px rgba(139, 92, 246, 0.12),
+
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+
+    backdrop-filter: blur(24px);
+
+    -webkit-backdrop-filter: blur(24px);
+
+    position: relative;
+
+    transition: var(--transition-smooth);
+
+    animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+
+    overflow: hidden;
+
+}
+
+.login-card.register-wide {
+
+    max-width: 840px;
+
 }
 
 
-/* ============================= */
-/* ÍCONO USUARIO */
-/* ============================= */
+
+.allticket-auth-bg {
+
+    position: relative;
+
+    z-index: 2;
+
+    width: 100%;
+
+    height: 100%;
+
+    padding: 35px 35px 40px;
+
+    border-radius: inherit;
+
+    background: rgba(13, 13, 26, 0.72);
+
+    border: 1px solid rgba(255, 255, 255, 0.1);
+
+    backdrop-filter: blur(24px);
+
+    -webkit-backdrop-filter: blur(24px);
+
+}
+
+
+
+/* EFECTO BLOB: la luz recorre SOLO el borde de la card (aro de 3px).
+   .allticket-auth-blob  = marco en forma de aro (mascara), no se mueve
+   ::before              = la luz que rebota; su recorrido va en % del tamano de la
+                           card, por eso funciona igual en login y en registro. */
+.allticket-auth-blob {
+    --auth-ring: 3px;
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    padding: var(--auth-ring);
+    border-radius: inherit;
+    overflow: hidden;
+    pointer-events: none;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+}
+
+.allticket-auth-blob::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+        ellipse 40% 36% at 50% 50%,
+        #7c3aed 0%,
+        #7c3aed 45%,
+        #2563eb 72%,
+        transparent 100%
+    );
+    transform: translate3d(-32%, -30%, 0);
+    will-change: transform;
+    animation: allticket-auth-blob-bounce 9s infinite ease-in-out;
+}
+
+
+
+@keyframes allticket-auth-blob-bounce {
+    0%, 100% { transform: translate3d(-32%, -30%, 0); }
+    25%      { transform: translate3d( 32%, -30%, 0); }
+    50%      { transform: translate3d( 32%,  30%, 0); }
+    75%      { transform: translate3d(-32%,  30%, 0); }
+}
+
+
+
+@media (max-width: 576px) {
+
+    .login-card {
+
+        border-radius: 18px;
+
+    }
+
+
+
+    .allticket-auth-bg {
+
+        padding: 26px 18px 30px;
+
+    }
+
+}
+
+
+
+@media (prefers-reduced-motion: reduce) {
+
+    .allticket-auth-blob,
+
+    .login-card {
+
+        animation: none;
+
+    }
+
+}
+
+
 
 .user-icon {
 
-    width: 65px;
+    width: 58px;
 
-    height: 65px;
+    height: 58px;
 
-    margin: 0 auto 15px;
+    margin: 0 auto 16px;
 
-    border-radius: 50%;
+    border-radius: var(--radius-full);
 
     display: flex;
 
@@ -248,96 +482,147 @@ body {
 
     justify-content: center;
 
+    background: linear-gradient(var(--bg-dark), var(--bg-dark)) padding-box,
+
+                linear-gradient(135deg, var(--primary-violet), var(--accent-cyan)) border-box;
+
     border: 2px solid transparent;
 
-    background:
-        linear-gradient(#080a25, #080a25) padding-box,
-        linear-gradient(
-            135deg,
-            #b000ff,
-            #008cff
-        ) border-box;
+    box-shadow: 0 0 20px var(--primary-violet-glow);
 
-    box-shadow:
-        0 0 20px rgba(130, 0, 255, 0.4);
 }
+
 
 
 .user-icon i {
 
-    font-size: 28px;
+    font-size: 22px;
 
-    color: white;
+    color: var(--text-main);
+
 }
 
 
-/* ============================= */
-/* TÍTULOS */
-/* ============================= */
 
 .login-card h2 {
 
-    font-size: 30px;
+    font-size: 24px;
 
-    margin-bottom: 10px;
+    font-weight: 700;
+
+    letter-spacing: -0.5px;
+
+    margin-bottom: 6px;
+
+    color: var(--text-main);
+
 }
+
 
 
 .description {
 
-    color: #aeb5d0;
+    color: var(--text-muted);
 
-    font-size: 14px;
+    font-size: 13.5px;
 
-    line-height: 1.6;
+    line-height: 1.5;
 
-    margin-bottom: 25px;
+    margin-bottom: 24px;
+
 }
 
 
-/* ============================= */
-/* INPUTS */
-/* ============================= */
+
+.section-title {
+
+    font-size: 12px;
+
+    text-transform: uppercase;
+
+    letter-spacing: 1.5px;
+
+    font-weight: 700;
+
+    color: var(--accent-cyan);
+
+    margin-bottom: 12px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+}
+
+
+
+/* --------------------------------------------------------------------------
+
+   6. CAMPOS DE INPUTS Y VALIDACIONES (.input-box)
+
+   -------------------------------------------------------------------------- */
+
+.form-label-custom {
+
+    display: block;
+
+    text-align: left;
+
+    font-size: 12.5px;
+
+    font-weight: 600;
+
+    color: var(--text-muted);
+
+    margin-bottom: 6px;
+
+}
+
+
 
 .input-box {
 
     width: 100%;
 
-    height: 55px;
+    height: 50px;
 
     display: flex;
 
     align-items: center;
 
-    gap: 14px;
+    gap: 12px;
 
-    padding: 0 17px;
+    padding: 0 16px;
 
-    margin-bottom: 13px;
+    border-radius: var(--radius-md);
 
-    border-radius: 13px;
+    border: 1px solid var(--input-border);
 
-    border: 1px solid #29396c;
+    background: var(--input-bg);
 
-    background: rgba(5, 10, 30, 0.65);
+    transition: var(--transition-fast);
 
-    transition: 0.3s;
 }
 
 
-/* Ícono */
 
 .input-box > i:first-child {
 
-    color: #aeb9df;
+    color: var(--text-placeholder);
 
-    font-size: 17px;
+    font-size: 15px;
+
+    transition: var(--transition-fast);
+
 }
 
 
-/* Input */
 
-.input-box input {
+.input-box input,
+
+.input-box select {
 
     flex: 1;
 
@@ -349,144 +634,313 @@ body {
 
     background: transparent;
 
-    color: white;
+    color: var(--text-main);
 
-    font-size: 14px;
+    font-size: 13.5px;
+
+    font-family: var(--font-family);
+
 }
+
+
+
+.input-box select option {
+
+    background-color: #0c0c1a;
+
+    color: var(--text-main);
+
+}
+
 
 
 .input-box input::placeholder {
 
-    color: #8e96b0;
+    color: var(--text-placeholder);
+
 }
 
 
-/* Cuando seleccionamos el input */
 
 .input-box:focus-within {
 
-    border-color: #7c35ff;
+    border-color: var(--input-focus-border);
+
+    background: rgba(15, 15, 35, 0.9);
 
     box-shadow:
-        0 0 15px rgba(120, 0, 255, 0.2);
+
+        0 0 0 3px rgba(139, 92, 246, 0.22),
+
+        0 0 20px var(--primary-violet-glow);
+
 }
 
 
-/* Ojo */
+
+.input-box:focus-within > i:first-child {
+
+    color: var(--primary-violet);
+
+}
+
+
+
+.input-box.input-error {
+
+    border-color: var(--danger-color) !important;
+
+    box-shadow: 0 0 15px var(--danger-glow) !important;
+
+}
+
+
+
+.input-box.input-error > i:first-child {
+
+    color: var(--danger-color) !important;
+
+}
+
+
+
+/* --- SELECTOR DE PROVINCIA Y GRUPO DE TELÉFONO --- */
+
+.input-box .form-select-custom {
+
+    flex: 1;
+
+    height: 100%;
+
+    border: none;
+
+    outline: none;
+
+    background: transparent;
+
+    color: var(--text-main);
+
+    font-size: 13.5px;
+
+    font-family: var(--font-family);
+
+    cursor: pointer;
+
+    padding-right: 10px;
+
+}
+
+
+
+.input-box .form-select-custom option {
+
+    background-color: #0d0d1a;
+
+    color: var(--text-main);
+
+    padding: 10px;
+
+}
+
+
+
+.phone-input-group {
+
+    display: flex;
+
+    gap: 10px;
+
+    width: 100%;
+
+}
+
+
+
+.country-select {
+
+    height: 50px;
+
+    min-width: 105px;
+
+    padding: 0 12px;
+
+    border-radius: var(--radius-md);
+
+    border: 1px solid var(--input-border);
+
+    background: var(--input-bg);
+
+    color: var(--text-main);
+
+    font-family: var(--font-family);
+
+    font-size: 13.5px;
+
+    font-weight: 600;
+
+    outline: none;
+
+    cursor: pointer;
+
+    transition: var(--transition-fast);
+
+}
+
+
+
+.country-select option {
+
+    background-color: #0d0d1a;
+
+    color: var(--text-main);
+
+}
+
+
+
+.country-select:focus {
+
+    border-color: var(--input-focus-border);
+
+    background: rgba(15, 15, 35, 0.9);
+
+    box-shadow:
+
+        0 0 0 3px rgba(139, 92, 246, 0.22),
+
+        0 0 20px var(--primary-violet-glow);
+
+}
+
+
+
+.phone-box {
+
+    flex: 1;
+
+}
+
+
+
+.phone-input-group.input-error .country-select,
+
+.phone-input-group.input-error .phone-box {
+
+    border-color: var(--danger-color) !important;
+
+    box-shadow: 0 0 15px var(--danger-glow) !important;
+
+}
+
+
+
+/* Cambia el color del icono nativo del picker de fecha */
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+
+    filter: invert(1);
+
+    cursor: pointer;
+
+}
+
+
+
+.error-text {
+
+    display: block;
+
+    text-align: left;
+
+    color: var(--danger-color);
+
+    font-size: 11.5px;
+
+    margin-top: 5px;
+
+    font-weight: 500;
+
+}
+
+
+
+.alert-danger-custom {
+
+    background: rgba(255, 77, 77, 0.12);
+
+    border: 1px solid rgba(255, 77, 77, 0.3);
+
+    color: #ff8080;
+
+    border-radius: var(--radius-md);
+
+    padding: 12px 16px;
+
+    font-size: 13px;
+
+    text-align: left;
+
+}
+
+
 
 .eye {
 
     cursor: pointer;
 
-    color: #8e96b0 !important;
+    color: var(--text-placeholder) !important;
 
-    transition: 0.2s;
+    font-size: 14px;
+
+    padding: 4px;
+
+    transition: var(--transition-fast);
+
 }
+
 
 
 .eye:hover {
 
-    color: white !important;
+    color: var(--text-main) !important;
+
+    transform: scale(1.1);
+
 }
 
 
-/* ============================= */
-/* BOTÓN LOGIN */
-/* ============================= */
+
+/* --------------------------------------------------------------------------
+
+   7. BOTONES (.login-button & .register-button)
+
+   -------------------------------------------------------------------------- */
 
 .login-button {
 
     width: 100%;
 
-    height: 55px;
+    height: 50px;
 
     border: none;
 
-    border-radius: 13px;
+    border-radius: var(--radius-md);
 
-    margin-top: 5px;
+    color: var(--text-main);
 
-    color: white;
+    font-size: 14.5px;
 
-    font-size: 15px;
+    font-weight: 700;
 
-    font-weight: bold;
+    font-family: var(--font-family);
 
     cursor: pointer;
 
-    background: linear-gradient(
-        90deg,
-        #8d00ff,
-        #006cff
-    );
+    background: linear-gradient(135deg, var(--primary-violet) 0%, var(--secondary-blue) 100%);
 
-    box-shadow:
-        0 8px 25px rgba(70, 0, 255, 0.3);
+    box-shadow: 0 8px 25px var(--primary-violet-glow);
 
-    transition: 0.3s;
-}
-
-
-.login-button i {
-
-    margin-left: 8px;
-}
-
-
-.login-button:hover {
-
-    transform: translateY(-2px);
-
-    box-shadow:
-        0 10px 30px rgba(70, 0, 255, 0.5);
-}
-
-
-/* ============================= */
-/* SEPARADOR */
-/* ============================= */
-
-.separator {
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 12px;
-
-    margin: 25px 0 18px;
-}
-
-
-.separator span {
-
-    height: 1px;
-
-    flex: 1;
-
-    background: #455070;
-}
-
-
-.separator p {
-
-    color: #aeb5d0;
-
-    font-size: 13px;
-
-    white-space: nowrap;
-}
-
-
-/* ============================= */
-/* CREAR CUENTA */
-/* ============================= */
-
-.register-button {
-
-    width: 100%;
-
-    height: 52px;
+    transition: var(--transition-smooth);
 
     display: flex;
 
@@ -496,81 +950,347 @@ body {
 
     gap: 10px;
 
-    border-radius: 13px;
+    text-decoration: none;
 
-    border: 1px solid #7d24ff;
+}
 
-    color: white;
+
+
+.login-button:hover {
+
+    transform: translateY(-2px);
+
+    box-shadow:
+
+        0 12px 30px var(--primary-violet-glow),
+
+        0 0 25px var(--secondary-blue-glow);
+
+    filter: brightness(1.1);
+
+    color: #fff;
+
+}
+
+
+
+.register-button {
+
+    width: 100%;
+
+    height: 48px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 10px;
+
+    border-radius: var(--radius-md);
+
+    border: 1px solid rgba(139, 92, 246, 0.35);
+
+    color: var(--text-main);
 
     text-decoration: none;
 
-    font-size: 15px;
+    font-size: 13.5px;
 
-    font-weight: bold;
+    font-weight: 600;
 
-    background: rgba(10, 10, 40, 0.45);
+    background: rgba(139, 92, 246, 0.08);
 
-    transition: 0.3s;
+    transition: var(--transition-smooth);
+
 }
+
 
 
 .register-button:hover {
 
-    background: rgba(120, 0, 255, 0.15);
+    background: rgba(139, 92, 246, 0.18);
 
-    border-color: #009cff;
+    border-color: var(--primary-violet);
 
-    box-shadow:
-        0 0 20px rgba(120, 0, 255, 0.2);
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.25);
+
+    color: #fff;
+
+    transform: translateY(-2px);
+
 }
 
 
-/* ============================= */
-/* CELULARES */
-/* ============================= */
 
-@media (max-width: 650px) {
+.separator {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 14px;
+
+    margin: 22px 0 18px;
+
+}
+
+
+
+.separator span {
+
+    height: 1px;
+
+    flex: 1;
+
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+
+}
+
+
+
+.separator p {
+
+    color: var(--text-muted);
+
+    font-size: 11.5px;
+
+    font-weight: 500;
+
+    text-transform: uppercase;
+
+    letter-spacing: 1px;
+
+    margin: 0;
+
+}
+
+
+
+/* --------------------------------------------------------------------------
+
+   8. INDICADOR DE REQUISITOS DE CONTRASEÑA
+
+   -------------------------------------------------------------------------- */
+
+.password-requirements {
+
+    background: rgba(10, 10, 22, 0.75);
+
+    border: 1px solid rgba(139, 92, 246, 0.3);
+
+    backdrop-filter: blur(12px);
+
+    border-radius: 12px;
+
+    padding: 10px 12px;
+
+    margin-top: 8px;
+
+    margin-bottom: 8px;
+
+    opacity: 1;
+
+    max-height: 160px;
+
+    transform: translateY(0);
+
+    overflow: hidden;
+
+    transition:
+
+        opacity 0.28s ease,
+
+        max-height 0.28s ease,
+
+        transform 0.28s ease,
+
+        padding 0.28s ease,
+
+        margin 0.28s ease;
+
+}
+
+
+
+.password-requirements.is-hidden {
+
+    opacity: 0;
+
+    max-height: 0;
+
+    padding-top: 0;
+
+    padding-bottom: 0;
+
+    margin-top: 0;
+
+    margin-bottom: 0;
+
+    transform: translateY(-8px);
+
+    pointer-events: none;
+
+    border-color: transparent;
+
+}
+
+
+
+.req-item {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 6px;
+
+    margin-bottom: 4px;
+
+    transition: color 0.2s ease;
+
+}
+
+
+
+.req-item.unfulfilled {
+
+    color: #f87171;
+
+}
+
+
+
+.req-item.unfulfilled .status-icon {
+
+    color: #ef4444;
+
+}
+
+
+
+.req-item.fulfilled {
+
+    color: #4ade80;
+
+    font-weight: 600;
+
+}
+
+
+
+.req-item.fulfilled .status-icon {
+
+    color: #22c55e;
+
+    filter: drop-shadow(0 0 5px rgba(34, 197, 94, 0.6));
+
+}
+
+
+
+/* --------------------------------------------------------------------------
+
+   9. ANIMACIONES Y ADAPTABILIDAD RESPONSIVE
+
+   -------------------------------------------------------------------------- */
+
+@keyframes fadeInDown {
+
+    from { opacity: 0; transform: translateY(-20px); }
+
+    to { opacity: 1; transform: translateY(0); }
+
+}
+
+
+
+@keyframes fadeInUp {
+
+    from { opacity: 0; transform: translateY(20px); }
+
+    to { opacity: 1; transform: translateY(0); }
+
+}
+
+
+
+@media (max-width: 576px) {
 
     .login-page {
 
-        padding: 40px 20px;
+        padding: 20px 12px;
+
     }
 
-
-    .brand h1 {
-
-        font-size: 55px;
-
-        letter-spacing: -3px;
-    }
-
-
-    .ticket-icon {
-
-        width: 55px;
-
-        height: 55px;
-    }
-
-
-    .ticket-icon i {
-
-        font-size: 30px;
-    }
-
-
-    .slogan {
-
-        font-size: 11px;
-
-        letter-spacing: 4px;
-    }
 
 
     .login-card {
 
-        width: 100%;
+        border-radius: 18px;
 
-        padding: 30px 25px;
+    }
+
+
+
+    .allticket-auth-bg {
+
+        padding: 26px 18px 30px;
+
+    }
+
+
+
+    .input-box {
+
+        height: 46px;
+
+    }
+
+
+
+    .login-button, .register-button {
+
+        height: 46px;
+
+        font-size: 13.5px;
+
+    }
+
+
+
+    .country-select {
+
+        height: 46px;
+
+        min-width: 95px;
+
+        font-size: 12.5px;
+
+        padding: 0 8px;
+
+    }
+
+}
+
+
+
+@media (prefers-reduced-motion: reduce) {
+
+    .allticket-auth-blob,
+
+    .login-card {
+
+        animation: none;
+
+    }
+
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+    .allticket-auth-blob::before {
+        animation: none;
     }
 }

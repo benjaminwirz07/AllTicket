@@ -1,0 +1,346 @@
+/* ==========================================================================
+   AllTicket - Index & Form Stylesheet
+   Paleta: Violeta (#7000FF), Azul Neón (#00D4FF), Fondo Oscuro (#0A0C10)
+   ========================================================================== */
+
+:root {
+  --bg-dark: #0a0c10;
+  --bg-card: #12151e;
+  --bg-card-alt: #0e1118;
+  --bg-footer: #06070a;
+  --violet-neon: #7000ff;
+  --violet-hover: #8824ff;
+  --blue-neon: #00d4ff;
+  --text-muted: #9aa0a6;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+}
+
+body {
+  background-color: var(--bg-dark);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: #f8f9fa;
+}
+
+/* Typography & Utility Colors */
+.text-primary-neon {
+  color: var(--violet-neon) !important;
+}
+
+.text-violet-neon {
+  color: var(--violet-neon);
+}
+
+.text-secondary-custom {
+  color: var(--text-muted);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #ffffff 0%, #a777ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.bg-allticket {
+  background-color: rgba(10, 12, 16, 0.95);
+  backdrop-filter: blur(10px);
+}
+
+.bg-main-dark {
+  background-color: var(--bg-dark);
+}
+
+.bg-card-dark {
+  background-color: var(--bg-card);
+}
+
+.bg-card-dark-alt {
+  background-color: var(--bg-card-alt);
+}
+
+.bg-dark-footer {
+  background-color: var(--bg-footer);
+}
+
+.bg-violet-neon {
+  background-color: var(--violet-neon);
+  color: #fff;
+}
+
+.bg-blue-neon {
+  background-color: var(--blue-neon);
+  color: #000;
+  font-weight: 600;
+}
+
+/* Hero Section */
+.hero-section {
+  background: radial-gradient(circle at top right, rgba(112, 0, 255, 0.15), transparent 50%),
+              radial-gradient(circle at bottom left, rgba(0, 212, 255, 0.1), transparent 50%);
+}
+
+.hero-card-img img {
+  height: 320px;
+  object-fit: cover;
+  width: 100%;
+}
+
+/* Search Form Custom Styles */
+.search-form-card {
+  background: rgba(18, 21, 30, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border-subtle) !important;
+}
+
+.custom-input {
+  background-color: #1a1e29 !important;
+  border: 1px solid var(--border-subtle) !important;
+  color: #ffffff !important;
+  padding: 0.6rem 0.9rem;
+}
+
+.custom-input:focus {
+  border-color: var(--violet-neon) !important;
+  box-shadow: 0 0 0 0.25rem rgba(112, 0, 255, 0.25) !important;
+}
+
+.custom-input-text {
+  background-color: #161922 !important;
+  border: 1px solid var(--border-subtle) !important;
+  color: var(--text-muted) !important;
+}
+
+/* Event Cards */
+.event-card {
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  border: 1px solid var(--border-subtle) !important;
+}
+
+.event-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 24px rgba(112, 0, 255, 0.2) !important;
+  border-color: rgba(112, 0, 255, 0.4) !important;
+}
+
+.event-img {
+  height: 190px;
+  object-fit: cover;
+}
+
+/* Buttons */
+.btn-violet {
+  background-color: var(--violet-neon);
+  color: #ffffff;
+  border: none;
+  font-weight: 600;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.btn-violet:hover {
+  background-color: var(--violet-hover);
+  color: #ffffff;
+}
+
+.btn-outline-violet {
+  border: 1px solid var(--violet-neon);
+  color: #ffffff;
+}
+
+.btn-outline-violet:hover {
+  background-color: var(--violet-neon);
+  color: #ffffff;
+}
+
+.btn-outline-custom {
+  border: 1px solid var(--border-subtle);
+  color: #ffffff;
+}
+
+.btn-outline-custom:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+}
+
+/* Step Cards */
+.step-card {
+  background-color: var(--bg-card);
+  transition: border-color 0.2s ease;
+}
+
+.step-card:hover {
+  border-color: var(--violet-neon) !important;
+}
+/* ==========================================================================
+   Efectos dinámicos y animación de fondo AllTicket
+   ========================================================================== */
+
+/* Fondo dinámico animado (Mesh Gradient) */
+.hero-animated-bg {
+  background: linear-gradient(
+    -45deg,
+    #0a0c10,
+    #18012e,
+    #05182e,
+    #0a0c10
+  );
+  background-size: 400% 400%;
+  animation: gradientMovement 12s ease infinite;
+}
+
+@keyframes gradientMovement {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Efecto de luz brillante / Glow en la imagen Hero */
+.hero-card-img {
+  position: relative;
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+  box-shadow: 0 0 25px rgba(112, 0, 255, 0.25);
+}
+
+.hero-card-img:hover {
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: 0 0 45px rgba(112, 0, 255, 0.5), 0 0 15px rgba(0, 212, 255, 0.3);
+}
+
+/* Brillo Neón en botones principales */
+.btn-violet {
+  background-color: var(--violet-neon);
+  color: #ffffff;
+  border: none;
+  font-weight: 600;
+  box-shadow: 0 0 15px rgba(112, 0, 255, 0.4);
+  transition: all 0.3s ease;
+}
+
+.btn-violet:hover {
+  background-color: var(--violet-hover);
+  color: #ffffff;
+  box-shadow: 0 0 25px rgba(112, 0, 255, 0.7);
+  transform: translateY(-2px);
+}
+
+/* Formulario con borde Neón iluminado al pasar el cursor */
+.search-form-card {
+  background: rgba(18, 21, 30, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-subtle) !important;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.search-form-card:hover {
+  border-color: rgba(112, 0, 255, 0.4) !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(112, 0, 255, 0.15) !important;
+}
+
+/* Styling del Logo de AllTicket */
+.brand-logo {
+  height: 40px; /* Ajusta la altura del logo */
+  width: auto;
+  object-fit: contain;
+  transition: transform 0.25s ease, filter 0.25s ease;
+}
+/* Efecto de hover para el logo */
+.brand-logo:hover {
+  transform: scale(1.03);
+  filter: drop-shadow(0 0 8px rgba(112, 0, 255, 0.6));
+}
+
+/* Reducción sutil de tamaño en móviles */
+@media (max-width: 576px) {
+  .brand-logo {
+    height: 32px;
+  }
+}
+
+/* ==========================================================================
+   Efecto "blob" en las event-cards (inicio)
+   Basado en Uiverse.io (dylanharriscameron), adaptado a Bootstrap + tema oscuro.
+
+   - Todo está limitado a .event-card: NO afecta a otras .card del proyecto.
+   - No requiere cambios en el HTML (usa ::before y ::after).
+   - ::before = blob que rebota | ::after = fondo oscuro que lo tapa,
+     dejando ver la luz solo en el borde (aro) y como un leve tinte adentro.
+   ========================================================================== */
+
+.card.event-card {
+  --ec-ring: 3px;                          /* grosor del borde con luz */
+  --ec-radius: 1rem;                       /* igual a rounded-4 */
+  --ec-blob-color: var(--violet-neon);
+  --ec-blob-size: 200px;
+
+  position: relative;
+  isolation: isolate;                      /* reemplaza al z-index: 1111 */
+  overflow: hidden;
+  padding: var(--ec-ring);                 /* el contenido queda dentro del aro */
+  border: 0 !important;                    /* el aro reemplaza al borde de 1px */
+  background-color: #1a1e2b;               /* color del aro cuando el blob no pasa */
+}
+
+/* Cards con badge azul -> blob azul (las demás quedan violeta) */
+.card.event-card:has(.bg-blue-neon) {
+  --ec-blob-color: var(--blue-neon);
+}
+
+/* El blob */
+.card.event-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background: radial-gradient(
+    circle calc(var(--ec-blob-size) / 2) at 50% 50%,
+    var(--ec-blob-color) 0%,
+    var(--ec-blob-color) 70%,
+    transparent 100%
+  );
+  will-change: transform;
+  animation: ec-blob-bounce 6s infinite ease;
+}
+
+/* Capa oscura que tapa el blob (deja libre el aro del borde) */
+.card.event-card::after {
+  content: "";
+  position: absolute;
+  inset: var(--ec-ring);
+  z-index: -1;
+  pointer-events: none;
+  border-radius: calc(var(--ec-radius) - var(--ec-ring));
+  background: var(--bg-card);              /* 100% opaca: la luz solo se ve en el aro del borde */
+}
+
+/* La imagen respeta la curvatura interior del aro */
+.card.event-card .card-img-top {
+  border-radius: calc(var(--ec-radius) - var(--ec-ring))
+                 calc(var(--ec-radius) - var(--ec-ring)) 0 0;
+}
+
+/* El recorrido usa % del propio tamaño de la card, por eso funciona
+   igual en móvil, tablet y escritorio sin importar el ancho. */
+@keyframes ec-blob-bounce {
+  0%, 100% { transform: translate3d(-32%, -30%, 0); }
+  25%      { transform: translate3d( 32%, -30%, 0); }
+  50%      { transform: translate3d( 32%,  30%, 0); }
+  75%      { transform: translate3d(-32%,  30%, 0); }
+}
+
+/* Que las cards no se muevan todas sincronizadas */
+#eventos .row > :nth-child(4n+2) .event-card::before { animation-delay: -1.5s; }
+#eventos .row > :nth-child(4n+3) .event-card::before { animation-delay: -3s; }
+#eventos .row > :nth-child(4n+4) .event-card::before { animation-delay: -4.5s; }
+
+/* Accesibilidad: sin animación si el usuario lo pide */
+@media (prefers-reduced-motion: reduce) {
+  .card.event-card::before {
+    animation: none;
+    transform: translate3d(-32%, -30%, 0);
+  }
+}

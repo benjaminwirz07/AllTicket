@@ -18,7 +18,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 // Definimos la URL base de la aplicación para enlaces e inclusiones
 if (!defined('BASE_URL')) {
-    define('BASE_URL', 'http://localhost/AllTicket');
+    define('BASE_URL', 'http://192.168.100.47:8000');
 }
  
 // Conexión a la base de datos, disponible en todo el proyecto como $pdo
