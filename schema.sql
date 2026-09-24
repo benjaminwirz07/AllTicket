@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS users (
     PRIMARY KEY (id),
     UNIQUE KEY uq_users_email (email),
     UNIQUE KEY uq_users_dni (dni)
-    -- CHECK eliminado: CURDATE() no es determinística, MySQL no la permite en CHECK constraints
+    
 );
 
 CREATE TABLE IF NOT EXISTS posts (

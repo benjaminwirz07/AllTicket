@@ -164,7 +164,7 @@ if (isset($_SESSION['user'])) {
 
                                 name="email"
 
-                                placeholder="ejemplo@correo.com"
+                                placeholder="Ingresá el correo de tu cuenta"
 
                                 required>
 

@@ -1,6 +1,5 @@
 <?php
 
-
 require_once __DIR__ . '/../../config/bootstrap.php';
 
 if (isset($_SESSION['user'])) {
@@ -12,6 +11,68 @@ $errors = $_SESSION['errors'] ?? [];
 $old = $_SESSION['old'] ?? [];
 
 unset($_SESSION['errors'], $_SESSION['old']);
+
+/*
+|--------------------------------------------------------------------------
+| Helpers de presentación (solo para esta vista)
+|--------------------------------------------------------------------------
+| Se guardan en variables (closures) para no chocar con funciones
+| que ya existan en bootstrap.php.
+*/
+
+// Escapa cualquier valor antes de imprimirlo
+$e = static fn($value): string => htmlspecialchars(
+    is_scalar($value) ? (string) $value : '',
+    ENT_QUOTES,
+    'UTF-8'
+);
+
+// Devuelve " input-error" si el campo tiene error
+$hasError = static fn(string $key): string => isset($errors[$key]) ? ' input-error' : '';
+
+// Atributos de accesibilidad cuando el campo tiene error
+$aria = static fn(string $key): string => isset($errors[$key])
+    ? ' aria-invalid="true" aria-describedby="' . $key . '-error"'
+    : '';
+
+// Mensaje de error debajo del campo (ya escapado)
+$errorText = static function (string $key) use ($errors, $e): string {
+    if (!isset($errors[$key])) {
+        return '';
+    }
+
+    return '<span class="error-text" id="' . $key . '-error">'
+        . '<i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>'
+        . '<span>' . $e($errors[$key]) . '</span>'
+        . '</span>';
+};
+
+$provinces = [
+    'Buenos Aires',
+    'CABA',
+    'Catamarca',
+    'Chaco',
+    'Chubut',
+    'Córdoba',
+    'Corrientes',
+    'Entre Ríos',
+    'Formosa',
+    'Jujuy',
+    'La Pampa',
+    'La Rioja',
+    'Mendoza',
+    'Misiones',
+    'Neuquén',
+    'Río Negro',
+    'Salta',
+    'San Juan',
+    'San Luis',
+    'Santa Cruz',
+    'Santa Fe',
+    'Santiago del Estero',
+    'Tierra del Fuego',
+    'Tucumán'
+];
 
 ?>
 
@@ -52,10 +113,16 @@ unset($_SESSION['errors'], $_SESSION['old']);
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
     >
 
-    <!-- CSS personalizado -->
+    <!-- CSS compartido (login + registro) -->
     <link
         rel="stylesheet"
         href="/assets/css/custom.css"
+    >
+
+    <!-- CSS exclusivo del registro (va DESPUÉS de custom.css) -->
+    <link
+        rel="stylesheet"
+        href="/assets/css/register.css"
     >
 
 </head>
@@ -85,37 +152,36 @@ unset($_SESSION['errors'], $_SESSION['old']);
 
             <div class="allticket-auth-bg">
 
-                <!-- Icono -->
-                <div class="user-icon">
+                <!-- Encabezado -->
+                <header class="auth-header">
 
-                    <i class="fa-solid fa-user-plus"></i>
+                    <div class="user-icon">
 
-                </div>
+                        <i class="fa-solid fa-user-plus"></i>
 
-                <!-- Título -->
-                <h2 class="text-center">
-                    Crear cuenta
-                </h2>
+                    </div>
 
-                <p class="description text-center">
+                    <h2 class="text-center">
+                        Crear cuenta
+                    </h2>
 
-                    Completá tus datos para acceder a las mejores
-                    entradas de recitales y eventos.
+                    <p class="description text-center">
 
-                </p>
+                        Completá tus datos para acceder a las mejores
+                        entradas de recitales y eventos.
+
+                    </p>
+
+                </header>
 
                 <!-- Error general -->
                 <?php if (isset($errors['general'])): ?>
 
-                    <div class="alert-danger-custom mb-4">
+                    <div class="alert-danger-custom mb-4" role="alert">
 
-                        <i class="fa-solid fa-circle-exclamation me-2"></i>
+                        <i class="fa-solid fa-circle-exclamation"></i>
 
-                        <?= htmlspecialchars(
-                            $errors['general'],
-                            ENT_QUOTES,
-                            'UTF-8'
-                        ) ?>
+                        <span><?= $e($errors['general']) ?></span>
 
                     </div>
 
@@ -128,483 +194,324 @@ unset($_SESSION['errors'], $_SESSION['old']);
                     novalidate
                 >
 
-                    <!-- Datos personales -->
-                    <div class="section-title">
+                    <!-- ============================================
+                         1. DATOS PERSONALES
+                         ============================================ -->
+                    <div class="form-section">
 
-                        <i class="fa-solid fa-address-card"></i>
+                        <div class="section-title">
 
-                        Datos personales
+                            <i class="fa-solid fa-address-card"></i>
 
-                    </div>
-
-                    <div class="row g-3 mb-4">
-
-                        <!-- Nombre -->
-                        <div class="col-12 col-md-6">
-
-                            <label class="form-label-custom">
-                                Nombre
-                            </label>
-
-                            <div
-                                class="input-box <?= isset($errors['first_name']) ? 'input-error' : '' ?>"
-                            >
-
-                                <i class="fa-solid fa-user"></i>
-
-                                <input
-                                    type="text"
-                                    name="first_name"
-                                    placeholder="Ej. Benjamin"
-                                    value="<?= htmlspecialchars(
-                                        $old['first_name'] ?? '',
-                                        ENT_QUOTES,
-                                        'UTF-8'
-                                    ) ?>"
-                                >
-
-                            </div>
-
-                            <?php if (isset($errors['first_name'])): ?>
-
-                                <span class="error-text">
-
-                                    <?= htmlspecialchars(
-                                        $errors['first_name'],
-                                        ENT_QUOTES,
-                                        'UTF-8'
-                                    ) ?>
-
-                                </span>
-
-                            <?php endif; ?>
+                            <span>Datos personales</span>
 
                         </div>
 
-                        <!-- Segundo nombre -->
-                        <div class="col-12 col-md-6">
+                        <div class="row g-3">
 
-                            <label class="form-label-custom">
-                                Segundo nombre
-                            </label>
+                            <!-- Nombre -->
+                            <div class="col-12 col-sm-6 col-lg-4">
 
-                            <div
-                                class="input-box <?= isset($errors['second_name']) ? 'input-error' : '' ?>"
-                            >
+                                <label class="form-label-custom" for="first_name">
+                                    Nombre
+                                </label>
 
-                                <i class="fa-solid fa-user"></i>
+                                <div class="input-box<?= $hasError('first_name') ?>">
 
-                                <input
-                                    type="text"
-                                    name="second_name"
-                                    placeholder="Ej. José"
-                                    value="<?= htmlspecialchars(
-                                        $old['second_name'] ?? '',
-                                        ENT_QUOTES,
-                                        'UTF-8'
-                                    ) ?>"
-                                >
+                                    <i class="fa-solid fa-user" aria-hidden="true"></i>
 
-                            </div>
-
-                            <?php if (isset($errors['second_name'])): ?>
-
-                                <span class="error-text">
-
-                                    <?= htmlspecialchars(
-                                        $errors['second_name'],
-                                        ENT_QUOTES,
-                                        'UTF-8'
-                                    ) ?>
-
-                                </span>
-
-                            <?php endif; ?>
-
-                        </div>
-
-                        <!-- Apellido -->
-                        <div class="col-12 col-md-6">
-
-                            <label class="form-label-custom">
-                                Apellido
-                            </label>
-
-                            <div
-                                class="input-box <?= isset($errors['last_name']) ? 'input-error' : '' ?>"
-                            >
-
-                                <i class="fa-solid fa-user"></i>
-
-                                <input
-                                    type="text"
-                                    name="last_name"
-                                    placeholder="Ej. Pérez"
-                                    value="<?= htmlspecialchars(
-                                        $old['last_name'] ?? '',
-                                        ENT_QUOTES,
-                                        'UTF-8'
-                                    ) ?>"
-                                >
-
-                            </div>
-
-                            <?php if (isset($errors['last_name'])): ?>
-
-                                <span class="error-text">
-
-                                    <?= htmlspecialchars(
-                                        $errors['last_name'],
-                                        ENT_QUOTES,
-                                        'UTF-8'
-                                    ) ?>
-
-                                </span>
-
-                            <?php endif; ?>
-
-                        </div>
-
-                        <!-- DNI -->
-                        <div class="col-12 col-md-6">
-
-                            <label class="form-label-custom">
-                                DNI / Documento
-                            </label>
-
-                            <div
-                                class="input-box <?= isset($errors['dni']) ? 'input-error' : '' ?>"
-                            >
-
-                                <i class="fa-solid fa-id-card"></i>
-
-                                <input
-                                    type="text"
-                                    id="dni_input"
-                                    name="dni"
-                                    placeholder="Ej. 42123456"
-                                    maxlength="8"
-                                    inputmode="numeric"
-                                    value="<?= htmlspecialchars(
-                                        $old['dni'] ?? '',
-                                        ENT_QUOTES,
-                                        'UTF-8'
-                                    ) ?>"
-                                >
-
-                            </div>
-
-                            <?php if (isset($errors['dni'])): ?>
-
-                                <span class="error-text">
-
-                                    <?= htmlspecialchars(
-                                        $errors['dni'],
-                                        ENT_QUOTES,
-                                        'UTF-8'
-                                    ) ?>
-
-                                </span>
-
-                            <?php endif; ?>
-
-                        </div>
-
-                        <!-- Fecha de nacimiento -->
-                        <div class="col-12 col-md-6">
-
-                            <label class="form-label-custom">
-                                Fecha de nacimiento
-                            </label>
-
-                            <div
-                                class="input-box <?= isset($errors['birth_date']) ? 'input-error' : '' ?>"
-                            >
-
-                                <i class="fa-solid fa-calendar-days"></i>
-
-                                <input
-                                    type="date"
-                                    name="birth_date"
-                                    value="<?= htmlspecialchars(
-                                        $old['birth_date'] ?? '',
-                                        ENT_QUOTES,
-                                        'UTF-8'
-                                    ) ?>"
-                                >
-
-                            </div>
-
-                            <?php if (isset($errors['birth_date'])): ?>
-
-                                <span class="error-text">
-
-                                    <?= htmlspecialchars(
-                                        $errors['birth_date'],
-                                        ENT_QUOTES,
-                                        'UTF-8'
-                                    ) ?>
-
-                                </span>
-
-                            <?php endif; ?>
-
-                        </div>
-
-                        <!-- Provincia -->
-                        <div class="col-12 col-md-6">
-
-                            <label class="form-label-custom">
-                                Provincia
-                            </label>
-
-                            <div
-                                class="input-box <?= isset($errors['province']) ? 'input-error' : '' ?>"
-                            >
-
-                                <i class="fa-solid fa-map-location-dot"></i>
-
-                                <select
-                                    name="province"
-                                    id="province_select"
-                                    class="form-select-custom"
-                                >
-
-                                    <option
-                                        value=""
-                                        disabled
-                                        <?= empty($old['province']) ? 'selected' : '' ?>
+                                    <input
+                                        type="text"
+                                        id="first_name"
+                                        name="first_name"
+                                        placeholder="Tu primer nombre"
+                                        autocomplete="given-name"
+                                        value="<?= $e($old['first_name'] ?? '') ?>"
+                                        <?= $aria('first_name') ?>
                                     >
-                                        Seleccionar provincia
-                                    </option>
 
-                                    <?php
+                                </div>
 
-                                    $provinces = [
-                                        'Buenos Aires',
-                                        'CABA',
-                                        'Catamarca',
-                                        'Chaco',
-                                        'Chubut',
-                                        'Córdoba',
-                                        'Corrientes',
-                                        'Entre Ríos',
-                                        'Formosa',
-                                        'Jujuy',
-                                        'La Pampa',
-                                        'La Rioja',
-                                        'Mendoza',
-                                        'Misiones',
-                                        'Neuquén',
-                                        'Río Negro',
-                                        'Salta',
-                                        'San Juan',
-                                        'San Luis',
-                                        'Santa Cruz',
-                                        'Santa Fe',
-                                        'Santiago del Estero',
-                                        'Tierra del Fuego',
-                                        'Tucumán'
-                                    ];
-
-                                    foreach ($provinces as $province):
-
-                                    ?>
-
-                                        <option
-                                            value="<?= htmlspecialchars(
-                                                $province,
-                                                ENT_QUOTES,
-                                                'UTF-8'
-                                            ) ?>"
-                                            <?= ($old['province'] ?? '') === $province ? 'selected' : '' ?>
-                                        >
-
-                                            <?= htmlspecialchars(
-                                                $province,
-                                                ENT_QUOTES,
-                                                'UTF-8'
-                                            ) ?>
-
-                                        </option>
-
-                                    <?php endforeach; ?>
-
-                                </select>
+                                <?= $errorText('first_name') ?>
 
                             </div>
 
-                            <?php if (isset($errors['province'])): ?>
+                            <!-- Segundo nombre -->
+                            <div class="col-12 col-sm-6 col-lg-4">
 
-                                <span class="error-text">
+                                <label class="form-label-custom" for="second_name">
+                                    Segundo nombre
+                                </label>
 
-                                    <?= htmlspecialchars(
-                                        $errors['province'],
-                                        ENT_QUOTES,
-                                        'UTF-8'
-                                    ) ?>
+                                <div class="input-box<?= $hasError('second_name') ?>">
 
-                                </span>
+                                    <i class="fa-solid fa-user" aria-hidden="true"></i>
 
-                            <?php endif; ?>
+                                    <input
+                                        type="text"
+                                        id="second_name"
+                                        name="second_name"
+                                        placeholder="Tu segundo nombre"
+                                        autocomplete="additional-name"
+                                        value="<?= $e($old['second_name'] ?? '') ?>"
+                                        <?= $aria('second_name') ?>
+                                    >
 
-                        </div>
+                                </div>
 
-                        <!-- Localidad -->
-                        <div class="col-12 col-md-6">
-
-                            <label class="form-label-custom">
-                                Localidad
-                            </label>
-
-                            <div
-                                class="input-box <?= isset($errors['city']) ? 'input-error' : '' ?>"
-                            >
-
-                                <i class="fa-solid fa-city"></i>
-
-                                <input
-                                    type="text"
-                                    name="city"
-                                    placeholder="Ej. Quilmes / La Plata"
-                                    value="<?= htmlspecialchars(
-                                        $old['city'] ?? '',
-                                        ENT_QUOTES,
-                                        'UTF-8'
-                                    ) ?>"
-                                >
+                                <?= $errorText('second_name') ?>
 
                             </div>
 
-                            <?php if (isset($errors['city'])): ?>
+                            <!-- Apellido -->
+                            <div class="col-12 col-lg-4">
 
-                                <span class="error-text">
+                                <label class="form-label-custom" for="last_name">
+                                    Apellido
+                                </label>
 
-                                    <?= htmlspecialchars(
-                                        $errors['city'],
-                                        ENT_QUOTES,
-                                        'UTF-8'
-                                    ) ?>
+                                <div class="input-box<?= $hasError('last_name') ?>">
 
-                                </span>
+                                    <i class="fa-solid fa-user" aria-hidden="true"></i>
 
-                            <?php endif; ?>
+                                    <input
+                                        type="text"
+                                        id="last_name"
+                                        name="last_name"
+                                        placeholder="Tu apellido"
+                                        autocomplete="family-name"
+                                        value="<?= $e($old['last_name'] ?? '') ?>"
+                                        <?= $aria('last_name') ?>
+                                    >
 
-                        </div>
+                                </div>
 
-                    </div>
-
-                    <!-- Contacto y cuenta -->
-                    <div class="section-title">
-
-                        <i class="fa-solid fa-at"></i>
-
-                        Contacto y cuenta
-
-                    </div>
-
-                    <div class="row g-3 mb-4">
-
-                        <!-- Usuario -->
-                        <div class="col-12 col-md-6">
-
-                            <label class="form-label-custom">
-                                Nombre de usuario
-                            </label>
-
-                            <div
-                                class="input-box <?= isset($errors['name']) ? 'input-error' : '' ?>"
-                            >
-
-                                <i class="fa-solid fa-at"></i>
-
-                                <input
-                                    type="text"
-                                    name="name"
-                                    placeholder="benjawz"
-                                    value="<?= htmlspecialchars(
-                                        $old['name'] ?? '',
-                                        ENT_QUOTES,
-                                        'UTF-8'
-                                    ) ?>"
-                                    required
-                                >
+                                <?= $errorText('last_name') ?>
 
                             </div>
 
-                            <?php if (isset($errors['name'])): ?>
+                            <!-- DNI -->
+                            <div class="col-12 col-md-6">
 
-                                <span class="error-text">
+                                <label class="form-label-custom" for="dni_input">
+                                    DNI / Documento
+                                </label>
 
-                                    <?= htmlspecialchars(
-                                        $errors['name'],
-                                        ENT_QUOTES,
-                                        'UTF-8'
-                                    ) ?>
+                                <div class="input-box<?= $hasError('dni') ?>">
 
-                                </span>
+                                    <i class="fa-solid fa-id-card" aria-hidden="true"></i>
 
-                            <?php endif; ?>
+                                    <input
+                                        type="text"
+                                        id="dni_input"
+                                        name="dni"
+                                        placeholder="Ingresá tu DNI"
+                                        maxlength="8"
+                                        inputmode="numeric"
+                                        autocomplete="off"
+                                        value="<?= $e($old['dni'] ?? '') ?>"
+                                        <?= $aria('dni') ?>
+                                    >
 
-                        </div>
+                                </div>
 
-                        <!-- Email -->
-                        <div class="col-12 col-md-6">
-
-                            <label class="form-label-custom">
-                                Correo electrónico
-                            </label>
-
-                            <div
-                                class="input-box <?= isset($errors['email']) ? 'input-error' : '' ?>"
-                            >
-
-                                <i class="fa-solid fa-envelope"></i>
-
-                                <input
-                                    type="email"
-                                    name="email"
-                                    placeholder="hola123@gmail.com"
-                                    value="<?= htmlspecialchars(
-                                        $old['email'] ?? '',
-                                        ENT_QUOTES,
-                                        'UTF-8'
-                                    ) ?>"
-                                    required
-                                >
+                                <?= isset($errors['dni'])
+                                    ? $errorText('dni')
+                                    : '<span class="field-hint">Solo números, sin puntos.</span>' ?>
 
                             </div>
 
-                            <?php if (isset($errors['email'])): ?>
+                            <!-- Fecha de nacimiento -->
+                            <div class="col-12 col-md-6">
 
-                                <span class="error-text">
+                                <label class="form-label-custom" for="birth_date">
+                                    Fecha de nacimiento
+                                </label>
 
-                                    <?= htmlspecialchars(
-                                        $errors['email'],
-                                        ENT_QUOTES,
-                                        'UTF-8'
-                                    ) ?>
+                                <div class="input-box<?= $hasError('birth_date') ?>">
 
-                                </span>
+                                    <i class="fa-solid fa-calendar-days" aria-hidden="true"></i>
 
-                            <?php endif; ?>
+                                    <input
+                                        type="date"
+                                        id="birth_date"
+                                        name="birth_date"
+                                        autocomplete="bday"
+                                        value="<?= $e($old['birth_date'] ?? '') ?>"
+                                        <?= $aria('birth_date') ?>
+                                    >
 
-                        </div>
+                                </div>
 
-                        <!-- Teléfono -->
-                        <div class="col-12 col-md-6">
+                                <?= $errorText('birth_date') ?>
 
-                            <label class="form-label-custom">
-                                Número de teléfono
-                            </label>
+                            </div>
 
-                            <div class="row g-2">
+                            <!-- Provincia -->
+                            <div class="col-12 col-md-6">
 
-                                <div class="col-5 col-sm-4">
+                                <label class="form-label-custom" for="province_select">
+                                    Provincia
+                                </label>
+
+                                <div class="input-box<?= $hasError('province') ?>">
+
+                                    <i class="fa-solid fa-map-location-dot" aria-hidden="true"></i>
 
                                     <select
-                                        class="country-select w-100 <?= isset($errors['phone']) ? 'input-error' : '' ?>"
+                                        name="province"
+                                        id="province_select"
+                                        class="form-select-custom"
+                                        <?= $aria('province') ?>
+                                    >
+
+                                        <option
+                                            value=""
+                                            disabled
+                                            <?= empty($old['province']) ? 'selected' : '' ?>
+                                        >
+                                            Seleccioná tu provincia
+                                        </option>
+
+                                        <?php foreach ($provinces as $province): ?>
+
+                                            <option
+                                                value="<?= $e($province) ?>"
+                                                <?= ($old['province'] ?? '') === $province ? 'selected' : '' ?>
+                                            >
+                                                <?= $e($province) ?>
+                                            </option>
+
+                                        <?php endforeach; ?>
+
+                                    </select>
+
+                                    <i class="fa-solid fa-chevron-down select-caret" aria-hidden="true"></i>
+
+                                </div>
+
+                                <?= $errorText('province') ?>
+
+                            </div>
+
+                            <!-- Localidad -->
+                            <div class="col-12 col-md-6">
+
+                                <label class="form-label-custom" for="city">
+                                    Localidad
+                                </label>
+
+                                <div class="input-box<?= $hasError('city') ?>">
+
+                                    <i class="fa-solid fa-city" aria-hidden="true"></i>
+
+                                    <input
+                                        type="text"
+                                        id="city"
+                                        name="city"
+                                        placeholder="Ingresá tu localidad"
+                                        autocomplete="address-level2"
+                                        value="<?= $e($old['city'] ?? '') ?>"
+                                        <?= $aria('city') ?>
+                                    >
+
+                                </div>
+
+                                <?= $errorText('city') ?>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- ============================================
+                         2. CONTACTO Y CUENTA
+                         ============================================ -->
+                    <div class="form-section">
+
+                        <div class="section-title">
+
+                            <i class="fa-solid fa-at"></i>
+
+                            <span>Contacto y cuenta</span>
+
+                        </div>
+
+                        <div class="row g-3">
+
+                            <!-- Email -->
+                            <div class="col-12">
+
+                                <label class="form-label-custom" for="email">
+                                    Correo electrónico
+                                </label>
+
+                                <div class="input-box<?= $hasError('email') ?>">
+
+                                    <i class="fa-solid fa-envelope" aria-hidden="true"></i>
+
+                                    <input
+                                        type="email"
+                                        id="email"
+                                        name="email"
+                                        placeholder="Ingresá el correo de tu cuenta"
+                                        autocomplete="email"
+                                        value="<?= $e($old['email'] ?? '') ?>"
+                                        required
+                                        <?= $aria('email') ?>
+                                    >
+
+                                </div>
+
+                                <?= $errorText('email') ?>
+
+                            </div>
+
+                            <!-- Usuario -->
+                            <div class="col-12 col-md-6">
+
+                                <label class="form-label-custom" for="username">
+                                    Nombre de usuario
+                                </label>
+
+                                <div class="input-box<?= $hasError('name') ?>">
+
+                                    <i class="fa-solid fa-at" aria-hidden="true"></i>
+
+                                    <input
+                                        type="text"
+                                        id="username"
+                                        name="name"
+                                        placeholder="Elegí tu nombre de usuario"
+                                        autocomplete="username"
+                                        value="<?= $e($old['name'] ?? '') ?>"
+                                        required
+                                        <?= $aria('name') ?>
+                                    >
+
+                                </div>
+
+                                <?= $errorText('name') ?>
+
+                            </div>
+
+                            <!-- Teléfono -->
+                            <div class="col-12 col-md-6">
+
+                                <label class="form-label-custom" for="phone">
+                                    Número de teléfono
+                                </label>
+
+                                <div class="input-box<?= $hasError('phone') ?>">
+
+                                    <i class="fa-solid fa-phone" aria-hidden="true"></i>
+
+                                    <select
+                                        class="phone-prefix"
+                                        id="phone_prefix"
                                         name="phone_prefix"
+                                        aria-label="Prefijo del país"
                                     >
 
                                         <option value="+54">
@@ -613,256 +520,204 @@ unset($_SESSION['errors'], $_SESSION['old']);
 
                                     </select>
 
-                                </div>
+                                    <span class="phone-divider" aria-hidden="true"></span>
 
-                                <div class="col-7 col-sm-8">
-
-                                    <div
-                                        class="input-box <?= isset($errors['phone']) ? 'input-error' : '' ?>"
+                                    <input
+                                        type="tel"
+                                        id="phone"
+                                        name="phone"
+                                        placeholder="1112345678"
+                                        inputmode="tel"
+                                        autocomplete="tel-national"
+                                        value="<?= $e($old['phone'] ?? '') ?>"
+                                        <?= $aria('phone') ?>
                                     >
 
-                                        <i class="fa-solid fa-phone"></i>
+                                </div>
+
+                                <?= isset($errors['phone'])
+                                    ? $errorText('phone')
+                                    : '<span class="field-hint">Código de área + número, sin 0 ni 15.</span>' ?>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- ============================================
+                         3. SEGURIDAD
+                         ============================================ -->
+                    <div class="form-section">
+
+                        <div class="section-title">
+
+                            <i class="fa-solid fa-shield-halved"></i>
+
+                            <span>Seguridad</span>
+
+                        </div>
+
+                        <div class="row g-3">
+
+                            <!-- Contraseña -->
+                            <div class="col-12 col-md-6">
+
+                                <label class="form-label-custom" for="password">
+                                    Contraseña
+                                </label>
+
+                                <div class="field-control">
+
+                                    <div class="input-box<?= $hasError('password') ?>">
+
+                                        <i class="fa-solid fa-lock" aria-hidden="true"></i>
 
                                         <input
-                                            type="tel"
-                                            name="phone"
-                                            placeholder="1112345678"
-                                            value="<?= htmlspecialchars(
-                                                $old['phone'] ?? '',
-                                                ENT_QUOTES,
-                                                'UTF-8'
-                                            ) ?>"
+                                            type="password"
+                                            name="password"
+                                            id="password"
+                                            placeholder="Ingresá tu contraseña"
+                                            autocomplete="new-password"
+                                            aria-describedby="password-requirements<?= isset($errors['password']) ? ' password-error' : '' ?>"
+                                            <?= isset($errors['password']) ? 'aria-invalid="true"' : '' ?>
+                                            required
                                         >
+
+                                        <i
+                                            class="fa-solid fa-eye eye"
+                                            data-target="password"
+                                            role="button"
+                                            tabindex="0"
+                                            aria-label="Mostrar contraseña"
+                                        ></i>
+
+                                    </div>
+
+                                    <!-- Requisitos (flotan debajo del campo, no empujan el layout) -->
+                                    <div
+                                        class="password-requirements is-hidden"
+                                        id="password-requirements"
+                                    >
+
+                                        <span class="req-title">
+                                            La contraseña debe contener
+                                        </span>
+
+                                        <ul class="list-unstyled m-0 p-0">
+
+                                            <li id="req-length" class="req-item unfulfilled">
+                                                <i class="fa-solid fa-circle-xmark status-icon"></i>
+                                                Al menos 8 caracteres
+                                            </li>
+
+                                            <li id="req-uppercase" class="req-item unfulfilled">
+                                                <i class="fa-solid fa-circle-xmark status-icon"></i>
+                                                Una letra mayúscula
+                                            </li>
+
+                                            <li id="req-number" class="req-item unfulfilled">
+                                                <i class="fa-solid fa-circle-xmark status-icon"></i>
+                                                Un número
+                                            </li>
+
+                                            <li id="req-special" class="req-item unfulfilled">
+                                                <i class="fa-solid fa-circle-xmark status-icon"></i>
+                                                Un carácter especial
+                                            </li>
+
+                                        </ul>
 
                                     </div>
 
                                 </div>
 
-                            </div>
-
-                            <?php if (isset($errors['phone'])): ?>
-
-                                <span class="error-text">
-
-                                    <?= htmlspecialchars(
-                                        $errors['phone'],
-                                        ENT_QUOTES,
-                                        'UTF-8'
-                                    ) ?>
-
-                                </span>
-
-                            <?php endif; ?>
-
-                        </div>
-
-                    </div>
-
-                    <!-- Seguridad -->
-                    <div class="section-title">
-
-                        <i class="fa-solid fa-shield-halved"></i>
-
-                        Seguridad
-
-                    </div>
-
-                    <div class="row g-3 mb-4">
-
-                        <!-- Contraseña -->
-                        <div class="col-12 col-md-6">
-
-                            <label class="form-label-custom">
-                                Contraseña
-                            </label>
-
-                            <div
-                                class="input-box <?= isset($errors['password']) ? 'input-error' : '' ?>"
-                            >
-
-                                <i class="fa-solid fa-lock"></i>
-
-                                <input
-                                    type="password"
-                                    name="password"
-                                    id="password"
-                                    placeholder="Contraseña"
-                                    required
-                                >
-
-                                <i
-                                    class="fa-solid fa-eye eye"
-                                    data-target="password"
-                                    role="button"
-                                    tabindex="0"
-                                    aria-label="Mostrar contraseña"
-                                ></i>
+                                <?= $errorText('password') ?>
 
                             </div>
 
-                            <!-- Requisitos -->
-                            <div
-                                class="password-requirements is-hidden"
-                                id="password-requirements"
-                            >
+                            <!-- Confirmar contraseña -->
+                            <div class="col-12 col-md-6">
 
-                                <small class="d-block text-muted mb-1 fw-bold">
+                                <label class="form-label-custom" for="repeatPassword">
+                                    Confirmar contraseña
+                                </label>
 
-                                    La contraseña debe contener:
+                                <div class="input-box<?= $hasError('repeatPassword') ?>">
 
-                                </small>
+                                    <i class="fa-solid fa-lock" aria-hidden="true"></i>
 
-                                <ul class="list-unstyled m-0 p-0">
-
-                                    <li
-                                        id="req-length"
-                                        class="req-item unfulfilled"
+                                    <input
+                                        type="password"
+                                        name="repeatPassword"
+                                        id="repeatPassword"
+                                        placeholder="Repetí tu contraseña"
+                                        autocomplete="new-password"
+                                        required
+                                        <?= $aria('repeatPassword') ?>
                                     >
 
-                                        <i class="fa-solid fa-circle-xmark status-icon"></i>
+                                    <i
+                                        class="fa-solid fa-eye eye"
+                                        data-target="repeatPassword"
+                                        role="button"
+                                        tabindex="0"
+                                        aria-label="Mostrar contraseña"
+                                    ></i>
 
-                                        Al menos 8 caracteres
+                                </div>
 
-                                    </li>
-
-                                    <li
-                                        id="req-uppercase"
-                                        class="req-item unfulfilled"
-                                    >
-
-                                        <i class="fa-solid fa-circle-xmark status-icon"></i>
-
-                                        Una letra mayúscula
-
-                                    </li>
-
-                                    <li
-                                        id="req-number"
-                                        class="req-item unfulfilled"
-                                    >
-
-                                        <i class="fa-solid fa-circle-xmark status-icon"></i>
-
-                                        Un número
-
-                                    </li>
-
-                                    <li
-                                        id="req-special"
-                                        class="req-item unfulfilled"
-                                    >
-
-                                        <i class="fa-solid fa-circle-xmark status-icon"></i>
-
-                                        Un carácter especial
-
-                                    </li>
-
-                                </ul>
+                                <?= $errorText('repeatPassword') ?>
 
                             </div>
-
-                            <?php if (isset($errors['password'])): ?>
-
-                                <span class="error-text">
-
-                                    <?= htmlspecialchars(
-                                        $errors['password'],
-                                        ENT_QUOTES,
-                                        'UTF-8'
-                                    ) ?>
-
-                                </span>
-
-                            <?php endif; ?>
-
-                        </div>
-
-                        <!-- Confirmar contraseña -->
-                        <div class="col-12 col-md-6">
-
-                            <label class="form-label-custom">
-                                Confirmar contraseña
-                            </label>
-
-                            <div
-                                class="input-box <?= isset($errors['repeatPassword']) ? 'input-error' : '' ?>"
-                            >
-
-                                <i class="fa-solid fa-lock"></i>
-
-                                <input
-                                    type="password"
-                                    name="repeatPassword"
-                                    id="repeatPassword"
-                                    placeholder="Repetir contraseña"
-                                    required
-                                >
-
-                                <i
-                                    class="fa-solid fa-eye eye"
-                                    data-target="repeatPassword"
-                                    role="button"
-                                    tabindex="0"
-                                    aria-label="Mostrar contraseña"
-                                ></i>
-
-                            </div>
-
-                            <?php if (isset($errors['repeatPassword'])): ?>
-
-                                <span class="error-text">
-
-                                    <?= htmlspecialchars(
-                                        $errors['repeatPassword'],
-                                        ENT_QUOTES,
-                                        'UTF-8'
-                                    ) ?>
-
-                                </span>
-
-                            <?php endif; ?>
 
                         </div>
 
                     </div>
 
                     <!-- Botón -->
-                    <button
-                        type="submit"
-                        class="login-button mt-2"
-                    >
+                    <div class="form-actions">
 
-                        Crear cuenta
+                        <button
+                            type="submit"
+                            class="login-button"
+                        >
 
-                        <i class="fa-solid fa-arrow-right"></i>
+                            Crear cuenta
 
-                    </button>
+                            <i class="fa-solid fa-arrow-right"></i>
+
+                        </button>
+
+                    </div>
 
                 </form>
 
-                <!-- Separador -->
-                <div class="separator">
+                <!-- Volver al login -->
+                <div class="auth-footer">
 
-                    <span></span>
+                    <div class="separator">
 
-                    <p>o</p>
+                        <span></span>
 
-                    <span></span>
+                        <p>¿Ya tenés cuenta?</p>
+
+                        <span></span>
+
+                    </div>
+
+                    <a
+                        href="/src/views/auth/login.php"
+                        class="register-button"
+                    >
+
+                        <i class="fa-solid fa-arrow-left"></i>
+
+                        Iniciar sesión
+
+                    </a>
 
                 </div>
-
-                <!-- Volver al login -->
-                <a
-                    href="/src/views/auth/login.php"
-                    class="register-button"
-                >
-
-                    <i class="fa-solid fa-arrow-left"></i>
-
-                    Iniciar sesión
-
-                </a>
 
             </div>
 

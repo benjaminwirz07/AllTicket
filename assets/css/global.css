@@ -1,0 +1,717 @@
+/* =============================================================
+   ALLTICKET — GLOBAL.CSS
+   Estilos globales y reutilizables, cargados desde _layouts/layout.php
+   Se aplican a TODAS las páginas que usen el layout (navbar, footer,
+   fondo ambiental, botones, tipografía, componentes base).
+
+   El contenido específico de cada página (hero, cards de eventos,
+   secciones propias del index, etc.) vive en su propio CSS
+   (ej: assets/css/index.css) y NO debe repetirse acá.
+
+   Índice:
+     1. Variables
+     2. Base / Reset
+     3. Utilidades de texto y color
+     4. Fondo ambiental (global)
+     5. Navbar
+     6. Botones
+     7. Badges y componentes
+     8. Formularios (base compartida)
+     9. Footer
+     10. Animaciones compartidas
+     11. Accesibilidad
+     12. Responsive global
+============================================================= */
+
+
+/* =============================================================
+   1. VARIABLES
+============================================================= */
+:root {
+
+    /* --- Superficies --- */
+    --void: #05060A;
+    --bg-dark: #0A0C10;
+    --bg-dark-elevated: #0D1016;
+    --bg-card: #12151E;
+    --bg-card-alt: #0E1118;
+    --bg-card-hover: #171B28;
+
+    /* --- Marca / Neón --- */
+    --violet: #7000FF;
+    --violet-light: #8B5CF6;
+    --violet-soft: rgba(112, 0, 255, .18);
+    --blue: #2563EB;
+    --blue-light: #4F8DFF;
+    --cyan: #00D4FF;
+    --cyan-soft: rgba(0, 212, 255, .18);
+
+    /* --- Texto --- */
+    --text-primary: #FFFFFF;
+    --text-secondary: #A7ACB8;
+    --text-muted: #6C7280;
+
+    /* --- Gradientes --- */
+    --gradient-brand: linear-gradient(135deg, var(--violet) 0%, var(--blue) 55%, var(--cyan) 100%);
+    --gradient-brand-soft: linear-gradient(135deg, rgba(112, 0, 255, .5) 0%, rgba(37, 99, 235, .5) 55%, rgba(0, 212, 255, .5) 100%);
+    --gradient-card-border: linear-gradient(135deg, rgba(139, 92, 246, .55), rgba(0, 212, 255, .25));
+
+    /* --- Bordes --- */
+    --border-subtle: rgba(255, 255, 255, .08);
+    --border-glow: rgba(139, 92, 246, .35);
+    --border-glow-cyan: rgba(0, 212, 255, .3);
+
+    /* --- Sombras --- */
+    --shadow-card: 0 20px 45px -20px rgba(0, 0, 0, .65);
+    --shadow-glow-violet: 0 0 45px rgba(112, 0, 255, .35);
+    --shadow-glow-cyan: 0 0 35px rgba(0, 212, 255, .25);
+
+    /* --- Radios --- */
+    --radius-sm: 10px;
+    --radius-md: 16px;
+    --radius-lg: 24px;
+    --radius-xl: 32px;
+
+    /* --- Tipografía --- */
+    --font-display: 'Sora', 'Inter', sans-serif;
+    --font-body: 'Inter', sans-serif;
+
+    /* --- Movimiento --- */
+    --ease-premium: cubic-bezier(.22, 1, .36, 1);
+    --transition-base: .35s var(--ease-premium);
+    --transition-fast: .2s var(--ease-premium);
+}
+
+
+/* =============================================================
+   2. BASE / RESET
+============================================================= */
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+    /* FIX STICKY FOOTER: html a 100% de altura como base para el body */
+    height: 100%;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-secondary);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    position: relative;
+    /* FIX STICKY FOOTER: body ocupa como mínimo toda la ventana y
+       se organiza en columna (header / main / footer) para poder
+       empujar el footer hacia abajo cuando el contenido es corto */
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+}
+
+a {
+    color: var(--violet-light);
+    text-decoration: none;
+}
+
+::selection {
+    background: var(--violet);
+    color: #fff;
+}
+
+/* Scrollbar (webkit) acorde a la identidad oscura/neón */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-dark);
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(var(--violet), var(--blue));
+    border-radius: 10px;
+    border: 2px solid var(--bg-dark);
+}
+
+
+/* =============================================================
+   3. UTILIDADES DE TEXTO Y COLOR
+============================================================= */
+.text-primary-neon { color: var(--violet-light) !important; }
+.text-violet-neon   { color: var(--violet-light) !important; }
+.text-blue-neon     { color: var(--cyan) !important; }
+.text-secondary-custom { color: var(--text-secondary) !important; }
+.text-light-50 { color: rgba(255, 255, 255, .82) !important; }
+
+.text-gradient {
+    background: var(--gradient-brand);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.max-w-2xl {
+    max-width: 640px;
+}
+
+.border-y-dark {
+    border-top: 1px solid var(--border-subtle);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+/* Ajuste fino sobre utilidades "subtle" de Bootstrap para que respondan
+   al modo oscuro real de AllTicket (además de data-bs-theme="dark") */
+.border-dark-subtle,
+.border-secondary-subtle {
+    border-color: var(--border-subtle) !important;
+}
+
+
+/* =============================================================
+   4. FONDO AMBIENTAL (GLOBAL)
+   Vive en layout.php para que todas las páginas hereden la misma
+   atmósfera. Se ubica fijo detrás de todo el contenido.
+============================================================= */
+.ambient-background {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+    background:
+        radial-gradient(ellipse 120% 60% at 50% -10%, rgba(112, 0, 255, .16), transparent 60%),
+        var(--void);
+}
+
+.ambient-background .grid-overlay {
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(255, 255, 255, .035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, .035) 1px, transparent 1px);
+    background-size: 64px 64px;
+    -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 20%, #000 20%, transparent 75%);
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 20%, #000 20%, transparent 75%);
+}
+
+.ambient-background .glow-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(90px);
+    opacity: .55;
+    will-change: transform;
+}
+
+.ambient-background .orb-violet {
+    width: 620px;
+    height: 620px;
+    top: -220px;
+    left: -140px;
+    background: radial-gradient(circle, rgba(112, 0, 255, .65), transparent 70%);
+    animation: blobFloat 22s ease-in-out infinite;
+}
+
+.ambient-background .orb-blue {
+    width: 560px;
+    height: 560px;
+    top: 30%;
+    right: -220px;
+    background: radial-gradient(circle, rgba(37, 99, 235, .55), transparent 70%);
+    animation: blobFloat 26s ease-in-out infinite reverse;
+}
+
+.ambient-background .orb-cyan {
+    width: 420px;
+    height: 420px;
+    bottom: -160px;
+    left: 20%;
+    background: radial-gradient(circle, rgba(0, 212, 255, .4), transparent 70%);
+    animation: blobFloat 30s ease-in-out infinite;
+}
+
+.ambient-background .orb-violet-secondary {
+    width: 340px;
+    height: 340px;
+    bottom: 10%;
+    right: 10%;
+    background: radial-gradient(circle, rgba(139, 92, 246, .35), transparent 70%);
+    animation: blobFloat 18s ease-in-out infinite reverse;
+}
+
+/* Todo el contenido real vive por encima del fondo */
+.site-main,
+header,
+footer {
+    position: relative;
+    z-index: 1;
+}
+
+/* FIX STICKY FOOTER: .site-main crece para ocupar el espacio libre
+   entre el header y el footer, empujando este último hacia abajo
+   cuando el contenido de la página es más bajo que la pantalla */
+.site-main {
+    flex: 1 0 auto;
+}
+
+
+/* =============================================================
+   5. NAVBAR
+============================================================= */
+.bg-allticket {
+    background: rgba(10, 12, 16, .72);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-bottom: 1px solid var(--border-subtle);
+    padding-top: .65rem;
+    padding-bottom: .65rem;
+    transition: background var(--transition-base), box-shadow var(--transition-base);
+}
+
+.bg-allticket::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 1px;
+    background: var(--gradient-brand);
+    opacity: .55;
+}
+
+.brand-logo {
+    height: 36px;
+    width: auto;
+    filter: drop-shadow(0 0 12px rgba(139, 92, 246, .45));
+}
+
+.bg-allticket .nav-link {
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: .93rem;
+    padding: .5rem 1rem !important;
+    border-radius: var(--radius-sm);
+    position: relative;
+    transition: color var(--transition-fast), background var(--transition-fast);
+}
+
+.bg-allticket .nav-link:hover,
+.bg-allticket .nav-link:focus-visible {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, .04);
+}
+
+.bg-allticket .nav-link.active {
+    color: var(--text-primary);
+}
+
+.bg-allticket .nav-link.active::before {
+    content: '';
+    position: absolute;
+    left: 1rem;
+    right: 1rem;
+    bottom: .1rem;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--gradient-brand);
+}
+
+.navbar-toggler {
+    filter: brightness(0) invert(1);
+    opacity: .85;
+}
+
+.navbar-toggler:focus {
+    box-shadow: 0 0 0 3px var(--violet-soft);
+}
+
+
+/* --- Botón de búsqueda del navbar (abre el panel de filtros) --- */
+.nav-search-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 38px;
+    height: 38px;
+
+    border-radius: 50%;
+
+    color: #fff;
+
+    background: rgba(255, 255, 255, .06);
+    border: 1px solid rgba(255, 255, 255, .12);
+
+    font-size: .95rem;
+
+    transition:
+        background-color var(--transition-fast),
+        border-color var(--transition-fast),
+        transform var(--transition-fast);
+}
+
+.nav-search-toggle:hover,
+.nav-search-toggle[aria-expanded="true"] {
+    background: rgba(112, 0, 255, .2);
+    border-color: rgba(112, 0, 255, .5);
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+
+/* --- Panel de búsqueda desplegable, pegado debajo del navbar --- */
+.nav-search-panel {
+    background: rgba(10, 12, 16, .92);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+/* Tarjeta del formulario dentro del panel (movida desde index.css
+   para que se vea bien en CUALQUIER página que use el header,
+   no solo en el home) */
+.search-form-card {
+    position: relative;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(18, 21, 30, .82),
+            rgba(14, 17, 24, .7)
+        );
+
+    border: 1px solid rgba(255, 255, 255, .08) !important;
+
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+
+    box-shadow: 0 20px 50px rgba(0, 0, 0, .25);
+
+    transition:
+        border-color var(--transition-base),
+        box-shadow var(--transition-base),
+        transform var(--transition-base);
+}
+
+.search-form-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background:
+        linear-gradient(
+            120deg,
+            rgba(112, 0, 255, .08),
+            transparent 35%,
+            rgba(0, 212, 255, .04)
+        );
+}
+
+.search-form-card:hover {
+    border-color: rgba(112, 0, 255, .25) !important;
+    box-shadow:
+        0 25px 60px rgba(0, 0, 0, .4),
+        0 0 30px rgba(112, 0, 255, .08);
+}
+
+.custom-input {
+    background: rgba(9, 11, 16, .75) !important;
+    border: 1px solid rgba(255, 255, 255, .09) !important;
+    color: #fff !important;
+    min-height: 44px;
+    font-family: var(--font-body);
+    transition:
+        border-color var(--transition-fast),
+        box-shadow var(--transition-fast),
+        background-color var(--transition-fast);
+}
+
+.custom-input::placeholder {
+    color: rgba(255, 255, 255, .38);
+}
+
+.custom-input:hover {
+    border-color: rgba(255, 255, 255, .16) !important;
+}
+
+.custom-input:focus {
+    background: rgba(10, 12, 18, .95) !important;
+    border-color: var(--violet) !important;
+    box-shadow:
+        0 0 0 3px rgba(112, 0, 255, .08),
+        0 0 20px rgba(112, 0, 255, .25) !important;
+}
+
+.custom-input option {
+    background: var(--bg-card);
+    color: #fff;
+}
+
+.custom-input-text {
+    background: rgba(18, 21, 30, .9) !important;
+    border-color: rgba(255, 255, 255, .09) !important;
+    color: var(--text-muted) !important;
+}
+
+
+/* =============================================================
+   6. BOTONES
+============================================================= */
+.btn {
+    font-family: var(--font-body);
+    font-weight: 600;
+    letter-spacing: .01em;
+    transition: transform var(--transition-fast), box-shadow var(--transition-base), background var(--transition-base), border-color var(--transition-base), color var(--transition-fast);
+}
+
+.btn:active {
+    transform: translateY(1px);
+}
+
+.btn-violet,
+.btn-violet-glow {
+    background: var(--gradient-brand);
+    border: none;
+    color: #fff;
+    box-shadow: 0 10px 30px -8px rgba(112, 0, 255, .55);
+}
+
+.btn-violet:hover,
+.btn-violet-glow:hover {
+    color: #fff;
+    box-shadow: 0 14px 38px -6px rgba(0, 212, 255, .45);
+    transform: translateY(-2px);
+}
+
+.btn-outline-custom {
+    background: transparent;
+    border: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+}
+
+.btn-outline-custom:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, .05);
+    border-color: rgba(255, 255, 255, .25);
+    transform: translateY(-2px);
+}
+
+.btn-outline-violet {
+    background: transparent;
+    border: 1px solid var(--border-glow);
+    color: var(--violet-light);
+}
+
+.btn-outline-violet:hover {
+    color: #fff;
+    background: var(--gradient-brand);
+    border-color: transparent;
+    box-shadow: 0 10px 26px -8px rgba(112, 0, 255, .5);
+}
+
+.btn-outline-danger {
+    --bs-btn-color: #ff6b8a;
+    --bs-btn-border-color: rgba(255, 107, 138, .45);
+    --bs-btn-hover-bg: rgba(255, 107, 138, .12);
+    --bs-btn-hover-border-color: #ff6b8a;
+    --bs-btn-hover-color: #ff8fa8;
+    background: transparent;
+}
+
+
+/* =============================================================
+   7. BADGES Y COMPONENTES
+============================================================= */
+.badge {
+    font-weight: 600;
+    letter-spacing: .02em;
+}
+
+.bg-violet-neon {
+    background: var(--gradient-brand) !important;
+    color: #fff !important;
+    box-shadow: 0 6px 18px -6px rgba(112, 0, 255, .6);
+}
+
+.bg-blue-neon {
+    background: linear-gradient(135deg, var(--blue), var(--cyan)) !important;
+    color: #05060A !important;
+    box-shadow: 0 6px 18px -6px rgba(0, 212, 255, .5);
+}
+
+.bg-card-dark {
+    background: var(--bg-card);
+}
+
+/* El <main> de cada página debe quedar transparente para que el
+   fondo ambiental global (fixed, detrás de todo) se siga viendo
+   entre secciones */
+.bg-main-dark {
+    background: transparent;
+}
+
+
+/* =============================================================
+   8. FORMULARIOS (BASE COMPARTIDA)
+============================================================= */
+.form-label {
+    color: var(--text-secondary);
+}
+
+.form-control,
+.form-select,
+.custom-input-text {
+    background: rgba(255, 255, 255, .03);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+}
+
+.form-control::placeholder {
+    color: var(--text-muted);
+}
+
+.form-control:focus,
+.form-select:focus {
+    background: rgba(255, 255, 255, .05);
+    border-color: var(--violet-light);
+    color: var(--text-primary);
+    box-shadow: 0 0 0 3px var(--violet-soft);
+}
+
+.form-select option {
+    background: var(--bg-card);
+    color: var(--text-primary);
+}
+
+
+/* =============================================================
+   9. FOOTER
+============================================================= */
+.bg-dark-footer {
+    background: linear-gradient(180deg, transparent, rgba(112, 0, 255, .06) 40%, var(--bg-dark-elevated));
+}
+
+.bg-dark-footer::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 1px;
+    background: var(--gradient-brand);
+    opacity: .5;
+}
+
+.nav-footer-link {
+    transition: color var(--transition-fast), padding-left var(--transition-fast);
+}
+
+.nav-footer-link:hover {
+    color: var(--text-primary) !important;
+    padding-left: .25rem;
+}
+
+.text-violet-neon.footer-icon,
+.bg-dark-footer i.text-violet-neon,
+.bg-dark-footer i.text-blue-neon {
+    filter: drop-shadow(0 0 6px currentColor);
+}
+
+
+/* =============================================================
+   10. ANIMACIONES COMPARTIDAS
+============================================================= */
+@keyframes blobFloat {
+    0%   { transform: translate(0, 0) scale(1); }
+    33%  { transform: translate(4%, 6%) scale(1.08); }
+    66%  { transform: translate(-3%, -4%) scale(.96); }
+    100% { transform: translate(0, 0) scale(1); }
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes glowPulse {
+    0%, 100% { opacity: .55; }
+    50%      { opacity: 1; }
+}
+
+
+/* =============================================================
+   11. ACCESIBILIDAD
+============================================================= */
+a:focus-visible,
+button:focus-visible,
+.btn:focus-visible,
+.nav-link:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+}
+
+.skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    z-index: 2000;
+    background: var(--bg-card);
+    color: var(--text-primary);
+    padding: .75rem 1.25rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-glow);
+}
+
+.skip-link:focus {
+    left: 1rem;
+    top: 1rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: .001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .001ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+
+/* =============================================================
+   12. RESPONSIVE GLOBAL
+============================================================= */
+@media (max-width: 991.98px) {
+    .navbar-collapse {
+        background: rgba(10, 12, 16, .92);
+        backdrop-filter: blur(14px);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-md);
+        padding: 1rem 1.25rem;
+        margin-top: .75rem;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .ambient-background .glow-orb {
+        filter: blur(60px);
+        opacity: .4;
+    }
+
+    .ambient-background .orb-violet-secondary {
+        display: none;
+    }
+
+    .brand-logo {
+        height: 30px;
+    }
+}
