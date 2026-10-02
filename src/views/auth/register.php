@@ -119,11 +119,6 @@ $provinces = [
         href="/assets/css/custom.css"
     >
 
-    <!-- CSS exclusivo del registro (va DESPUÉS de custom.css) -->
-    <link
-        rel="stylesheet"
-        href="/assets/css/register.css"
-    >
 
 </head>
 

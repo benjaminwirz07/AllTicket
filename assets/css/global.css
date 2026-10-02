@@ -8,6 +8,14 @@
    secciones propias del index, etc.) vive en su propio CSS
    (ej: assets/css/index.css) y NO debe repetirse acá.
 
+   Las fuentes (Poppins y Roboto) se cargan con <link> desde
+   layout.php, por eso ya no hay @import en este archivo.
+
+   SIN !important: cuando hay que ganarle a Bootstrap se usa
+   especificidad (selectores más específicos) o se redefinen sus
+   variables CSS (--bs-*). Este archivo tiene que cargarse DESPUÉS
+   de bootstrap.min.css.
+
    Índice:
      1. Variables
      2. Base / Reset
@@ -33,6 +41,7 @@
     --void: #05060A;
     --bg-dark: #0A0C10;
     --bg-dark-elevated: #0D1016;
+    --bg-footer: #06070A;
     --bg-card: #12151E;
     --bg-card-alt: #0E1118;
     --bg-card-hover: #171B28;
@@ -40,6 +49,7 @@
     /* --- Marca / Neón --- */
     --violet: #7000FF;
     --violet-light: #8B5CF6;
+    --violet-hover: #8824FF;
     --violet-soft: rgba(112, 0, 255, .18);
     --blue: #2563EB;
     --blue-light: #4F8DFF;
@@ -73,13 +83,22 @@
     --radius-xl: 32px;
 
     /* --- Tipografía --- */
-    --font-display: 'Sora', 'Inter', sans-serif;
-    --font-body: 'Inter', sans-serif;
+    --font-display: 'Poppins', system-ui, sans-serif;
+    --font-body: 'Roboto', system-ui, sans-serif;
 
     /* --- Movimiento --- */
     --ease-premium: cubic-bezier(.22, 1, .36, 1);
     --transition-base: .35s var(--ease-premium);
     --transition-fast: .2s var(--ease-premium);
+}
+
+/* Bootstrap define sus bordes "subtle" con !important en las clases
+   (.border-secondary-subtle, .border-dark-subtle). La forma de cambiarlos
+   sin !important es redefinir las variables que esas clases leen. */
+:root,
+[data-bs-theme="dark"] {
+    --bs-secondary-border-subtle: var(--border-subtle);
+    --bs-dark-border-subtle: var(--border-subtle);
 }
 
 
@@ -94,6 +113,8 @@ html {
     scroll-behavior: smooth;
     /* FIX STICKY FOOTER: html a 100% de altura como base para el body */
     height: 100%;
+    /* El navbar es sticky: evita que tape el destino de los anchors */
+    scroll-padding-top: 88px;
 }
 
 body {
@@ -113,7 +134,14 @@ body {
     flex-direction: column;
 }
 
-h1, h2, h3, h4, h5, h6 {
+/* OJO: acá NO van .btn ni .badge. Si se les fuerza "color" en este
+   selector agrupado, se pisa el color propio de Bootstrap en los
+   botones (--bs-btn-color) y "Cerrar sesión" se veía blanco. Su
+   font-family se define en sus propias secciones (6 y 7). */
+h1, h2, h3, h4, h5, h6,
+.navbar-brand,
+.step-number,
+.card-title {
     font-family: var(--font-display);
     color: var(--text-primary);
     letter-spacing: -0.01em;
@@ -127,6 +155,15 @@ a {
 ::selection {
     background: var(--violet);
     color: #fff;
+}
+
+img {
+    max-width: 100%;
+}
+
+button,
+a {
+    -webkit-tap-highlight-color: transparent;
 }
 
 /* Scrollbar (webkit) acorde a la identidad oscura/neón */
@@ -149,17 +186,32 @@ a {
 /* =============================================================
    3. UTILIDADES DE TEXTO Y COLOR
 ============================================================= */
-.text-primary-neon { color: var(--violet-light) !important; }
-.text-violet-neon   { color: var(--violet-light) !important; }
-.text-blue-neon     { color: var(--cyan) !important; }
-.text-secondary-custom { color: var(--text-secondary) !important; }
-.text-light-50 { color: rgba(255, 255, 255, .82) !important; }
+.text-primary-neon    { color: var(--violet-light); }
+.text-violet-neon     { color: var(--violet-light); }
+.text-blue-neon       { color: var(--cyan); }
+.text-secondary-custom { color: var(--text-secondary); }
+.text-light-50        { color: rgba(255, 255, 255, .82); }
 
 .text-gradient {
-    background: var(--gradient-brand);
+    font-family: var(--font-display);
+    background:
+        linear-gradient(
+            110deg,
+            #ffe0b8 0%,    /* durazno claro */
+            #ffb3d1 50%,   /* rosa suave */
+            #ff8fc7 100%   /* rosa más vivo */
+        );
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+    -webkit-text-fill-color: transparent;
+    background-size: 200% auto;
+    animation: gradientText 7s ease-in-out infinite alternate;
+}
+
+@keyframes gradientText {
+    from { background-position: 0% center; }
+    to   { background-position: 100% center; }
 }
 
 .max-w-2xl {
@@ -171,18 +223,16 @@ a {
     border-bottom: 1px solid var(--border-subtle);
 }
 
-/* Ajuste fino sobre utilidades "subtle" de Bootstrap para que respondan
-   al modo oscuro real de AllTicket (además de data-bs-theme="dark") */
-.border-dark-subtle,
-.border-secondary-subtle {
-    border-color: var(--border-subtle) !important;
-}
+/* Los bordes .border-dark-subtle / .border-secondary-subtle de Bootstrap
+   toman su color de --bs-dark-border-subtle / --bs-secondary-border-subtle,
+   que se redefinen arriba en la sección 1. */
 
 
 /* =============================================================
    4. FONDO AMBIENTAL (GLOBAL)
    Vive en layout.php para que todas las páginas hereden la misma
    atmósfera. Se ubica fijo detrás de todo el contenido.
+   Es solo un degradé sutil, sin orbes ni grilla.
 ============================================================= */
 .ambient-background {
     position: fixed;
@@ -193,61 +243,6 @@ a {
     background:
         radial-gradient(ellipse 120% 60% at 50% -10%, rgba(112, 0, 255, .16), transparent 60%),
         var(--void);
-}
-
-.ambient-background .grid-overlay {
-    position: absolute;
-    inset: 0;
-    background-image:
-        linear-gradient(rgba(255, 255, 255, .035) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, .035) 1px, transparent 1px);
-    background-size: 64px 64px;
-    -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 20%, #000 20%, transparent 75%);
-    mask-image: radial-gradient(ellipse 70% 60% at 50% 20%, #000 20%, transparent 75%);
-}
-
-.ambient-background .glow-orb {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(90px);
-    opacity: .55;
-    will-change: transform;
-}
-
-.ambient-background .orb-violet {
-    width: 620px;
-    height: 620px;
-    top: -220px;
-    left: -140px;
-    background: radial-gradient(circle, rgba(112, 0, 255, .65), transparent 70%);
-    animation: blobFloat 22s ease-in-out infinite;
-}
-
-.ambient-background .orb-blue {
-    width: 560px;
-    height: 560px;
-    top: 30%;
-    right: -220px;
-    background: radial-gradient(circle, rgba(37, 99, 235, .55), transparent 70%);
-    animation: blobFloat 26s ease-in-out infinite reverse;
-}
-
-.ambient-background .orb-cyan {
-    width: 420px;
-    height: 420px;
-    bottom: -160px;
-    left: 20%;
-    background: radial-gradient(circle, rgba(0, 212, 255, .4), transparent 70%);
-    animation: blobFloat 30s ease-in-out infinite;
-}
-
-.ambient-background .orb-violet-secondary {
-    width: 340px;
-    height: 340px;
-    bottom: 10%;
-    right: 10%;
-    background: radial-gradient(circle, rgba(139, 92, 246, .35), transparent 70%);
-    animation: blobFloat 18s ease-in-out infinite reverse;
 }
 
 /* Todo el contenido real vive por encima del fondo */
@@ -265,17 +260,26 @@ footer {
     flex: 1 0 auto;
 }
 
+/* Las secciones con id no quedan tapadas por el navbar sticky */
+section[id] {
+    scroll-margin-top: 88px;
+}
+
 
 /* =============================================================
    5. NAVBAR
 ============================================================= */
+
+/* El fondo usa el mismo tono que el fondo ambiental (--void:
+   5, 6, 10) para que el navbar no se vea más gris que el resto. */
 .bg-allticket {
-    background: rgba(10, 12, 16, .72);
+    background: rgba(5, 6, 10, .72);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
     border-bottom: 1px solid var(--border-subtle);
     padding-top: .65rem;
     padding-bottom: .65rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .18);
     transition: background var(--transition-base), box-shadow var(--transition-base);
 }
 
@@ -293,14 +297,24 @@ footer {
 .brand-logo {
     height: 36px;
     width: auto;
+    object-fit: contain;
     filter: drop-shadow(0 0 12px rgba(139, 92, 246, .45));
+    transition: transform .25s ease, filter .25s ease;
 }
 
-.bg-allticket .nav-link {
+.brand-logo:hover {
+    transform: scale(1.04);
+    filter: drop-shadow(0 0 8px rgba(112, 0, 255, .65));
+}
+
+/* El selector con .navbar-nav (3 clases) le gana al padding que
+   Bootstrap pone en ".navbar-expand-lg .navbar-nav .nav-link". */
+.bg-allticket .nav-link,
+.bg-allticket .navbar-nav .nav-link {
     color: var(--text-secondary);
     font-weight: 500;
     font-size: .93rem;
-    padding: .5rem 1rem !important;
+    padding: .5rem 1rem;
     border-radius: var(--radius-sm);
     position: relative;
     transition: color var(--transition-fast), background var(--transition-fast);
@@ -372,16 +386,21 @@ footer {
 
 /* --- Panel de búsqueda desplegable, pegado debajo del navbar --- */
 .nav-search-panel {
-    background: rgba(10, 12, 16, .92);
+    background: rgba(5, 6, 10, .92);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
     border-bottom: 1px solid var(--border-subtle);
 }
 
-/* Tarjeta del formulario dentro del panel (movida desde index.css
-   para que se vea bien en CUALQUIER página que use el header,
-   no solo en el home) */
+/* Tarjeta del formulario dentro del panel (vive acá porque el
+   formulario de búsqueda está en el header, compartido por todas
+   las páginas, no solo en el home).
+   El color del borde va por --bs-border-color: así funciona tanto si
+   la card usa la clase .border de Bootstrap (que lee esa variable)
+   como si no. */
 .search-form-card {
+    --bs-border-color: rgba(255, 255, 255, .08);
+
     position: relative;
 
     background:
@@ -391,7 +410,7 @@ footer {
             rgba(14, 17, 24, .7)
         );
 
-    border: 1px solid rgba(255, 255, 255, .08) !important;
+    border: 1px solid var(--bs-border-color);
 
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
@@ -420,16 +439,20 @@ footer {
 }
 
 .search-form-card:hover {
-    border-color: rgba(112, 0, 255, .25) !important;
+    --bs-border-color: rgba(112, 0, 255, .25);
+
+    border-color: var(--bs-border-color);
     box-shadow:
         0 25px 60px rgba(0, 0, 0, .4),
         0 0 30px rgba(112, 0, 255, .08);
 }
 
+/* Inputs del buscador. La base de .form-control / .form-select
+   (sección 8) los excluye con :not(.custom-input), así no hay conflicto. */
 .custom-input {
-    background: rgba(9, 11, 16, .75) !important;
-    border: 1px solid rgba(255, 255, 255, .09) !important;
-    color: #fff !important;
+    background-color: rgba(9, 11, 16, .75);
+    border: 1px solid rgba(255, 255, 255, .09);
+    color: #fff;
     min-height: 44px;
     font-family: var(--font-body);
     transition:
@@ -443,15 +466,17 @@ footer {
 }
 
 .custom-input:hover {
-    border-color: rgba(255, 255, 255, .16) !important;
+    border-color: rgba(255, 255, 255, .16);
 }
 
+/* color en :focus porque Bootstrap lo redefine en .form-control:focus */
 .custom-input:focus {
-    background: rgba(10, 12, 18, .95) !important;
-    border-color: var(--violet) !important;
+    background-color: rgba(10, 12, 18, .95);
+    border-color: var(--violet);
+    color: #fff;
     box-shadow:
         0 0 0 3px rgba(112, 0, 255, .08),
-        0 0 20px rgba(112, 0, 255, .25) !important;
+        0 0 20px rgba(112, 0, 255, .25);
 }
 
 .custom-input option {
@@ -460,14 +485,16 @@ footer {
 }
 
 .custom-input-text {
-    background: rgba(18, 21, 30, .9) !important;
-    border-color: rgba(255, 255, 255, .09) !important;
-    color: var(--text-muted) !important;
+    background-color: rgba(18, 21, 30, .9);
+    border-color: rgba(255, 255, 255, .09);
+    color: var(--text-muted);
 }
 
 
 /* =============================================================
    6. BOTONES
+   Sin "color" en .btn: cada variante define el suyo, y el resto
+   (ej: btn-outline-danger) hereda el de Bootstrap.
 ============================================================= */
 .btn {
     font-family: var(--font-body);
@@ -483,42 +510,52 @@ footer {
 .btn-violet,
 .btn-violet-glow {
     background: var(--gradient-brand);
-    border: none;
+    background-origin: border-box;
+    border: 1px solid rgba(255, 255, 255, .08);
     color: #fff;
-    box-shadow: 0 10px 30px -8px rgba(112, 0, 255, .55);
+    box-shadow: 0 8px 20px -6px rgba(0, 0, 0, .5);
 }
 
 .btn-violet:hover,
 .btn-violet-glow:hover {
     color: #fff;
-    box-shadow: 0 14px 38px -6px rgba(0, 212, 255, .45);
+    box-shadow: 0 12px 26px -6px rgba(0, 0, 0, .55);
     transform: translateY(-2px);
+    filter: brightness(1.06);
+}
+
+.btn-violet:active,
+.btn-violet-glow:active {
+    transform: translateY(0);
 }
 
 .btn-outline-custom {
-    background: transparent;
+    background: rgba(255, 255, 255, .025);
     border: 1px solid var(--border-subtle);
     color: var(--text-primary);
+    backdrop-filter: blur(10px);
 }
 
 .btn-outline-custom:hover {
     color: var(--text-primary);
-    background: rgba(255, 255, 255, .05);
-    border-color: rgba(255, 255, 255, .25);
+    background: rgba(255, 255, 255, .07);
+    border-color: rgba(0, 212, 255, .4);
+    box-shadow: 0 0 20px rgba(0, 212, 255, .12);
     transform: translateY(-2px);
 }
 
 .btn-outline-violet {
-    background: transparent;
+    background: rgba(112, 0, 255, .04);
     border: 1px solid var(--border-glow);
     color: var(--violet-light);
 }
 
 .btn-outline-violet:hover {
     color: #fff;
-    background: var(--gradient-brand);
-    border-color: transparent;
-    box-shadow: 0 10px 26px -8px rgba(112, 0, 255, .5);
+    background: rgba(112, 0, 255, .15);
+    border-color: var(--violet);
+    box-shadow: 0 0 20px rgba(112, 0, 255, .35);
+    transform: translateY(-2px);
 }
 
 .btn-outline-danger {
@@ -533,21 +570,28 @@ footer {
 
 /* =============================================================
    7. BADGES Y COMPONENTES
+   background-origin va DESPUÉS del shorthand "background"
+   (si va antes, el shorthand lo resetea). Evita el halo cuando
+   el badge tiene un borde semitransparente.
 ============================================================= */
 .badge {
+    font-family: var(--font-display);
     font-weight: 600;
     letter-spacing: .02em;
+    backdrop-filter: blur(10px);
 }
 
 .bg-violet-neon {
-    background: var(--gradient-brand) !important;
-    color: #fff !important;
+    background: var(--gradient-brand);
+    background-origin: border-box;
+    color: #fff;
     box-shadow: 0 6px 18px -6px rgba(112, 0, 255, .6);
 }
 
 .bg-blue-neon {
-    background: linear-gradient(135deg, var(--blue), var(--cyan)) !important;
-    color: #05060A !important;
+    background: linear-gradient(135deg, var(--blue), var(--cyan));
+    background-origin: border-box;
+    color: #05060A;
     box-shadow: 0 6px 18px -6px rgba(0, 212, 255, .5);
 }
 
@@ -557,7 +601,8 @@ footer {
 
 /* El <main> de cada página debe quedar transparente para que el
    fondo ambiental global (fixed, detrás de todo) se siga viendo
-   entre secciones */
+   entre secciones. NO redeclarar esta clase con un color sólido
+   en el CSS de una página puntual (eso tapaba el fondo ambiental). */
 .bg-main-dark {
     background: transparent;
 }
@@ -565,15 +610,16 @@ footer {
 
 /* =============================================================
    8. FORMULARIOS (BASE COMPARTIDA)
+   :where() no suma especificidad y :not(.custom-input) deja afuera
+   los inputs del buscador, que tienen su propio estilo (sección 5).
+   Así no hace falta !important para que .custom-input gane.
 ============================================================= */
 .form-label {
     color: var(--text-secondary);
 }
 
-.form-control,
-.form-select,
-.custom-input-text {
-    background: rgba(255, 255, 255, .03);
+:where(.form-control, .form-select):not(.custom-input) {
+    background-color: rgba(255, 255, 255, .03);
     border: 1px solid var(--border-subtle);
     color: var(--text-primary);
 }
@@ -582,9 +628,8 @@ footer {
     color: var(--text-muted);
 }
 
-.form-control:focus,
-.form-select:focus {
-    background: rgba(255, 255, 255, .05);
+:where(.form-control, .form-select):not(.custom-input):focus {
+    background-color: rgba(255, 255, 255, .05);
     border-color: var(--violet-light);
     color: var(--text-primary);
     box-shadow: 0 0 0 3px var(--violet-soft);
@@ -598,27 +643,49 @@ footer {
 
 /* =============================================================
    9. FOOTER
+   Única implementación (antes index.css tenía la suya propia,
+   con otro degradé y otro color de fondo, pisando esta).
+
+   FIX "PANZA": se eliminó el box-shadow hacia arriba. Una sombra
+   con blur se debilita en los bordes izquierdo/derecho y dibujaba
+   una curva justo arriba de la línea del footer.
+   El fondo usa el mismo tono que --void para no marcar escalón.
 ============================================================= */
-.bg-dark-footer {
-    background: linear-gradient(180deg, transparent, rgba(112, 0, 255, .06) 40%, var(--bg-dark-elevated));
+footer {
+    position: relative;
+    font-family: var(--font-body);
+    background: rgba(5, 6, 10, .72);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-top: 1px solid var(--border-subtle);
 }
 
+.bg-dark-footer {
+    background: rgba(5, 6, 10, .72);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+}
+
+footer::before,
 .bg-dark-footer::before {
     content: '';
     position: absolute;
-    inset: 0 0 auto 0;
+    left: 0;
+    right: 0;
+    top: -1px;
     height: 1px;
     background: var(--gradient-brand);
-    opacity: .5;
+    opacity: .55;
 }
 
 .nav-footer-link {
-    transition: color var(--transition-fast), padding-left var(--transition-fast);
+    display: inline-block;
+    transition: color var(--transition-fast), transform var(--transition-fast), padding-left var(--transition-fast);
 }
 
 .nav-footer-link:hover {
-    color: var(--text-primary) !important;
-    padding-left: .25rem;
+    color: var(--cyan);
+    transform: translateX(4px);
 }
 
 .text-violet-neon.footer-icon,
@@ -627,17 +694,9 @@ footer {
     filter: drop-shadow(0 0 6px currentColor);
 }
 
-
 /* =============================================================
    10. ANIMACIONES COMPARTIDAS
 ============================================================= */
-@keyframes blobFloat {
-    0%   { transform: translate(0, 0) scale(1); }
-    33%  { transform: translate(4%, 6%) scale(1.08); }
-    66%  { transform: translate(-3%, -4%) scale(.96); }
-    100% { transform: translate(0, 0) scale(1); }
-}
-
 @keyframes fadeInUp {
     from { opacity: 0; transform: translateY(18px); }
     to   { opacity: 1; transform: translateY(0); }
@@ -652,10 +711,7 @@ footer {
 /* =============================================================
    11. ACCESIBILIDAD
 ============================================================= */
-a:focus-visible,
-button:focus-visible,
-.btn:focus-visible,
-.nav-link:focus-visible {
+:focus-visible {
     outline: 2px solid var(--cyan);
     outline-offset: 2px;
 }
@@ -677,12 +733,29 @@ button:focus-visible,
     top: 1rem;
 }
 
+/* Movimiento reducido. Sin !important no sirve un "*" universal (su
+   especificidad es 0 y cualquier clase lo pisa), así que se apagan
+   explícitamente los componentes que animan. Si agregás un componente
+   nuevo con animación o transición, sumalo a esta lista. */
 @media (prefers-reduced-motion: reduce) {
-    * {
-        animation-duration: .001ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: .001ms !important;
-        scroll-behavior: auto !important;
+    html {
+        scroll-behavior: auto;
+    }
+
+    .text-gradient {
+        animation: none;
+    }
+
+    .bg-allticket,
+    .bg-allticket .nav-link,
+    .bg-allticket .navbar-nav .nav-link,
+    .brand-logo,
+    .nav-search-toggle,
+    .search-form-card,
+    .custom-input,
+    .btn,
+    .nav-footer-link {
+        transition: none;
     }
 }
 
@@ -692,7 +765,7 @@ button:focus-visible,
 ============================================================= */
 @media (max-width: 991.98px) {
     .navbar-collapse {
-        background: rgba(10, 12, 16, .92);
+        background: rgba(5, 6, 10, .92);
         backdrop-filter: blur(14px);
         border: 1px solid var(--border-subtle);
         border-radius: var(--radius-md);
@@ -702,16 +775,22 @@ button:focus-visible,
 }
 
 @media (max-width: 767.98px) {
-    .ambient-background .glow-orb {
-        filter: blur(60px);
-        opacity: .4;
-    }
-
-    .ambient-background .orb-violet-secondary {
-        display: none;
-    }
-
     .brand-logo {
-        height: 30px;
+        height: 32px;
+    }
+
+    /* El padding del buscador en mobile se resuelve en el HTML con
+       clases responsive (p-3 p-md-4), porque .p-4 de Bootstrap usa
+       !important y no se puede pisar desde acá sin otro !important. */
+}
+
+@media (max-width: 575.98px) {
+    .brand-logo {
+        height: 28px;
+    }
+
+    .btn-violet,
+    .btn-outline-custom {
+        width: 100%;
     }
 }
