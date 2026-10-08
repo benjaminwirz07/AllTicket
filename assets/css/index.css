@@ -300,6 +300,75 @@
    SEARCH / FILTERS
    ========================================================================== */
 
+.filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+ 
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+ 
+  padding: 0.4rem 1rem;
+ 
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+ 
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-secondary);
+ 
+  font-size: 0.88rem;
+  font-weight: 500;
+  white-space: nowrap;
+ 
+  transition:
+    color var(--transition-fast),
+    background var(--transition-fast),
+    border-color var(--transition-fast);
+}
+ 
+.filter-chip:hover {
+  color: #fff;
+  background: var(--violet-soft);
+  border-color: var(--border-glow);
+}
+ 
+/* Chip seleccionado */
+.filter-chip.active {
+  color: #fff;
+  background: var(--gradient-brand);
+  background-origin: border-box;
+  border-color: transparent;
+}
+ 
+/* Selector de ciudad */
+.filter-city-form {
+  min-width: 220px;
+}
+ 
+/* Mobile: los chips van en una sola fila con scroll horizontal,
+   así no ocupan media pantalla */
+@media (max-width: 767.98px) {
+  .filter-chips {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+    scrollbar-width: none;
+  }
+ 
+  .filter-chips::-webkit-scrollbar {
+    display: none;
+  }
+ 
+  .filter-city-form {
+    width: 100%;
+  }
+}
+ 
+@media (prefers-reduced-motion: reduce) {
+  .filter-chip { transition: none; }
+}
 /* .search-form-card, .custom-input y .custom-input-text viven en
    global.css: el formulario de búsqueda está en el header (layout.php),
    que se comparte en todas las páginas. */
@@ -575,4 +644,57 @@
 
 @media (prefers-reduced-motion: reduce) {
   .card.event-card::before { animation: none; }
+}
+
+.faq-accordion {
+  --bs-accordion-bg: transparent;
+  --bs-accordion-color: var(--text-secondary);
+  --bs-accordion-border-color: var(--border-subtle);
+  --bs-accordion-border-radius: 1rem;
+  --bs-accordion-inner-border-radius: calc(1rem - 1px);
+  --bs-accordion-btn-color: var(--text-primary);
+  --bs-accordion-btn-bg: rgba(18, 21, 30, 0.8);
+  --bs-accordion-active-color: #fff;
+  --bs-accordion-active-bg: rgba(112, 0, 255, 0.12);
+  --bs-accordion-btn-focus-box-shadow: 0 0 0 3px var(--violet-soft);
+ 
+  max-width: 820px;
+}
+ 
+/* Cada pregunta es una tarjeta separada */
+.faq-accordion .accordion-item,
+.faq-accordion .accordion-item:not(:first-of-type) {
+  margin-bottom: 0.75rem;
+  border: 1px solid var(--bs-accordion-border-color);
+  border-radius: var(--bs-accordion-border-radius);
+  overflow: hidden;
+  background: linear-gradient(145deg,
+      rgba(18, 21, 30, 0.8),
+      rgba(10, 12, 16, 0.65));
+  transition: border-color 0.3s ease;
+}
+ 
+.faq-accordion .accordion-item:hover {
+  border-color: rgba(112, 0, 255, 0.35);
+}
+ 
+.faq-accordion .accordion-button {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1rem;
+  padding: 1.1rem 1.4rem;
+}
+ 
+/* Pregunta abierta: sin la sombra azul de Bootstrap */
+.faq-accordion .accordion-button:not(.collapsed) {
+  box-shadow: none;
+}
+ 
+.faq-accordion .accordion-body {
+  padding: 0.25rem 1.4rem 1.3rem;
+  line-height: 1.7;
+}
+ 
+@media (prefers-reduced-motion: reduce) {
+  .faq-accordion .accordion-item { transition: none; }
 }

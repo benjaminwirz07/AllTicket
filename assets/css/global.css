@@ -21,7 +21,7 @@
      2. Base / Reset
      3. Utilidades de texto y color
      4. Fondo ambiental (global)
-     5. Navbar
+     5. Navbar (links, categorías, buscador con sugerencias)
      6. Botones
      7. Badges y componentes
      8. Formularios (base compartida)
@@ -265,6 +265,12 @@ section[id] {
     scroll-margin-top: 88px;
 }
 
+/* El header es sticky y las sugerencias del buscador cuelgan de él:
+   tiene que quedar por encima del contenido de la página */
+header.sticky-top {
+    z-index: 1030;
+}
+
 
 /* =============================================================
    5. NAVBAR
@@ -321,7 +327,8 @@ section[id] {
 }
 
 .bg-allticket .nav-link:hover,
-.bg-allticket .nav-link:focus-visible {
+.bg-allticket .nav-link:focus-visible,
+.bg-allticket .nav-link.show {
     color: var(--text-primary);
     background: rgba(255, 255, 255, .04);
 }
@@ -330,7 +337,10 @@ section[id] {
     color: var(--text-primary);
 }
 
-.bg-allticket .nav-link.active::before {
+/* Subrayado de marca: existe en todos los links pero está "plegado"
+   (scaleX 0). Se despliega desde el centro en el link activo
+   (el último que se tocó) y mientras el menú Categorías está abierto. */
+.bg-allticket .nav-link::before {
     content: '';
     position: absolute;
     left: 1rem;
@@ -339,6 +349,14 @@ section[id] {
     height: 2px;
     border-radius: 2px;
     background: var(--gradient-brand);
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform var(--transition-base);
+}
+
+.bg-allticket .nav-link.active::before,
+.bg-allticket .nav-link.show::before {
+    transform: scaleX(1);
 }
 
 .navbar-toggler {
@@ -351,11 +369,54 @@ section[id] {
 }
 
 
-/* --- Botón de búsqueda del navbar (abre el panel de filtros) --- */
+/* --- Menú desplegable de Categorías --- */
+.bg-allticket .dropdown-menu {
+    margin-top: .6rem;
+    padding: .4rem;
+    background: rgba(13, 16, 22, .96);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid var(--border-glow);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-card);
+}
+
+.bg-allticket .dropdown-item {
+    padding: .5rem .8rem;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-size: .9rem;
+    transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.bg-allticket .dropdown-item:hover,
+.bg-allticket .dropdown-item:focus-visible {
+    background: var(--violet-soft);
+    color: var(--text-primary);
+}
+
+
+/* --- Grupo derecho del navbar (buscador + usuario) --- */
+.nav-actions {
+    min-width: 0;
+}
+
+
+/* --- Buscador del navbar ---
+   La lupa BUSCA: el campo se expande en el mismo header, con
+   sugerencias en vivo debajo. La lógica vive en assets/js/nav-search.js */
+.nav-search {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+
 .nav-search-toggle {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
 
     width: 38px;
     height: 38px;
@@ -376,79 +437,117 @@ section[id] {
 }
 
 .nav-search-toggle:hover,
-.nav-search-toggle[aria-expanded="true"] {
+.nav-search.is-open .nav-search-toggle {
     background: rgba(112, 0, 255, .2);
     border-color: rgba(112, 0, 255, .5);
     color: #fff;
     transform: translateY(-1px);
 }
 
+/* Campo: colapsado (ancho 0) hasta que se abre */
+.nav-search-input {
+    width: 0;
+    min-height: 38px;
+    padding: .4rem 0;
+    opacity: 0;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: rgba(9, 11, 16, .75);
+    color: #fff;
+    font-family: var(--font-body);
+    font-size: .9rem;
+    outline: none;
+    transition:
+        width .3s var(--ease-premium),
+        opacity var(--transition-fast),
+        padding .3s var(--ease-premium),
+        border-color var(--transition-fast),
+        box-shadow var(--transition-fast);
+}
 
-/* --- Panel de búsqueda desplegable, pegado debajo del navbar --- */
-.nav-search-panel {
-    background: rgba(5, 6, 10, .92);
+.nav-search.is-open .nav-search-input {
+    width: 260px;
+    padding: .4rem 1rem;
+    opacity: 1;
+    border-color: rgba(255, 255, 255, .12);
+}
+
+.nav-search.is-open .nav-search-input:focus {
+    border-color: var(--violet);
+    box-shadow:
+        0 0 0 3px rgba(112, 0, 255, .08),
+        0 0 20px rgba(112, 0, 255, .25);
+}
+
+.nav-search-input::placeholder {
+    color: rgba(255, 255, 255, .4);
+}
+
+/* Quita la "x" nativa de los input type="search" en webkit */
+.nav-search-input::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+}
+
+/* Sugerencias */
+.nav-search-suggest {
+    position: absolute;
+    top: calc(100% + .7rem);
+    right: 0;
+    width: 340px;
+    max-width: 90vw;
+    max-height: 360px;
+    overflow-y: auto;
+    padding: .4rem;
+    background: rgba(13, 16, 22, .97);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
-    border-bottom: 1px solid var(--border-subtle);
+    border: 1px solid var(--border-glow);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-card);
+    z-index: 1050;
 }
 
-/* Tarjeta del formulario dentro del panel (vive acá porque el
-   formulario de búsqueda está en el header, compartido por todas
-   las páginas, no solo en el home).
-   El color del borde va por --bs-border-color: así funciona tanto si
-   la card usa la clase .border de Bootstrap (que lee esa variable)
-   como si no. */
-.search-form-card {
-    --bs-border-color: rgba(255, 255, 255, .08);
-
-    position: relative;
-
-    background:
-        linear-gradient(
-            135deg,
-            rgba(18, 21, 30, .82),
-            rgba(14, 17, 24, .7)
-        );
-
-    border: 1px solid var(--bs-border-color);
-
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-
-    box-shadow: 0 20px 50px rgba(0, 0, 0, .25);
-
-    transition:
-        border-color var(--transition-base),
-        box-shadow var(--transition-base),
-        transform var(--transition-base);
+.nav-search-suggest[hidden] {
+    display: none;
 }
 
-.search-form-card::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    pointer-events: none;
-    background:
-        linear-gradient(
-            120deg,
-            rgba(112, 0, 255, .08),
-            transparent 35%,
-            rgba(0, 212, 255, .04)
-        );
+.suggest-item {
+    display: flex;
+    align-items: center;
+    gap: .7rem;
+    padding: .55rem .75rem;
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: .9rem;
+    transition: background var(--transition-fast);
 }
 
-.search-form-card:hover {
-    --bs-border-color: rgba(112, 0, 255, .25);
-
-    border-color: var(--bs-border-color);
-    box-shadow:
-        0 25px 60px rgba(0, 0, 0, .4),
-        0 0 30px rgba(112, 0, 255, .08);
+.suggest-item:hover,
+.suggest-item.is-active {
+    background: var(--violet-soft);
+    color: var(--text-primary);
 }
 
-/* Inputs del buscador. La base de .form-control / .form-select
-   (sección 8) los excluye con :not(.custom-input), así no hay conflicto. */
+.suggest-type {
+    margin-left: auto;
+    font-size: .7rem;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--text-muted);
+}
+
+.suggest-empty {
+    padding: .7rem .75rem;
+    font-size: .85rem;
+    color: var(--text-muted);
+}
+
+
+/* --- Inputs reutilizables (ej: filtros de la lista de eventos) ---
+   Ya no se usan en el header, pero quedan disponibles para los
+   filtros que van arriba de la lista de eventos. La base de
+   .form-control / .form-select (sección 8) los excluye con
+   :not(.custom-input), así no hay conflicto. */
 .custom-input {
     background-color: rgba(9, 11, 16, .75);
     border: 1px solid rgba(255, 255, 255, .09);
@@ -611,8 +710,8 @@ section[id] {
 /* =============================================================
    8. FORMULARIOS (BASE COMPARTIDA)
    :where() no suma especificidad y :not(.custom-input) deja afuera
-   los inputs del buscador, que tienen su propio estilo (sección 5).
-   Así no hace falta !important para que .custom-input gane.
+   los inputs con estilo propio. Así no hace falta !important para
+   que .custom-input gane.
 ============================================================= */
 .form-label {
     color: var(--text-secondary);
@@ -716,6 +815,11 @@ footer::before,
     outline-offset: 2px;
 }
 
+/* El campo de búsqueda ya marca el foco con su propio borde/glow */
+.nav-search-input:focus-visible {
+    outline: none;
+}
+
 .skip-link {
     position: absolute;
     left: -9999px;
@@ -749,9 +853,12 @@ footer::before,
     .bg-allticket,
     .bg-allticket .nav-link,
     .bg-allticket .navbar-nav .nav-link,
+    .bg-allticket .dropdown-item,
+    .bg-allticket .nav-link::before,
     .brand-logo,
     .nav-search-toggle,
-    .search-form-card,
+    .nav-search-input,
+    .suggest-item,
     .custom-input,
     .btn,
     .nav-footer-link {
@@ -772,16 +879,37 @@ footer::before,
         padding: 1rem 1.25rem;
         margin-top: .75rem;
     }
+
+    /* Buscador: queda siempre visible y a ancho completo,
+       con el usuario / botón de sesión en la fila de abajo */
+    .nav-actions {
+        flex-wrap: wrap;
+    }
+
+    .nav-search {
+        flex: 1 1 100%;
+    }
+
+    .nav-search-input {
+        flex: 1;
+        width: 100%;
+        padding: .45rem 1rem;
+        opacity: 1;
+        border-color: rgba(255, 255, 255, .12);
+    }
+
+    .nav-search-suggest {
+        left: 0;
+        right: 0;
+        width: auto;
+        max-width: none;
+    }
 }
 
 @media (max-width: 767.98px) {
     .brand-logo {
         height: 32px;
     }
-
-    /* El padding del buscador en mobile se resuelve en el HTML con
-       clases responsive (p-3 p-md-4), porque .p-4 de Bootstrap usa
-       !important y no se puede pisar desde acá sin otro !important. */
 }
 
 @media (max-width: 575.98px) {

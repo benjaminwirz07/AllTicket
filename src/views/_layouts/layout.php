@@ -3,11 +3,10 @@
 require_once __DIR__ . '/../../config/bootstrap.php';
 
 // Si no está logueado, redirigir al login
-if (!isset($_SESSION['user'])) {
-    header('Location: /src/views/auth/login.php');
-    exit;
-}
-
+//if (!isset($_SESSION['user'])) {
+//    header('Location: /src/views/auth/login.php');
+//    exit;
+//}
 ?>
 
 <!DOCTYPE html>
@@ -31,7 +30,7 @@ if (!isset($_SESSION['user'])) {
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Roboto:wght@400;500;700&display=swap"
         rel="stylesheet"
     >
 
@@ -39,31 +38,24 @@ if (!isset($_SESSION['user'])) {
     <!-- =========================================================
          BOOTSTRAP
     ========================================================== -->
-    <link
-        rel="stylesheet"
-        href="/assets/css/bootstrap.min.css"
-    >
+    <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
 
-    <!-- Bootstrap Icons: usados en navbar y footer, se cargan acá
-         a nivel global para que estén disponibles en toda página
-         que use este layout -->
+    <!-- Bootstrap Icons: usados en navbar y footer -->
     <link
         rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
     >
 
-    <script
-        src="/assets/js/bootstrap.min.js"
-    ></script>
+    <!-- Bootstrap JS (versión "bundle", incluye Popper para el menú de Categorías).
+         Se carga desde internet para no depender de un archivo local.
+         Si preferís tenerlo local, bajá el mismo archivo a /assets/js/ y cambiá este src. -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 
     <!-- =========================================================
          ESTILOS GLOBALES ALLTICKET
     ========================================================== -->
-    <link
-        rel="stylesheet"
-        href="/assets/css/global.css"
-    >
+    <link rel="stylesheet" href="/assets/css/global.css">
 
     <?php
     // Estilos específicos de la página actual (ej: index.css),
@@ -85,8 +77,6 @@ if (!isset($_SESSION['user'])) {
 
     <!-- =========================================================
          FONDO AMBIENTAL GLOBAL
-         Vive acá porque se comparte entre todas las páginas
-         que usan este layout.
     ========================================================== -->
     <div class="ambient-background" aria-hidden="true">
 
@@ -112,9 +102,7 @@ if (!isset($_SESSION['user'])) {
             <div class="container-fluid container-xl">
 
 
-                <!-- =================================================
-                     LOGO
-                ================================================== -->
+                <!-- LOGO -->
                 <a
                     class="navbar-brand d-flex align-items-center py-1"
                     href="/src/views/index.php"
@@ -129,9 +117,7 @@ if (!isset($_SESSION['user'])) {
                 </a>
 
 
-                <!-- =================================================
-                     BOTÓN MENÚ RESPONSIVE
-                ================================================== -->
+                <!-- BOTÓN MENÚ RESPONSIVE -->
                 <button
                     class="navbar-toggler border-0 shadow-none"
                     type="button"
@@ -147,24 +133,19 @@ if (!isset($_SESSION['user'])) {
                 </button>
 
 
-                <!-- =================================================
-                     CONTENIDO NAVBAR
-                ================================================== -->
+                <!-- CONTENIDO NAVBAR -->
                 <div
                     class="collapse navbar-collapse"
                     id="navbarAllTicket"
                 >
 
 
-                    <!-- =================================================
-                         LINKS PRINCIPALES
-                    ================================================== -->
+                    <!-- LINKS PRINCIPALES -->
                     <ul
                         class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4"
                     >
 
                         <li class="nav-item">
-
                             <a
                                 class="nav-link active"
                                 aria-current="page"
@@ -172,55 +153,96 @@ if (!isset($_SESSION['user'])) {
                             >
                                 Inicio
                             </a>
-
                         </li>
 
 
                         <li class="nav-item">
-
-                            <a
-                                class="nav-link"
-                                href="#eventos"
-                            >
+                            <a class="nav-link" href="#eventos">
                                 Eventos & Recitales
                             </a>
+                        </li>
+
+
+                        <!-- NUEVO: Categorías -->
+                        <li class="nav-item dropdown">
+
+                            <a
+                                class="nav-link dropdown-toggle"
+                                href="#"
+                                role="button"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false"
+                            >
+                                Categorías
+                            </a>
+
+                            <ul class="dropdown-menu dropdown-menu-dark">
+                                <li><a class="dropdown-item" href="/src/views/index.php?categoria=rock#eventos">Rock</a></li>
+                                <li><a class="dropdown-item" href="/src/views/index.php?categoria=reggaeton#eventos">Reggaetón / Trap</a></li>
+                                <li><a class="dropdown-item" href="/src/views/index.php?categoria=pop#eventos">Pop</a></li>
+                                <li><a class="dropdown-item" href="/src/views/index.php?categoria=electronica#eventos">Electrónica</a></li>
+                            </ul>
 
                         </li>
 
 
                         <li class="nav-item">
-
-                            <a
-                                class="nav-link"
-                                href="#como-funciona"
-                            >
+                            <a class="nav-link" href="#como-funciona">
                                 Cómo funciona
                             </a>
+                        </li>
 
+
+                        <!-- Ayuda: lleva a las preguntas frecuentes del inicio -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="/src/views/index.php#preguntas-frecuentes">
+                                Ayuda
+                            </a>
                         </li>
 
                     </ul>
 
 
-                    <!-- =================================================
-                         USUARIO
-                    ================================================== -->
-                    <div class="d-flex align-items-center gap-3">
+                    <!-- BÚSQUEDA + USUARIO -->
+                    <div class="nav-actions d-flex align-items-center gap-3">
 
                         <!-- BÚSQUEDA
-                             Abre/cierra el panel de filtros que se
-                             despliega debajo del navbar. -->
-                        <button
-                            type="button"
-                            class="nav-search-toggle"
-                            data-bs-toggle="collapse"
-                            data-bs-target="#navSearchPanel"
-                            aria-controls="navSearchPanel"
-                            aria-expanded="false"
-                            aria-label="Buscar eventos"
+                             La lupa ahora BUSCA: se expande el campo, se escribe,
+                             y con Enter o la lupa va a los resultados. -->
+                        <form
+                            class="nav-search"
+                            id="navSearch"
+                            action="/src/views/index.php"
+                            method="GET"
+                            role="search"
+                            autocomplete="off"
                         >
-                            <i class="bi bi-search"></i>
-                        </button>
+
+                            <input
+                                type="search"
+                                name="q"
+                                id="navSearchInput"
+                                class="nav-search-input"
+                                placeholder="Buscar artista o evento..."
+                                aria-label="Buscar artista o evento"
+                            >
+
+                            <button
+                                type="button"
+                                class="nav-search-toggle"
+                                id="navSearchToggle"
+                                aria-label="Buscar eventos"
+                            >
+                                <i class="bi bi-search"></i>
+                            </button>
+
+                            <div
+                                class="nav-search-suggest"
+                                id="navSearchSuggest"
+                                hidden
+                            ></div>
+
+                        </form>
 
 
                         <?php if (isset($_SESSION['user']['first_name'])): ?>
@@ -274,154 +296,6 @@ if (!isset($_SESSION['user'])) {
 
         </nav>
 
-
-        <!-- =================================================
-             PANEL DE BÚSQUEDA (desplegable, oculto por defecto)
-        ================================================== -->
-        <div class="collapse nav-search-panel" id="navSearchPanel">
-
-            <div class="container-fluid container-xl py-4">
-
-                <form
-                    class="search-form-card p-4 rounded-4 border border-secondary-subtle"
-                    action="/src/views/index.php"
-                    method="GET"
-                >
-
-                    <div class="row g-3 align-items-end">
-
-
-                        <!-- ARTISTA / EVENTO -->
-
-                        <div class="col-12 col-md-4">
-
-                            <label
-                                class="form-label text-light-50 small fw-semibold"
-                            >
-                                Buscar Artista o Evento
-                            </label>
-
-                            <div class="input-group">
-
-                                <span class="input-group-text custom-input-text">
-
-                                    <i class="bi bi-search"></i>
-
-                                </span>
-
-                                <input
-                                    type="text"
-                                    name="q"
-                                    class="form-control custom-input"
-                                    placeholder="Ej. Duki, Divididos, Festival..."
-                                >
-
-                            </div>
-
-                        </div>
-
-
-                        <!-- CATEGORÍA -->
-
-                        <div class="col-12 col-sm-6 col-md-3">
-
-                            <label
-                                class="form-label text-light-50 small fw-semibold"
-                            >
-                                Género / Categoría
-                            </label>
-
-                            <select
-                                name="categoria"
-                                class="form-select custom-input"
-                            >
-
-                                <option value="">
-                                    Todas las categorías
-                                </option>
-
-                                <option value="rock">
-                                    Rock
-                                </option>
-
-                                <option value="reggaeton">
-                                    Reggaetón / Trap
-                                </option>
-
-                                <option value="pop">
-                                    Pop
-                                </option>
-
-                                <option value="electronica">
-                                    Electrónica
-                                </option>
-
-                            </select>
-
-                        </div>
-
-
-                        <!-- UBICACIÓN -->
-
-                        <div class="col-12 col-sm-6 col-md-3">
-
-                            <label
-                                class="form-label text-light-50 small fw-semibold"
-                            >
-                                Ubicación
-                            </label>
-
-                            <select
-                                name="ciudad"
-                                class="form-select custom-input"
-                            >
-
-                                <option value="">
-                                    Todas las ciudades
-                                </option>
-
-                                <option value="buenos-aires">
-                                    Buenos Aires
-                                </option>
-
-                                <option value="cordoba">
-                                    Córdoba
-                                </option>
-
-                                <option value="rosario">
-                                    Rosario
-                                </option>
-
-                            </select>
-
-                        </div>
-
-
-                        <!-- BOTÓN -->
-
-                        <div class="col-12 col-md-2">
-
-                            <button
-                                type="submit"
-                                class="btn btn-violet w-100 py-2 rounded-3"
-                            >
-
-                                <i class="bi bi-funnel-fill me-1"></i>
-
-                                Filtrar
-
-                            </button>
-
-                        </div>
-
-                    </div>
-
-                </form>
-
-            </div>
-
-        </div>
-
     </header>
 
 
@@ -430,8 +304,6 @@ if (!isset($_SESSION['user'])) {
          CONTENIDO PRINCIPAL
          Cada vista arma su propio contenido en $pageContent
          (con ob_start / ob_get_clean) antes de incluir este layout.
-         El layout solo se encarga de ubicarlo dentro de la
-         estructura global (por encima del fondo, entre header y footer).
     ========================================================== -->
     <div id="main-content" class="site-main">
 
@@ -455,15 +327,10 @@ if (!isset($_SESSION['user'])) {
         <div class="container-xl">
 
 
-            <!-- =================================================
-                 CONTENIDO PRINCIPAL DEL FOOTER
-            ================================================== -->
             <div class="row g-4 mb-4">
 
 
-                <!-- =================================================
-                     MARCA
-                ================================================== -->
+                <!-- MARCA -->
                 <div class="col-12 col-md-4">
 
                     <a
@@ -492,55 +359,50 @@ if (!isset($_SESSION['user'])) {
 
 
 
-                <!-- =================================================
-                     SECCIONES
-                ================================================== -->
+                <!-- SECCIONES -->
                 <div class="col-6 col-md-2 offset-md-2">
 
-                    <h5
-                        class="text-white small fw-bold text-uppercase mb-3"
-                    >
+                    <h5 class="text-white small fw-bold text-uppercase mb-3">
                         Secciones
                     </h5>
 
 
-                    <ul
-                        class="list-unstyled small d-flex flex-column gap-2 mb-0"
-                    >
+                    <ul class="list-unstyled small d-flex flex-column gap-2 mb-0">
 
                         <li>
-
                             <a
                                 href="/src/views/index.php"
                                 class="text-secondary-custom text-decoration-none nav-footer-link"
                             >
                                 Inicio
                             </a>
-
                         </li>
 
-
                         <li>
-
                             <a
                                 href="#eventos"
                                 class="text-secondary-custom text-decoration-none nav-footer-link"
                             >
                                 Eventos
                             </a>
-
                         </li>
 
-
                         <li>
-
                             <a
                                 href="#como-funciona"
                                 class="text-secondary-custom text-decoration-none nav-footer-link"
                             >
                                 Cómo funciona
                             </a>
+                        </li>
 
+                        <li>
+                            <a
+                                href="/src/views/index.php#preguntas-frecuentes"
+                                class="text-secondary-custom text-decoration-none nav-footer-link"
+                            >
+                                Ayuda
+                            </a>
                         </li>
 
                     </ul>
@@ -549,14 +411,10 @@ if (!isset($_SESSION['user'])) {
 
 
 
-                <!-- =================================================
-                     SOPORTE
-                ================================================== -->
+                <!-- SOPORTE -->
                 <div class="col-6 col-md-4">
 
-                    <h5
-                        class="text-white small fw-bold text-uppercase mb-3"
-                    >
+                    <h5 class="text-white small fw-bold text-uppercase mb-3">
                         Soporte & Contacto
                     </h5>
 
@@ -566,24 +424,13 @@ if (!isset($_SESSION['user'])) {
                     >
 
                         <li>
-
-                            <i
-                                class="bi bi-envelope me-2 text-violet-neon"
-                            ></i>
-
+                            <i class="bi bi-envelope me-2 text-violet-neon"></i>
                             soporte@allticket.com
-
                         </li>
 
-
                         <li>
-
-                            <i
-                                class="bi bi-shield-check me-2 text-blue-neon"
-                            ></i>
-
+                            <i class="bi bi-shield-check me-2 text-blue-neon"></i>
                             Compra 100% segura
-
                         </li>
 
                     </ul>
@@ -594,9 +441,7 @@ if (!isset($_SESSION['user'])) {
 
 
 
-            <!-- =================================================
-                 COPYRIGHT
-            ================================================== -->
+            <!-- COPYRIGHT -->
             <div
                 class="border-top border-secondary-subtle pt-4 text-center small text-secondary-custom"
             >
@@ -616,6 +461,59 @@ if (!isset($_SESSION['user'])) {
 
     </footer>
 
+
+    <?php
+    // Nombres de los eventos próximos para las sugerencias de la lupa.
+    // Salen de la base de datos, así siempre están actualizados.
+    $nombresEventos = [];
+
+    if (isset($pdo)) {
+        try {
+            $stmtNombres = $pdo->query(
+                "SELECT DISTINCT name
+                   FROM concerts
+                  WHERE status = 'active'
+                    AND date >= CURDATE()
+                  ORDER BY name ASC"
+            );
+            $nombresEventos = $stmtNombres->fetchAll(PDO::FETCH_COLUMN);
+        } catch (PDOException $e) {
+            $nombresEventos = [];
+        }
+    }
+    ?>
+    <script>
+        // Lista que usa nav-search.js
+        var eventosAllticket = <?= json_encode($nombresEventos, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>;
+    </script>
+
+    <script>
+        // Subrayado del menú: al tocar un link, el subrayado pasa a ese link.
+        var enlacesMenu = document.querySelectorAll(
+            ".navbar-nav > .nav-item > a.nav-link:not(.dropdown-toggle)"
+        );
+
+        // Saca la marca a todos los links y se la pone al que tocaron
+        function marcarActivo(enlace) {
+            for (var i = 0; i < enlacesMenu.length; i++) {
+                enlacesMenu[i].classList.remove("active");
+                enlacesMenu[i].removeAttribute("aria-current");
+            }
+
+            enlace.classList.add("active");
+            enlace.setAttribute("aria-current", "page");
+        }
+
+        // Cada link avisa cuando lo tocan
+        for (var i = 0; i < enlacesMenu.length; i++) {
+            enlacesMenu[i].addEventListener("click", function () {
+                marcarActivo(this);
+            });
+        }
+    </script>
+
+    <!-- Buscador del header (lupa + sugerencias) -->
+    <script src="/assets/js/nav-search.js"></script>
 
 </body>
 
