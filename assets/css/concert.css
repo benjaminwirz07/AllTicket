@@ -1,0 +1,308 @@
+/* =========================================================
+   AllTicket · estilos de la página de recital y del checkout
+   (se suma a index.css, no lo reemplaza)
+========================================================= */
+
+:root {
+    --ct-violet: #a855f7;
+    --ct-violet-2: #6d28d9;
+    --ct-cyan: #22d3ee;
+    --ct-surface: rgba(255, 255, 255, .04);
+    --ct-border: rgba(255, 255, 255, .12);
+    --ct-muted: #9aa0b4;
+}
+
+/* ---------- Marquesina ---------- */
+.ct-marquee {
+    overflow: hidden;
+    border-block: 1px solid var(--ct-border);
+    background: linear-gradient(90deg, rgba(109, 40, 217, .25), rgba(34, 211, 238, .15));
+    padding: .85rem 0;
+    white-space: nowrap;
+}
+.ct-marquee__track {
+    display: inline-flex;
+    width: max-content;
+    animation: ct-marquee 28s linear infinite;
+}
+.ct-marquee:hover .ct-marquee__track { animation-play-state: paused; }
+.ct-marquee__item {
+    font-weight: 800;
+    font-size: clamp(1rem, 2.2vw, 1.5rem);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: #fff;
+    padding-inline: 1.25rem;
+}
+.ct-marquee__item::after {
+    content: "✦";
+    margin-left: 2.5rem;
+    color: var(--ct-cyan);
+}
+@keyframes ct-marquee {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .ct-marquee__track { animation: none; }
+}
+
+/* ---------- Cuenta regresiva ---------- */
+.ct-countdown {
+    display: inline-flex;
+    gap: .6rem;
+    flex-wrap: wrap;
+}
+.ct-countdown__box {
+    min-width: 72px;
+    text-align: center;
+    padding: .6rem .8rem;
+    border-radius: 14px;
+    background: var(--ct-surface);
+    border: 1px solid var(--ct-border);
+}
+.ct-countdown__num {
+    display: block;
+    font-size: 1.7rem;
+    font-weight: 800;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+    background: linear-gradient(90deg, var(--ct-violet), var(--ct-cyan));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+.ct-countdown__lbl {
+    font-size: .7rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--ct-muted);
+}
+
+/* ---------- Tarjetas de entrada ---------- */
+.ct-ticket {
+    display: block;
+    height: 100%;
+    padding: 1.4rem;
+    border-radius: 1.25rem;
+    background: var(--ct-surface);
+    border: 1px solid var(--ct-border);
+    cursor: pointer;
+    transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+.ct-ticket:hover { transform: translateY(-2px); border-color: var(--ct-violet); }
+.btn-check:checked + .ct-ticket {
+    border-color: var(--ct-violet);
+    box-shadow: 0 0 0 2px var(--ct-violet), 0 12px 32px rgba(168, 85, 247, .25);
+}
+.btn-check:disabled + .ct-ticket { opacity: .45; cursor: not-allowed; transform: none; }
+.ct-ticket__tag {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    font-size: .75rem;
+    color: var(--ct-muted);
+    margin-top: .6rem;
+}
+
+/* ---------- Mapa de butacas ---------- */
+.ct-seatbox {
+    border-radius: 1.25rem;
+    border: 1px solid var(--ct-border);
+    background: rgba(8, 8, 16, .6);
+    padding: 1.25rem;
+}
+.ct-stage {
+    width: 70%;
+    margin: 0 auto 1.25rem;
+    padding: .55rem 0;
+    text-align: center;
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .3em;
+    color: #fff;
+    border-radius: 0 0 60% 60% / 0 0 100% 100%;
+    background: linear-gradient(180deg, rgba(168, 85, 247, .55), rgba(168, 85, 247, 0));
+}
+.ct-seatscroll {
+    overflow: auto;
+    max-height: 360px;
+    padding-bottom: .5rem;
+}
+.ct-seatrow {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 4px;
+    width: max-content;
+    margin-inline: auto;
+}
+.ct-seatrow__lbl {
+    width: 28px;
+    font-size: .65rem;
+    color: var(--ct-muted);
+    text-align: right;
+    padding-right: 4px;
+}
+.ct-seat {
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: 0;
+    border-radius: 6px 6px 3px 3px;
+    background: rgba(255, 255, 255, .16);
+    cursor: pointer;
+    transition: transform .1s ease, background .1s ease;
+}
+.ct-seat:hover:not(:disabled) { background: var(--ct-cyan); transform: scale(1.2); }
+.ct-seat.is-gap { margin-right: 14px; }
+.ct-seat.is-selected {
+    background: linear-gradient(135deg, var(--ct-violet), var(--ct-cyan));
+    box-shadow: 0 0 10px rgba(168, 85, 247, .8);
+}
+.ct-seat:disabled {
+    cursor: not-allowed;
+    background: repeating-linear-gradient(45deg, #2a2a38, #2a2a38 3px, #1d1d28 3px, #1d1d28 6px);
+}
+.ct-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    font-size: .78rem;
+    color: var(--ct-muted);
+}
+.ct-legend i {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    margin-right: .35rem;
+    vertical-align: -2px;
+}
+.ct-chip {
+    display: inline-block;
+    padding: .2rem .65rem;
+    margin: 0 .35rem .35rem 0;
+    border-radius: 999px;
+    font-size: .78rem;
+    background: rgba(168, 85, 247, .18);
+    border: 1px solid rgba(168, 85, 247, .5);
+    color: #fff;
+}
+
+/* ---------- Campo (sin butaca) ---------- */
+.ct-field {
+    border-radius: 1.25rem;
+    border: 1px dashed var(--ct-border);
+    padding: 1.5rem;
+    background: var(--ct-surface);
+}
+.ct-stepper {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--ct-border);
+    border-radius: 999px;
+    overflow: hidden;
+}
+.ct-stepper button {
+    width: 42px;
+    height: 42px;
+    border: 0;
+    background: transparent;
+    color: #fff;
+    font-size: 1.2rem;
+}
+.ct-stepper button:hover { background: rgba(255, 255, 255, .08); }
+.ct-stepper output {
+    min-width: 44px;
+    text-align: center;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Barra de resumen ---------- */
+.ct-summary {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    margin-top: 1.5rem;
+    padding: 1rem 1.25rem;
+    border-radius: 1.25rem;
+    border: 1px solid var(--ct-border);
+    background: rgba(12, 12, 22, .88);
+    backdrop-filter: blur(10px);
+}
+.ct-summary__total { font-size: 1.5rem; font-weight: 800; }
+
+/* ---------- Mapa y lugares cercanos ---------- */
+#venue-map {
+    height: 380px;
+    border-radius: 1.25rem;
+    border: 1px solid var(--ct-border);
+    z-index: 1;
+}
+.ct-near h3 {
+    font-size: .8rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ct-muted);
+    margin: 1rem 0 .4rem;
+}
+.ct-near li {
+    display: flex;
+    justify-content: space-between;
+    gap: .75rem;
+    padding: .35rem 0;
+    border-bottom: 1px solid var(--ct-border);
+    font-size: .88rem;
+}
+.ct-near li span:last-child { color: var(--ct-muted); white-space: nowrap; }
+
+/* ---------- Checkout ---------- */
+.ct-pay {
+    display: block;
+    padding: 1rem 1.15rem;
+    border-radius: 1rem;
+    background: var(--ct-surface);
+    border: 1px solid var(--ct-border);
+    cursor: pointer;
+    transition: border-color .15s ease;
+}
+.ct-pay:hover { border-color: var(--ct-violet); }
+.btn-check:checked + .ct-pay {
+    border-color: var(--ct-violet);
+    box-shadow: 0 0 0 2px var(--ct-violet);
+}
+.ct-pay__icon {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    display: grid;
+    place-items: center;
+    border-radius: 12px;
+    background: rgba(168, 85, 247, .18);
+    color: var(--ct-violet);
+    font-size: 1.25rem;
+}
+.ct-panel {
+    margin-top: 1rem;
+    padding: 1.25rem;
+    border-radius: 1rem;
+    border: 1px solid var(--ct-border);
+    background: rgba(8, 8, 16, .5);
+}
+.ct-card-preview {
+    padding: 1.25rem;
+    border-radius: 1rem;
+    color: #fff;
+    background: linear-gradient(135deg, #4c1d95, #0e7490);
+    margin-bottom: 1rem;
+    min-height: 120px;
+}
+.ct-card-preview__num {
+    font-size: 1.25rem;
+    letter-spacing: .14em;
+    font-variant-numeric: tabular-nums;
+    margin: 1.1rem 0 .4rem;
+}
+.ct-field-error { color: #fda4af; font-size: .8rem; margin-top: .25rem; }

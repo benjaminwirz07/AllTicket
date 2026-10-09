@@ -133,6 +133,18 @@ function textoGenero($categoria)
     return $categoria;
 }
 
+// Texto "Faltan X días" para la tarjeta
+function textoDias($fecha)
+{
+    $hoy  = new DateTime('today', new DateTimeZone('America/Argentina/Buenos_Aires'));
+    $show = new DateTime($fecha, new DateTimeZone('America/Argentina/Buenos_Aires'));
+    $dias = (int)$hoy->diff($show)->format('%r%a');
+
+    if ($dias <= 0) { return "¡Es hoy!"; }
+    if ($dias == 1) { return "¡Es mañana!"; }
+    return "Faltan " . $dias . " días";
+}
+
 // Arma el link de los chips, guardando lo que ya estaba elegido
 function armarLink($busqueda, $categoria, $ciudad)
 {
@@ -172,11 +184,9 @@ try {
                 c.date,
                 c.time,
                 v.name AS venue,
-                v.city,
-                MIN(t.price) AS price
+                v.city
             FROM concerts c
             JOIN venues v ON c.venue_id = v.id
-            LEFT JOIN tickets t ON t.concert_id = c.id AND t.available > 0
             WHERE c.status = 'active'
               AND c.date >= CURDATE()";
 
@@ -204,8 +214,7 @@ try {
     }
 
     // Final de la consulta
-    $sql = $sql . " GROUP BY c.id, c.name, c.image, c.genre, c.date, c.time, v.name, v.city
-                    ORDER BY c.date ASC
+    $sql = $sql . " ORDER BY c.date ASC
                     LIMIT 12";
 
     $stmt = $pdo->prepare($sql);
@@ -484,13 +493,15 @@ ob_start();
                                     <div
                                         class="mt-auto d-flex justify-content-between align-items-center pt-3 border-top border-secondary-subtle">
 
-                                        <span class="fs-5 fw-bold text-white">
-                                            <?= e(formatPrecio($concert['price'])) ?>
+                                        <span class="small fw-semibold text-white">
+                                            <i class="bi bi-hourglass-split me-1 text-violet-neon"></i>
+                                            <?= e(textoDias($concert['date'])) ?>
                                         </span>
 
+                                        <!-- stretched-link: toda la tarjeta es clickeable -->
                                         <a href="/src/views/concerts/show.php?id=<?= urlencode($concert['id']) ?>"
-                                            class="btn btn-sm btn-outline-violet rounded-pill px-3">
-                                            Comprar
+                                            class="btn btn-sm btn-outline-violet rounded-pill px-3 stretched-link">
+                                            Ver entradas
                                         </a>
 
                                     </div>
