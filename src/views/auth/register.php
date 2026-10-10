@@ -305,6 +305,7 @@ $provinces = [
                                         inputmode="numeric"
                                         autocomplete="off"
                                         value="<?= $e($old['dni'] ?? '') ?>"
+                                        required
                                         <?= $aria('dni') ?>
                                     >
 
@@ -312,7 +313,40 @@ $provinces = [
 
                                 <?= isset($errors['dni'])
                                     ? $errorText('dni')
-                                    : '<span class="field-hint">Solo números, sin puntos.</span>' ?>
+                                    : '<span class="field-hint">Obligatorio: 7 u 8 números, sin puntos.</span>' ?>
+
+                            </div>
+
+                            <!-- Género -->
+                            <div class="col-12 col-md-6">
+
+                                <label class="form-label-custom" for="gender">
+                                    Género
+                                </label>
+
+                                <div class="input-box<?= $hasError('gender') ?>">
+
+                                    <i class="fa-solid fa-venus-mars" aria-hidden="true"></i>
+
+                                    <select
+                                        name="gender"
+                                        id="gender"
+                                        class="form-select-custom"
+                                        required
+                                        <?= $aria('gender') ?>
+                                    >
+                                        <option value="" disabled <?= empty($old['gender']) ? 'selected' : '' ?>>Seleccioná una opción</option>
+                                        <option value="femenino" <?= ($old['gender'] ?? '') === 'femenino' ? 'selected' : '' ?>>Femenino</option>
+                                        <option value="masculino" <?= ($old['gender'] ?? '') === 'masculino' ? 'selected' : '' ?>>Masculino</option>
+                                        <option value="otro" <?= ($old['gender'] ?? '') === 'otro' ? 'selected' : '' ?>>Otro</option>
+                                        <option value="prefiero_no_decir" <?= ($old['gender'] ?? '') === 'prefiero_no_decir' ? 'selected' : '' ?>>Prefiero no decirlo</option>
+                                    </select>
+
+                                    <i class="fa-solid fa-chevron-down select-caret" aria-hidden="true"></i>
+
+                                </div>
+
+                                <?= $errorText('gender') ?>
 
                             </div>
 
@@ -522,8 +556,12 @@ $provinces = [
                                         id="phone"
                                         name="phone"
                                         placeholder="1112345678"
-                                        inputmode="tel"
+                                        inputmode="numeric"
                                         autocomplete="tel-national"
+                                        minlength="10"
+                                        maxlength="10"
+                                        pattern="[0-9]{10}"
+                                        title="Ingresá exactamente 10 números, sin 0 ni 15."
                                         value="<?= $e($old['phone'] ?? '') ?>"
                                         <?= $aria('phone') ?>
                                     >
@@ -532,7 +570,7 @@ $provinces = [
 
                                 <?= isset($errors['phone'])
                                     ? $errorText('phone')
-                                    : '<span class="field-hint">Código de área + número, sin 0 ni 15.</span>' ?>
+                                    : '<span class="field-hint">10 números: código de área + número, sin 0 ni 15.</span>' ?>
 
                             </div>
 
@@ -744,6 +782,20 @@ $provinces = [
                     event.target.value = event.target.value
                         .replace(/\D/g, "")
                         .slice(0, 8);
+
+                });
+
+            }
+
+            const phoneInput = document.getElementById("phone");
+
+            if (phoneInput) {
+
+                phoneInput.addEventListener("input", (event) => {
+
+                    event.target.value = event.target.value
+                        .replace(/\D/g, "")
+                        .slice(0, 10);
 
                 });
 

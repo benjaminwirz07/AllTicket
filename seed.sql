@@ -292,3 +292,85 @@ SELECT
     5000
 FROM concerts
 WHERE name = 'Anuel AA - Live 2027';
+
+
+-- ENTRADAS VIP
+INSERT INTO tickets (
+    concert_id,
+    type,
+    price,
+    stock,
+    available
+)
+SELECT
+    id,
+    'VIP',
+    90000.00,
+    500,
+    500
+FROM concerts
+WHERE name = 'Tini - Tour 2026';
+
+INSERT INTO tickets (
+    concert_id,
+    type,
+    price,
+    stock,
+    available
+)
+SELECT
+    id,
+    'VIP',
+    75000.00,
+    500,
+    500
+FROM concerts
+WHERE name = 'Clarent - Live 2026';
+
+INSERT INTO tickets (
+    concert_id,
+    type,
+    price,
+    stock,
+    available
+)
+SELECT
+    id,
+    'VIP',
+    80000.00,
+    500,
+    500
+FROM concerts
+WHERE name = 'Bad Gyal - Live 2026';
+
+INSERT INTO tickets (
+    concert_id,
+    type,
+    price,
+    stock,
+    available
+)
+SELECT
+    id,
+    'VIP',
+    100000.00,
+    500,
+    500
+FROM concerts
+WHERE name = 'Cazzu - Live 2026';
+
+INSERT INTO tickets (
+    concert_id,
+    type,
+    price,
+    stock,
+    available
+)
+SELECT
+    id,
+    'VIP',
+    110000.00,
+    500,
+    500
+FROM concerts
+WHERE name = 'Anuel AA - Live 2027';

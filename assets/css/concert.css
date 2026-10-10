@@ -17,6 +17,7 @@
     overflow: hidden;
     border-block: 1px solid var(--ct-border);
     background: linear-gradient(90deg, rgba(109, 40, 217, .25), rgba(34, 211, 238, .15));
+    /*background-color: black;*/
     padding: .85rem 0;
     white-space: nowrap;
 }
@@ -34,11 +35,11 @@
     color: #fff;
     padding-inline: 1.25rem;
 }
-.ct-marquee__item::after {
+/*.ct-marquee__item::after {
     content: "✦";
     margin-left: 2.5rem;
     color: var(--ct-cyan);
-}
+}*/
 @keyframes ct-marquee {
     from { transform: translateX(0); }
     to   { transform: translateX(-50%); }

@@ -17,6 +17,7 @@ $repeatPassword = $_POST['repeatPassword'] ?? '';
 $first_name  = trim($_POST['first_name'] ?? '');
 $second_name = trim($_POST['second_name'] ?? '');
 $last_name   = trim($_POST['last_name'] ?? '');
+$gender      = trim($_POST['gender'] ?? '');
 $dni         = trim($_POST['dni'] ?? '');
 $phone       = trim($_POST['phone'] ?? '');
 $city        = trim($_POST['city'] ?? '');
@@ -43,12 +44,18 @@ if (empty($last_name)) {
     $errors['last_name'] = 'El apellido es obligatorio.';
 }
 
-if (!empty($dni) && !preg_match('/^[A-Za-z0-9]{6,20}$/', $dni)) {
-    $errors['dni'] = 'El DNI/Documento debe tener entre 6 y 20 caracteres alfanuméricos.';
+if (!in_array($gender, ['masculino', 'femenino', 'otro', 'prefiero_no_decir'], true)) {
+    $errors['gender'] = 'Seleccioná una opción de género.';
 }
 
-if (!empty($phone) && !preg_match('/^[0-9+\-\s()]{6,30}$/', $phone)) {
-    $errors['phone'] = 'Ingresá un número de teléfono válido.';
+if (empty($dni)) {
+    $errors['dni'] = 'El DNI es obligatorio.';
+} elseif (!preg_match('/^\\d{7,8}$/', $dni)) {
+    $errors['dni'] = 'Ingresá un DNI válido de 7 u 8 números, sin puntos.';
+}
+
+if (!empty($phone) && !preg_match('/^\d{10}$/', $phone)) {
+    $errors['phone'] = 'El teléfono debe tener exactamente 10 números, sin 0 ni 15.';
 }
 
 if (!empty($birth_date)) {
@@ -106,7 +113,7 @@ if (empty($errors['email'])) {
     }
 }
 
-if (!empty($dni) && empty($errors['dni'])) {
+if (empty($errors['dni'])) {
     $stmt = $pdo->prepare('SELECT id FROM users WHERE dni = :dni LIMIT 1');
     $stmt->execute(['dni' => $dni]);
     if ($stmt->fetch()) {
@@ -123,6 +130,7 @@ if (!empty($errors)) {
         'first_name'  => $first_name,
         'second_name' => $second_name,
         'last_name'   => $last_name,
+        'gender'      => $gender,
         'dni'         => $dni,
         'phone'       => $phone,
         'city'        => $city,
@@ -137,15 +145,16 @@ if (!empty($errors)) {
 try {
     $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
     $stmt = $pdo->prepare(
-        'INSERT INTO users (name, first_name, second_name, last_name, dni, phone, city, province, birth_date, email, password)
-         VALUES (:name, :first_name, :second_name, :last_name, :dni, :phone, :city, :province, :birth_date, :email, :password)'
+        'INSERT INTO users (name, first_name, second_name, last_name, gender, dni, phone, city, province, birth_date, email, password)
+         VALUES (:name, :first_name, :second_name, :last_name, :gender, :dni, :phone, :city, :province, :birth_date, :email, :password)'
     );
     $stmt->execute([
         'name'        => $name,
         'first_name'  => $first_name,
         'second_name' => $second_name !== '' ? $second_name : null,
         'last_name'   => $last_name,
-        'dni'         => $dni !== '' ? $dni : null,
+        'gender'      => $gender,
+        'dni'         => $dni,
         'phone'       => $phone !== '' ? $phone : null,
         'city'        => $city !== '' ? $city : null,
         'province'    => $province !== '' ? $province : null,
@@ -168,6 +177,7 @@ try {
         'first_name'  => $first_name,
         'second_name' => $second_name,
         'last_name'   => $last_name,
+        'gender'      => $gender,
         'dni'         => $dni,
         'phone'       => $phone,
         'city'        => $city,
