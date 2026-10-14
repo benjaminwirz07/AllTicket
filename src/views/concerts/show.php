@@ -1,6 +1,17 @@
 <?php
 require_once __DIR__ . '/../../config/bootstrap.php';
 
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Pagina de login de tu proyecto (la misma que usa checkout.php)
+$loginUrl = '/src/views/auth/login.php';
+
+// Mismo criterio que checkout.php para saber si hay alguien logueado
+$userId = $_SESSION['user']['id'] ?? ($_SESSION['user_id'] ?? null);
+$logueado = ($userId != null);
+
 date_default_timezone_set('America/Argentina/Buenos_Aires');
 
 // ============================================================
@@ -134,6 +145,11 @@ if ($concert) {
 $dias = 0;
 $sePuedeComprar = false;
 $fechaCompleta = "";
+
+// Si no esta logueado, guardamos esta pagina para volver despues del login
+if (!$logueado) {
+    $_SESSION['volver_a'] = $_SERVER['REQUEST_URI'] . '#entradas';
+}
 $marquesina = [];
 
 if ($concert) {
@@ -155,6 +171,22 @@ if ($concert) {
         "Entradas oficiales",
         "Sin reventa"
     ];
+
+    // Link para agregar el show a Google Calendar (dura 3 horas)
+    $inicio = strtotime($concert['date'] . ' ' . $concert['time']);
+    $fin = $inicio + 3 * 3600;
+    $linkCalendario = 'https://calendar.google.com/calendar/render?action=TEMPLATE'
+        . '&text=' . urlencode($concert['name'])
+        . '&dates=' . date('Ymd\THis', $inicio) . '/' . date('Ymd\THis', $fin)
+        . '&ctz=America/Argentina/Buenos_Aires'
+        . '&location=' . urlencode($concert['venue'] . ', ' . $concert['address'] . ', ' . $concert['city']);
+
+    // Link para compartir por WhatsApp
+    $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
+    $urlPagina = ($https ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+    $linkWhatsapp = 'https://wa.me/?text=' . urlencode(
+        $concert['name'] . ' - ' . formatFecha($concert['date'], $concert['time']) . ' en ' . $concert['venue'] . ' ' . $urlPagina
+    );
 }
 
 ob_start();
@@ -165,7 +197,7 @@ ob_start();
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 
-<main class="bg-main-dark text-light min-vh-100 position-relative z-1 overflow-hidden">
+<main class="bg-main-dark text-light min-vh-100 position-relative z-1 ct-page">
 
     <?php if (!$concert) { ?>
 
@@ -192,6 +224,8 @@ ob_start();
             <div class="ct-hero__shade" aria-hidden="true"></div>
 
             <div class="container-xl ct-hero__inner">
+
+                <div class="ct-hero__text">
 
                 <a href="/src/views/index.php#eventos" class="ct-hero__back">
                     <i class="bi bi-arrow-left me-1"></i>Volver a recitales
@@ -245,6 +279,21 @@ ob_start();
                     </a>
                 </div>
 
+                <?php if ($dias >= 0) { ?>
+                    <div class="ct-hero__links">
+                        <a href="<?= e($linkCalendario) ?>" target="_blank" rel="noopener">
+                            <i class="bi bi-calendar-plus"></i>Agregar al calendario
+                        </a>
+                        <a href="<?= e($linkWhatsapp) ?>" target="_blank" rel="noopener">
+                            <i class="bi bi-whatsapp"></i>Compartir
+                        </a>
+                    </div>
+                <?php } ?>
+
+                </div>
+
+                <img class="ct-hero__photo" src="/<?= e($concert['image']) ?>" alt="<?= e($concert['artist']) ?>">
+
             </div>
         </section>
 
@@ -259,6 +308,17 @@ ob_start();
                 <?php } ?>
             </div>
         </div>
+
+
+        <!-- MENÚ DE SECCIONES -->
+        <nav class="ct-subnav" aria-label="Secciones del recital">
+            <div class="container-xl ct-subnav__inner">
+                <a href="#info">Info</a>
+                <a href="#entradas">Entradas</a>
+                <a href="#como-llegar">Cómo llegar</a>
+                <a href="#faq">Preguntas</a>
+            </div>
+        </nav>
 
 
         <!-- =================================================
@@ -321,127 +381,167 @@ ob_start();
                         <input type="hidden" name="quantity" id="f-qty" value="1">
                         <input type="hidden" name="seats" id="f-seats" value="">
 
-                        <!-- Tipos de entrada -->
-                        <div class="row g-4 mb-4" role="radiogroup" aria-label="Tipo de entrada">
+                        <div class="row g-4 align-items-start">
 
-                            <?php foreach ($entradas as $i => $entrada) { ?>
+                            <!-- COLUMNA IZQUIERDA: entradas + butacas o cantidad -->
+                            <div class="col-12 col-lg-8">
 
-                                <?php
-                                $agotada   = ((int)$entrada['available'] <= 0);
-                                $vip       = esVip($entrada['type']);
-                                $numerada  = esNumerada($entrada['type']);
-                                $idInput   = "entrada-" . $i;
-                                ?>
+                                <!-- Tipos de entrada (lista vertical) -->
+                                <div class="d-grid gap-3 mb-4" role="radiogroup" aria-label="Tipo de entrada">
 
-                                <div class="col-12 col-md-6 col-lg-4">
+                                    <?php foreach ($entradas as $i => $entrada) { ?>
 
-                                    <input type="radio" class="btn-check" name="ticket_id"
-                                        id="<?= $idInput ?>" value="<?= e($entrada['id']) ?>"
-                                        data-tipo="<?= e($entrada['type']) ?>"
-                                        data-precio="<?= e($entrada['price']) ?>"
-                                        data-disponibles="<?= (int)$entrada['available'] ?>"
-                                        data-stock="<?= (int)$entrada['stock'] ?>"
-                                        data-numerada="<?php if ($numerada) { echo "si"; } else { echo "no"; } ?>"
-                                        data-ocupadas="<?= e($entrada['ocupadas']) ?>"
-                                        <?php if ($agotada || !$sePuedeComprar) { echo "disabled"; } ?>>
+                                        <?php
+                                        $agotada   = ((int)$entrada['available'] <= 0);
+                                        $vip       = esVip($entrada['type']);
+                                        $numerada  = esNumerada($entrada['type']);
+                                        $idInput   = "entrada-" . $i;
 
-                                    <label for="<?= $idInput ?>" class="ct-ticket">
+                                        // Porcentaje de entradas que quedan (para la barrita)
+                                        $stockTotal = (int)$entrada['stock'];
+                                        $porcentaje = 0;
+                                        if ($stockTotal > 0) {
+                                            $porcentaje = round(((int)$entrada['available'] / $stockTotal) * 100);
+                                        }
+                                        ?>
 
-                                        <div class="d-flex justify-content-between align-items-start mb-2">
-                                            <h3 class="h5 fw-bold text-white mb-0">
-                                                <?php if ($vip) { ?><i class="bi bi-star-fill text-warning me-1"></i><?php } ?>
-                                                <?= e($entrada['type']) ?>
-                                            </h3>
+                                        <div>
 
-                                            <?php if ($agotada) { ?>
-                                                <span class="badge text-bg-secondary">Agotada</span>
-                                            <?php } elseif ((int)$entrada['available'] <= 20) { ?>
-                                                <span class="badge text-bg-danger">¡Últimas!</span>
-                                            <?php } ?>
+                                            <input type="radio" class="btn-check" name="ticket_id"
+                                                id="<?= $idInput ?>" value="<?= e($entrada['id']) ?>"
+                                                data-tipo="<?= e($entrada['type']) ?>"
+                                                data-precio="<?= e($entrada['price']) ?>"
+                                                data-disponibles="<?= (int)$entrada['available'] ?>"
+                                                data-stock="<?= (int)$entrada['stock'] ?>"
+                                                data-numerada="<?php if ($numerada) { echo "si"; } else { echo "no"; } ?>"
+                                                data-ocupadas="<?= e($entrada['ocupadas']) ?>"
+                                                <?php if ($agotada || !$sePuedeComprar) { echo "disabled"; } ?>>
+
+                                            <label for="<?= $idInput ?>" class="ct-ticket">
+
+                                                <div class="d-flex justify-content-between align-items-center gap-3">
+
+                                                    <div>
+                                                        <h3 class="h5 fw-bold text-white mb-1">
+                                                            <?php if ($vip) { ?><i class="bi bi-star-fill text-warning me-1"></i><?php } ?>
+                                                            <?= e($entrada['type']) ?>
+                                                            <?php if ($agotada) { ?>
+                                                                <span class="badge text-bg-secondary ms-1">Agotada</span>
+                                                            <?php } elseif ((int)$entrada['available'] <= 20) { ?>
+                                                                <span class="badge text-bg-danger ms-1">¡Últimas!</span>
+                                                            <?php } ?>
+                                                        </h3>
+
+                                                        <p class="small text-secondary-custom mb-0">
+                                                            <?= $agotada ? "Sin disponibilidad" : (int)$entrada['available'] . " disponibles" ?>
+                                                        </p>
+
+                                                        <div class="ct-meter<?php if ($porcentaje <= 20) { echo " is-low"; } ?>" aria-hidden="true">
+                                                            <span style="width: <?= (int)$porcentaje ?>%"></span>
+                                                        </div>
+
+                                                        <span class="ct-ticket__tag">
+                                                            <?php if ($numerada) { ?>
+                                                                <i class="bi bi-grid-3x3-gap"></i> Butaca numerada · elegís tu asiento
+                                                            <?php } else { ?>
+                                                                <i class="bi bi-people"></i> Ingreso libre · sin butaca asignada
+                                                            <?php } ?>
+                                                        </span>
+                                                    </div>
+
+                                                    <p class="fs-4 fw-bold text-white mb-0 text-nowrap"><?= e(formatPrecio($entrada['price'])) ?></p>
+
+                                                </div>
+
+                                            </label>
                                         </div>
 
-                                        <p class="fs-4 fw-bold text-white mb-1"><?= e(formatPrecio($entrada['price'])) ?></p>
+                                    <?php } ?>
 
-                                        <p class="small text-secondary-custom mb-0">
-                                            <?= $agotada ? "Sin disponibilidad" : (int)$entrada['available'] . " disponibles" ?>
-                                        </p>
-
-                                        <span class="ct-ticket__tag">
-                                            <?php if ($numerada) { ?>
-                                                <i class="bi bi-grid-3x3-gap"></i> Butaca numerada · elegís tu asiento
-                                            <?php } else { ?>
-                                                <i class="bi bi-people"></i> Ingreso libre · sin butaca asignada
-                                            <?php } ?>
-                                        </span>
-
-                                    </label>
                                 </div>
 
-                            <?php } ?>
 
-                        </div>
+                                <!-- Panel de BUTACAS (solo si la entrada es numerada) -->
+                                <div id="panel-seats" class="ct-seatbox" hidden>
 
+                                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                                        <h3 class="h6 text-white fw-bold mb-0">
+                                            <i class="bi bi-grid-3x3-gap me-1 text-violet-neon"></i>
+                                            Elegí tus butacas <span class="text-secondary-custom fw-normal">(hasta 6)</span>
+                                        </h3>
 
-                        <!-- Panel de BUTACAS (solo si la entrada es numerada) -->
-                        <div id="panel-seats" class="ct-seatbox mb-3" hidden>
+                                        <div class="ct-legend">
+                                            <span><i style="background:rgba(255,255,255,.16)"></i>Libre</span>
+                                            <span><i style="background:linear-gradient(135deg,#a855f7,#22d3ee)"></i>Tu selección</span>
+                                            <span><i style="background:#2a2a38"></i>Ocupada</span>
+                                        </div>
+                                    </div>
 
-                            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-                                <h3 class="h6 text-white fw-bold mb-0">
-                                    <i class="bi bi-grid-3x3-gap me-1 text-violet-neon"></i>
-                                    Elegí tus butacas <span class="text-secondary-custom fw-normal">(hasta 6)</span>
-                                </h3>
+                                    <div class="ct-stage">ESCENARIO</div>
+                                    <div class="ct-seatscroll" id="seat-grid" role="group" aria-label="Mapa de butacas"></div>
 
-                                <div class="ct-legend">
-                                    <span><i style="background:rgba(255,255,255,.16)"></i>Libre</span>
-                                    <span><i style="background:linear-gradient(135deg,#a855f7,#22d3ee)"></i>Tu selección</span>
-                                    <span><i style="background:#2a2a38"></i>Ocupada</span>
-                                </div>
-                            </div>
-
-                            <div class="ct-stage">ESCENARIO</div>
-                            <div class="ct-seatscroll" id="seat-grid" role="group" aria-label="Mapa de butacas"></div>
-
-                            <div class="mt-3" id="seat-chips" aria-live="polite"></div>
-                        </div>
-
-
-                        <!-- Panel de CAMPO (entradas sin butaca) -->
-                        <div id="panel-field" class="ct-field mb-3" hidden>
-                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-                                <div>
-                                    <h3 class="h6 text-white fw-bold mb-1">
-                                        <i class="bi bi-people me-1 text-violet-neon"></i>Ingreso libre
-                                    </h3>
-                                    <p class="small text-secondary-custom mb-0">
-                                        Esta ubicación no tiene butaca asignada: ubicate donde prefieras dentro del sector.
-                                    </p>
+                                    <div class="mt-3" id="seat-chips" aria-live="polite"></div>
                                 </div>
 
-                                <div>
-                                    <label class="small text-secondary-custom d-block mb-1">Cantidad de entradas</label>
-                                    <div class="ct-stepper">
-                                        <button type="button" id="qty-minus" aria-label="Menos">−</button>
-                                        <output id="qty-out">1</output>
-                                        <button type="button" id="qty-plus" aria-label="Más">+</button>
+
+                                <!-- Panel de CAMPO (entradas sin butaca) -->
+                                <div id="panel-field" class="ct-field" hidden>
+                                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                                        <div>
+                                            <h3 class="h6 text-white fw-bold mb-1">
+                                                <i class="bi bi-people me-1 text-violet-neon"></i>Ingreso libre
+                                            </h3>
+                                            <p class="small text-secondary-custom mb-0">
+                                                Esta ubicación no tiene butaca asignada: ubicate donde prefieras dentro del sector.
+                                            </p>
+                                        </div>
+
+                                        <div>
+                                            <label class="small text-secondary-custom d-block mb-1">Cantidad de entradas</label>
+                                            <div class="ct-stepper">
+                                                <button type="button" id="qty-minus" aria-label="Menos">−</button>
+                                                <output id="qty-out">1</output>
+                                                <button type="button" id="qty-plus" aria-label="Más">+</button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
 
-
-                        <!-- Resumen + botón -->
-                        <div class="ct-summary d-flex flex-wrap justify-content-between align-items-center gap-3">
-                            <div>
-                                <div class="small text-secondary-custom" id="sum-text">Elegí un tipo de entrada para continuar.</div>
-                                <div class="ct-summary__total text-white" id="sum-total">$ 0</div>
                             </div>
 
-                            <button type="submit" id="btn-buy" class="btn btn-violet-glow btn-lg px-5 rounded-pill" disabled>
-                                Continuar con el pago <i class="bi bi-arrow-right ms-2"></i>
-                            </button>
-                        </div>
 
-                        <p class="text-danger small mt-2 mb-0" id="form-error" role="alert" hidden></p>
+                            <!-- COLUMNA DERECHA: resumen + botón -->
+                            <div class="col-12 col-lg-4">
+                                <div class="ct-summary">
+
+                                    <h3 class="h6 text-white fw-bold mb-3">
+                                        <i class="bi bi-receipt me-1 text-violet-neon"></i>Tu compra
+                                    </h3>
+
+                                    <div class="small text-secondary-custom" id="sum-text">Elegí un tipo de entrada para continuar.</div>
+
+                                    <div class="d-flex justify-content-between align-items-center border-top border-secondary-subtle pt-3 mt-3">
+                                        <span class="text-secondary-custom">Total</span>
+                                        <span class="ct-summary__total text-white" id="sum-total">$ 0</span>
+                                    </div>
+
+                                    <?php if (!$logueado) { ?>
+                                        <p class="small text-warning mt-3 mb-0">
+                                            <i class="bi bi-person-lock me-1"></i>Podés armar tu selección, pero para pagar necesitás
+                                            <a href="<?= e($loginUrl) ?>" class="text-warning fw-semibold">iniciar sesión</a>.
+                                        </p>
+                                    <?php } ?>
+
+                                    <button type="submit" id="btn-buy" class="btn btn-violet-glow btn-lg w-100 rounded-pill mt-3" disabled>
+                                        Continuar con el pago <i class="bi bi-arrow-right ms-2"></i>
+                                    </button>
+
+                                    <p class="text-danger small mt-2 mb-0" id="form-error" role="alert" hidden></p>
+
+                                </div>
+                            </div>
+
+                        </div>
 
                     </form>
 
@@ -485,6 +585,52 @@ ob_start();
             </div>
         </section>
 
+
+        <!-- =================================================
+             PREGUNTAS FRECUENTES
+        ================================================== -->
+        <section id="faq" class="py-5 border-top border-dark-subtle">
+            <div class="container-xl">
+
+                <h2 class="h4 fw-bold text-white mb-4">Preguntas frecuentes</h2>
+
+                <div class="ct-faq">
+
+                    <details>
+                        <summary>¿Cómo recibo mi entrada?</summary>
+                        <p>Te llega con código QR a tu celular. Mostralo en el ingreso y listo.</p>
+                    </details>
+
+                    <details>
+                        <summary>¿Cuántas entradas puedo comprar?</summary>
+                        <p>Hasta 6 entradas por compra.</p>
+                    </details>
+
+                    <details>
+                        <summary>¿Qué medios de pago puedo usar?</summary>
+                        <p>Mercado Pago, tarjeta de crédito o débito, transferencia bancaria y efectivo en Rapipago o Pago Fácil.</p>
+                    </details>
+
+                    <details>
+                        <summary>¿Las entradas son oficiales?</summary>
+                        <p>Sí. Vendemos entradas oficiales, sin reventa.</p>
+                    </details>
+
+                    <details>
+                        <summary>¿A qué hora empieza el show?</summary>
+                        <p>El show empieza a las <?= e(substr($concert['time'], 0, 5)) ?> hs en <?= e($concert['venue']) ?>.</p>
+                    </details>
+
+                    <details>
+                        <summary>¿Tuve un problema con mi compra, qué hago?</summary>
+                        <p>Escribinos a soporte@allticket.com con tu número de pedido y te ayudamos.</p>
+                    </details>
+
+                </div>
+
+            </div>
+        </section>
+
     <?php } ?>
 
 </main>
@@ -494,7 +640,7 @@ ob_start();
     <!-- Datos que lee el JavaScript -->
     <div id="datos-show" hidden
         data-fecha="<?= e($fechaCompleta) ?>"
-        data-puede-comprar="<?php if ($sePuedeComprar) { echo "si"; } else { echo "no"; } ?>"
+        data-puede-comprar="<?php if ($sePuedeComprar && $logueado) { echo "si"; } else { echo "no"; } ?>"
         data-lugar="<?= e($concert['venue']) ?>"
         data-direccion="<?= e($concert['address']) ?>"
         data-ciudad="<?= e($concert['city']) ?>"></div>

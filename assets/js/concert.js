@@ -143,8 +143,8 @@ function dibujarButacas() {
 
             var codigo = fila + '-' + columna;
 
-            var boton = document.createElement('button');
-            boton.type = 'button';
+            var boton = document.createElement('input');
+            boton.type = 'checkbox';
             boton.className = 'ct-seat';
             boton.setAttribute('data-codigo', codigo);
 
@@ -247,34 +247,31 @@ function alElegirEntrada(evento) {
 // Cuando el usuario toca una butaca
 function alTocarButaca(evento) {
 
-    var boton = evento.target;
+    var casilla = evento.target;
 
-    if (boton.classList.contains('ct-seat') == false) {
-        return;
-    }
-    if (boton.disabled) {
+    if (casilla.classList.contains('ct-seat') == false) {
         return;
     }
 
-    var codigo = boton.getAttribute('data-codigo');
-    var posicion = butacas.indexOf(codigo);
+    var codigo = casilla.getAttribute('data-codigo');
 
-    if (posicion != -1) {
-        // Ya estaba elegida: la sacamos
-        butacas.splice(posicion, 1);
-        boton.classList.remove('is-selected');
-        mostrarError('');
-    } else {
-        // No estaba elegida: la agregamos (si no se paso del maximo)
+    if (casilla.checked) {
+        // La marcó: si ya llegó al máximo, la desmarcamos
         if (butacas.length >= maximoPosible()) {
+            casilla.checked = false;
             mostrarError('Podés elegir hasta ' + maximoPosible() + ' butacas por compra.');
             return;
         }
         butacas.push(codigo);
-        boton.classList.add('is-selected');
-        mostrarError('');
+    } else {
+        // La desmarcó: la sacamos de la lista
+        var posicion = butacas.indexOf(codigo);
+        if (posicion != -1) {
+            butacas.splice(posicion, 1);
+        }
     }
 
+    mostrarError('');
     actualizarResumen();
 }
 
@@ -336,7 +333,7 @@ function prepararEntradas() {
         radios[i].addEventListener('change', alElegirEntrada);
     }
 
-    grilla.addEventListener('click', alTocarButaca);
+    grilla.addEventListener('change', alTocarButaca);
     document.getElementById('qty-minus').addEventListener('click', bajarCantidad);
     document.getElementById('qty-plus').addEventListener('click', subirCantidad);
     formulario.addEventListener('submit', alEnviar);
@@ -627,9 +624,50 @@ function prepararMapa() {
 
 
 // ============================================================
+// 4. MENU DE SECCIONES (marca la seccion que se esta viendo)
+// ============================================================
+
+function prepararMenu() {
+
+    var enlaces = document.querySelectorAll('.ct-subnav a');
+    if (enlaces.length == 0 || typeof IntersectionObserver == 'undefined') {
+        return;
+    }
+
+    // Marca como activo el enlace de la seccion que se ve
+    function marcar(id) {
+        for (var i = 0; i < enlaces.length; i++) {
+            if (enlaces[i].getAttribute('href') == '#' + id) {
+                enlaces[i].classList.add('is-active');
+            } else {
+                enlaces[i].classList.remove('is-active');
+            }
+        }
+    }
+
+    var observador = new IntersectionObserver(function (entradas) {
+        for (var i = 0; i < entradas.length; i++) {
+            if (entradas[i].isIntersecting) {
+                marcar(entradas[i].target.id);
+            }
+        }
+    }, { rootMargin: '-40% 0px -55% 0px' });
+
+    for (var i = 0; i < enlaces.length; i++) {
+        var id = enlaces[i].getAttribute('href').substring(1);
+        var seccion = document.getElementById(id);
+        if (seccion != null) {
+            observador.observe(seccion);
+        }
+    }
+}
+
+
+// ============================================================
 // ARRANCAMOS TODO
 // ============================================================
 
 ponerCuentaRegresiva();
 prepararEntradas();
 prepararMapa();
+prepararMenu();

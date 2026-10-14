@@ -12,32 +12,122 @@
     --ct-muted: #9aa0b4;
 }
 
+/* ---------- Hero ---------- */
+.ct-hero {
+    position: relative;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    isolation: isolate;
+}
+.ct-hero__bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: blur(18px) saturate(1.1);
+    transform: scale(1.1);
+    opacity: .4;
+    z-index: -2;
+}
+.ct-hero__shade {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+        linear-gradient(90deg, rgba(8, 8, 16, .92) 0%, rgba(8, 8, 16, .6) 55%, rgba(8, 8, 16, .85) 100%),
+        linear-gradient(180deg, transparent 60%, #080810 100%);
+}
+.ct-hero__inner {
+    display: grid;
+    grid-template-columns: 1fr minmax(260px, 340px);
+    gap: 3rem;
+    align-items: center;
+    padding-block: 3rem;
+}
+.ct-hero__photo {
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+    object-position: center top;
+    border-radius: 1.25rem;
+    border: 1px solid var(--ct-border);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, .5);
+}
+@media (max-width: 991.98px) {
+    .ct-hero__inner { grid-template-columns: 1fr; gap: 2rem; }
+    .ct-hero__photo { order: -1; max-width: 260px; }
+}
+.ct-hero__back {
+    display: block;
+    width: fit-content;
+    margin-bottom: 1.5rem;
+    font-size: .85rem;
+    color: var(--ct-muted);
+    text-decoration: none;
+    transition: color .15s ease;
+}
+.ct-hero__back:hover { color: #fff; }
+.ct-hero__title {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -.02em;
+    color: #fff;
+    margin-bottom: .5rem;
+}
+.ct-hero__artist {
+    font-size: 1.15rem;
+    color: var(--ct-muted);
+    margin-bottom: 1.25rem;
+}
+.ct-hero__facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem 1.75rem;
+    margin-bottom: 1.5rem;
+    padding: 0;
+    font-size: .95rem;
+    color: #fff;
+}
+.ct-hero__facts li {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+.ct-hero__facts i { color: var(--ct-violet); }
+.ct-hero__eyebrow {
+    font-size: .85rem;
+    color: var(--ct-muted);
+    margin-bottom: .75rem;
+}
+
 /* ---------- Marquesina ---------- */
 .ct-marquee {
     overflow: hidden;
     border-block: 1px solid var(--ct-border);
-    background: linear-gradient(90deg, rgba(109, 40, 217, .25), rgba(34, 211, 238, .15));
-    padding: .85rem 0;
+    padding: .7rem 0;
     white-space: nowrap;
 }
 .ct-marquee__track {
     display: inline-flex;
     width: max-content;
-    animation: ct-marquee 28s linear infinite;
+    animation: ct-marquee 40s linear infinite;
 }
 .ct-marquee:hover .ct-marquee__track { animation-play-state: paused; }
 .ct-marquee__item {
-    font-weight: 800;
-    font-size: clamp(1rem, 2.2vw, 1.5rem);
-    letter-spacing: .08em;
+    font-size: .8rem;
+    font-weight: 500;
+    letter-spacing: .2em;
     text-transform: uppercase;
-    color: #fff;
-    padding-inline: 1.25rem;
+    color: var(--ct-muted);
+    padding-inline: 1.5rem;
 }
 .ct-marquee__item::after {
-    content: "✦";
-    margin-left: 2.5rem;
-    color: var(--ct-cyan);
+    content: "·";
+    margin-left: 3rem;
+    color: var(--ct-muted);
 }
 @keyframes ct-marquee {
     from { transform: translateX(0); }
@@ -50,40 +140,29 @@
 /* ---------- Cuenta regresiva ---------- */
 .ct-countdown {
     display: inline-flex;
-    gap: .6rem;
+    gap: 1.75rem;
     flex-wrap: wrap;
 }
-.ct-countdown__box {
-    min-width: 72px;
-    text-align: center;
-    padding: .6rem .8rem;
-    border-radius: 14px;
-    background: var(--ct-surface);
-    border: 1px solid var(--ct-border);
-}
+.ct-countdown__box { min-width: 56px; }
 .ct-countdown__num {
     display: block;
-    font-size: 1.7rem;
-    font-weight: 800;
+    font-size: 2rem;
+    font-weight: 700;
     line-height: 1.1;
     font-variant-numeric: tabular-nums;
-    background: linear-gradient(90deg, var(--ct-violet), var(--ct-cyan));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    color: #fff;
 }
 .ct-countdown__lbl {
     font-size: .7rem;
     text-transform: uppercase;
-    letter-spacing: .08em;
+    letter-spacing: .1em;
     color: var(--ct-muted);
 }
 
 /* ---------- Tarjetas de entrada ---------- */
 .ct-ticket {
     display: block;
-    height: 100%;
-    padding: 1.4rem;
+    padding: 1.1rem 1.4rem;
     border-radius: 1.25rem;
     background: var(--ct-surface);
     border: 1px solid var(--ct-border);
@@ -145,8 +224,11 @@
     padding-right: 4px;
 }
 .ct-seat {
+    -webkit-appearance: none;
+    appearance: none;
     width: 20px;
     height: 20px;
+    margin: 0;
     padding: 0;
     border: 0;
     border-radius: 6px 6px 3px 3px;
@@ -156,7 +238,7 @@
 }
 .ct-seat:hover:not(:disabled) { background: var(--ct-cyan); transform: scale(1.2); }
 .ct-seat.is-gap { margin-right: 14px; }
-.ct-seat.is-selected {
+.ct-seat:checked {
     background: linear-gradient(135deg, var(--ct-violet), var(--ct-cyan));
     box-shadow: 0 0 10px rgba(168, 85, 247, .8);
 }
@@ -223,16 +305,17 @@
 /* ---------- Barra de resumen ---------- */
 .ct-summary {
     position: sticky;
-    bottom: 0;
-    z-index: 5;
-    margin-top: 1.5rem;
-    padding: 1rem 1.25rem;
+    top: 90px;
+    padding: 1.25rem;
     border-radius: 1.25rem;
     border: 1px solid var(--ct-border);
     background: rgba(12, 12, 22, .88);
     backdrop-filter: blur(10px);
 }
 .ct-summary__total { font-size: 1.5rem; font-weight: 800; }
+@media (max-width: 991.98px) {
+    .ct-summary { position: static; }
+}
 
 /* ---------- Mapa y lugares cercanos ---------- */
 #venue-map {
@@ -306,3 +389,106 @@
     margin: 1.1rem 0 .4rem;
 }
 .ct-field-error { color: #fda4af; font-size: .8rem; margin-top: .25rem; }
+
+/* ---------- Pagina del recital ---------- */
+/* "clip" en vez de "hidden" para que position: sticky siga funcionando */
+.ct-page { overflow: clip; }
+section[id] { scroll-margin-top: 120px; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+}
+
+/* ---------- Links del hero (calendario y compartir) ---------- */
+.ct-hero__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem 1.5rem;
+    margin-top: 1.25rem;
+}
+.ct-hero__links a {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    font-size: .85rem;
+    color: var(--ct-muted);
+    text-decoration: none;
+    transition: color .15s ease;
+}
+.ct-hero__links a:hover { color: #fff; }
+.ct-hero__links i { color: var(--ct-violet); }
+
+/* ---------- Menu de secciones ---------- */
+.ct-subnav {
+    position: sticky;
+    top: 56px;
+    z-index: 20;
+    background: rgba(8, 8, 16, .85);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--ct-border);
+}
+.ct-subnav__inner {
+    display: flex;
+    gap: .25rem;
+    overflow-x: auto;
+}
+.ct-subnav a {
+    padding: .9rem 1rem;
+    font-size: .85rem;
+    color: var(--ct-muted);
+    text-decoration: none;
+    white-space: nowrap;
+    border-bottom: 2px solid transparent;
+    transition: color .15s ease, border-color .15s ease;
+}
+.ct-subnav a:hover { color: #fff; }
+.ct-subnav a.is-active {
+    color: #fff;
+    border-bottom-color: var(--ct-violet);
+}
+
+/* ---------- Barra de disponibilidad ---------- */
+.ct-meter {
+    width: 100%;
+    max-width: 220px;
+    height: 4px;
+    margin-top: .6rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .12);
+    overflow: hidden;
+}
+.ct-meter span {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--ct-violet), var(--ct-cyan));
+}
+.ct-meter.is-low span { background: #fb7185; }
+
+/* ---------- Preguntas frecuentes ---------- */
+.ct-faq { max-width: 760px; }
+.ct-faq details { border-bottom: 1px solid var(--ct-border); }
+.ct-faq summary {
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 0;
+    cursor: pointer;
+    color: #fff;
+    font-weight: 600;
+}
+.ct-faq summary::-webkit-details-marker { display: none; }
+.ct-faq summary::after {
+    content: "+";
+    font-size: 1.3rem;
+    font-weight: 400;
+    color: var(--ct-violet);
+}
+.ct-faq details[open] summary::after { content: "−"; }
+.ct-faq p {
+    margin: 0 0 1rem;
+    font-size: .92rem;
+    color: var(--ct-muted);
+}
