@@ -168,8 +168,9 @@ if ($concert) {
         $concert['artist'],
         formatFecha($concert['date'], $concert['time']),
         $concert['venue'],
-        "Entradas oficiales",
-        "Sin reventa"
+        "vivi un show único",
+        "entreas oficiales, sin reventa",
+        "¡no te lo pierdas!",
     ];
 
     // Link para agregar el show a Google Calendar (dura 3 horas)

@@ -14,6 +14,7 @@ $usuario     = trim($_POST['usuario'] ?? '');
 $first_name  = trim($_POST['first_name'] ?? '');
 $second_name = trim($_POST['second_name'] ?? '');
 $last_name   = trim($_POST['last_name'] ?? '');
+$gender      = trim($_POST['gender'] ?? '');
 $dni         = trim($_POST['dni'] ?? '');
 $genero      = strtoupper(trim($_POST['genero'] ?? ''));
 $phone       = trim($_POST['phone'] ?? '');
@@ -52,8 +53,14 @@ if (!in_array($genero, $generosPermitidos, true)) {
     $errors['genero'] = 'Seleccioná un género.';
 }
 
-if (!empty($phone) && !preg_match('/^[0-9+\-\s()]{6,30}$/', $phone)) {
-    $errors['phone'] = 'Ingresá un número de teléfono válido.';
+if (empty($dni)) {
+    $errors['dni'] = 'El DNI es obligatorio.';
+} elseif (!preg_match('/^\\d{7,8}$/', $dni)) {
+    $errors['dni'] = 'Ingresá un DNI válido de 7 u 8 números, sin puntos.';
+}
+
+if (!empty($phone) && !preg_match('/^\d{10}$/', $phone)) {
+    $errors['phone'] = 'El teléfono debe tener exactamente 10 números, sin 0 ni 15.';
 }
 
 if (!empty($birth_date)) {
