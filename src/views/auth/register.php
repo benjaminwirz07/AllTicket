@@ -6,6 +6,10 @@ if (isset($_SESSION['user'])) {
     exit;
 }
 
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 $errors = $_SESSION['errors'] ?? [];
 $old    = $_SESSION['old'] ?? [];
 unset($_SESSION['errors'], $_SESSION['old']);
@@ -78,6 +82,8 @@ $provinces = [
                 <?php endif; ?>
 
                 <form action="/src/controllers/auth/register.php" method="POST" novalidate>
+                    <input type="hidden" name="csrf_token" value="<?= $e($_SESSION['csrf_token']) ?>">
+
                     <div class="form-section">
                         <div class="section-title">
                             <i class="fa-solid fa-address-card"></i>
@@ -215,7 +221,7 @@ $provinces = [
                                     </select>
                                     <span class="phone-divider" aria-hidden="true"></span>
                                     <input type="tel" id="phone" name="phone" placeholder="1112345678"
-                                        inputmode="tel" autocomplete="tel-national"
+                                        maxlength="10" inputmode="tel" autocomplete="tel-national"
                                         value="<?= $e($old['phone'] ?? '') ?>" <?= $aria('phone') ?>>
                                 </div>
                                 <?= isset($errors['phone']) ? $errorText('phone') : '<span class="field-hint">Código de área + número, sin 0 ni 15.</span>' ?>
@@ -290,10 +296,17 @@ $provinces = [
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             const dniInput = document.getElementById("dni_input");
+            const phoneInput = document.getElementById("phone");
 
             if (dniInput) {
                 dniInput.addEventListener("input", (event) => {
                     event.target.value = event.target.value.replace(/\D/g, "").slice(0, 8);
+                });
+            }
+
+            if (phoneInput) {
+                phoneInput.addEventListener("input", (event) => {
+                    event.target.value = event.target.value.replace(/\D/g, "").slice(0, 10);
                 });
             }
 

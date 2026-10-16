@@ -6,6 +6,17 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+$csrfToken = $_POST['csrf_token'] ?? '';
+if (
+    empty($_SESSION['csrf_token']) ||
+    !is_string($csrfToken) ||
+    !hash_equals($_SESSION['csrf_token'], $csrfToken)
+) {
+    $_SESSION['errors'] = ['general' => 'La sesión expiró o el formulario no es válido. Intentá nuevamente.'];
+    header('Location: ../../views/auth/register.php');
+    exit;
+}
+
 $email          = trim($_POST['email'] ?? '');
 $password       = $_POST['password'] ?? '';
 $repeatPassword = $_POST['repeatPassword'] ?? '';
@@ -14,7 +25,6 @@ $usuario     = trim($_POST['usuario'] ?? '');
 $first_name  = trim($_POST['first_name'] ?? '');
 $second_name = trim($_POST['second_name'] ?? '');
 $last_name   = trim($_POST['last_name'] ?? '');
-$gender      = trim($_POST['gender'] ?? '');
 $dni         = trim($_POST['dni'] ?? '');
 $genero      = strtoupper(trim($_POST['genero'] ?? ''));
 $phone       = trim($_POST['phone'] ?? '');
@@ -51,12 +61,6 @@ if ($dni === '') {
 
 if (!in_array($genero, $generosPermitidos, true)) {
     $errors['genero'] = 'Seleccioná un género.';
-}
-
-if (empty($dni)) {
-    $errors['dni'] = 'El DNI es obligatorio.';
-} elseif (!preg_match('/^\\d{7,8}$/', $dni)) {
-    $errors['dni'] = 'Ingresá un DNI válido de 7 u 8 números, sin puntos.';
 }
 
 if (!empty($phone) && !preg_match('/^\d{10}$/', $phone)) {
@@ -175,6 +179,7 @@ try {
         'password'    => $hashedPassword,
     ]);
 
+    unset($_SESSION['csrf_token']);
     $_SESSION['success'] = '¡Cuenta creada con éxito! Ya podés iniciar sesión.';
     header('Location: ../../views/auth/login.php');
     exit;

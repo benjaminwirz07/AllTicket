@@ -29,6 +29,20 @@ $e = static fn($value): string => htmlspecialchars(
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="/assets/css/custom.css">
+    <style>
+        .alert-success-custom {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            text-align: left;
+            color: #4ade80;
+            background: rgba(34, 197, 94, 0.12);
+            border: 1px solid rgba(34, 197, 94, 0.35);
+        }
+    </style>
 </head>
 <body>
     <main class="login-page">
@@ -47,7 +61,7 @@ $e = static fn($value): string => htmlspecialchars(
                 </p>
 
                 <?php if ($success): ?>
-                    <div class="alert-danger-custom mb-3" role="status">
+                    <div class="alert-success-custom mb-3" role="status">
                         <i class="fa-solid fa-circle-check"></i>
                         <span><?= $e($success) ?></span>
                     </div>
@@ -82,7 +96,7 @@ $e = static fn($value): string => htmlspecialchars(
                         <div class="input-box<?= isset($errors['password']) ? ' input-error' : '' ?>">
                             <i class="fa-solid fa-lock"></i>
                             <input type="password" name="password" id="password" placeholder="Tu contraseña" required>
-                            <i class="fa-regular fa-eye eye" onclick="mostrarPassword()"></i>
+                            <i class="fa-regular fa-eye eye" data-target="password" role="button" tabindex="0" aria-label="Mostrar contraseña"></i>
                         </div>
                         <?php if (isset($errors['password'])): ?>
                             <span class="error-text">
@@ -113,10 +127,25 @@ $e = static fn($value): string => htmlspecialchars(
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        function mostrarPassword() {
-            const password = document.getElementById("password");
-            password.type = password.type === "password" ? "text" : "password";
-        }
+        document.addEventListener("DOMContentLoaded", () => {
+            document.querySelectorAll(".eye").forEach(icon => {
+                icon.addEventListener("click", () => {
+                    const input = document.querySelector(`input[name="${icon.dataset.target}"]`);
+                    if (!input) return;
+                    const isPassword = input.type === "password";
+                    input.type = isPassword ? "text" : "password";
+                    icon.classList.toggle("fa-eye", !isPassword);
+                    icon.classList.toggle("fa-eye-slash", isPassword);
+                    icon.setAttribute("aria-label", isPassword ? "Ocultar contraseña" : "Mostrar contraseña");
+                });
+                icon.addEventListener("keydown", event => {
+                    if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        icon.click();
+                    }
+                });
+            });
+        });
     </script>
 </body>
 </html>

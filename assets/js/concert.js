@@ -2,15 +2,19 @@
 // AllTicket - pagina del recital
 //   1. Cuenta regresiva
 //   2. Elegir la entrada (butacas o campo)
-//   3. Mapa y lugares cercanos
+//   3. Mapa y lugares cercanos (se carga al acercarse)
+//   4. Menu de secciones y barra de compra
 // ============================================================
 
-// Datos que nos manda el PHP
 var datos = document.getElementById('datos-show');
 var puedeComprar = (datos.dataset.puedeComprar == 'si');
+var logueado = (datos.dataset.logueado == 'si');
+var urlLogin = datos.dataset.loginUrl;
+var claveGuardado = 'seleccion-' + datos.dataset.concierto;
 
 var MAXIMO = 6;       // maximo de entradas por compra
 var COLUMNAS = 20;    // butacas por fila
+var PASILLO = 10;     // el pasillo esta despues de esta columna
 
 
 // ============================================================
@@ -31,7 +35,6 @@ function ponerCuentaRegresiva() {
     var cajaMin = caja.querySelector('[data-cd="m"]');
     var cajaSeg = caja.querySelector('[data-cd="s"]');
 
-    // Agrega un cero adelante: 5 -> 05
     function conCero(numero) {
         if (numero < 10) {
             return '0' + numero;
@@ -46,15 +49,10 @@ function ponerCuentaRegresiva() {
         }
 
         var segundosTotales = Math.floor(falta / 1000);
-        var dias = Math.floor(segundosTotales / 86400);
-        var horas = Math.floor((segundosTotales % 86400) / 3600);
-        var minutos = Math.floor((segundosTotales % 3600) / 60);
-        var segundos = segundosTotales % 60;
-
-        cajaDias.textContent = dias;
-        cajaHoras.textContent = conCero(horas);
-        cajaMin.textContent = conCero(minutos);
-        cajaSeg.textContent = conCero(segundos);
+        cajaDias.textContent = Math.floor(segundosTotales / 86400);
+        cajaHoras.textContent = conCero(Math.floor((segundosTotales % 86400) / 3600));
+        cajaMin.textContent = conCero(Math.floor((segundosTotales % 3600) / 60));
+        cajaSeg.textContent = conCero(segundosTotales % 60);
     }
 
     actualizar();
@@ -68,37 +66,35 @@ function ponerCuentaRegresiva() {
 
 var formulario = document.getElementById('form-compra');
 
+var panelVacio = document.getElementById('panel-empty');
 var panelButacas = document.getElementById('panel-seats');
 var panelCampo = document.getElementById('panel-field');
 var grilla = document.getElementById('seat-grid');
 var listaButacas = document.getElementById('seat-chips');
 var textoResumen = document.getElementById('sum-text');
-var textoTotal = document.getElementById('sum-total');
-var botonComprar = document.getElementById('btn-buy');
 var cajaError = document.getElementById('form-error');
 var textoCantidad = document.getElementById('qty-out');
+var tituloPaso2 = document.getElementById('step2-title');
+var ayudaPaso2 = document.getElementById('step2-hint');
+
+// Hay dos totales y dos botones (resumen de escritorio y barra del celular)
+var totales = document.querySelectorAll('.js-total');
+var botonesComprar = document.querySelectorAll('.js-buy');
 
 var entrada = null;     // la entrada que eligio el usuario
 var butacas = [];       // las butacas que eligio: ["3-12", "3-13"]
 var cantidad = 1;       // cantidad (solo para entradas sin butaca)
 
 
-// Muestra un mensaje de error (o lo borra si va vacio)
 function mostrarError(mensaje) {
     cajaError.textContent = mensaje;
-    if (mensaje == '') {
-        cajaError.hidden = true;
-    } else {
-        cajaError.hidden = false;
-    }
+    cajaError.hidden = (mensaje == '');
 }
 
-// Escribe un precio lindo: 30000 -> $ 30.000
 function formatoPrecio(numero) {
     return '$ ' + Math.round(numero).toLocaleString('es-AR');
 }
 
-// Cuantas entradas va a comprar
 function cuantasEntradas() {
     if (entrada.numerada) {
         return butacas.length;
@@ -106,7 +102,6 @@ function cuantasEntradas() {
     return cantidad;
 }
 
-// Maximo que puede comprar de esta entrada
 function maximoPosible() {
     if (entrada.disponibles < MAXIMO) {
         return entrada.disponibles;
@@ -115,7 +110,63 @@ function maximoPosible() {
 }
 
 
-// Dibuja todas las butacas en pantalla
+// ---------- Guardar la seleccion (para no perderla al iniciar sesion) ----------
+
+function guardarSeleccion() {
+    try {
+        if (entrada == null) {
+            sessionStorage.removeItem(claveGuardado);
+            return;
+        }
+        sessionStorage.setItem(claveGuardado, JSON.stringify({
+            ticket: entrada.id,
+            butacas: butacas,
+            cantidad: cantidad
+        }));
+    } catch (error) {
+        // si el navegador no deja guardar, seguimos igual
+    }
+}
+
+function recuperarSeleccion() {
+
+    var guardado = null;
+    try {
+        guardado = JSON.parse(sessionStorage.getItem(claveGuardado));
+    } catch (error) {
+        guardado = null;
+    }
+    if (guardado == null) {
+        return;
+    }
+
+    var radio = document.querySelector('input[name="ticket_id"][value="' + guardado.ticket + '"]');
+    if (radio == null || radio.disabled) {
+        return;
+    }
+
+    radio.checked = true;
+    alElegirEntrada({ target: radio }, true);
+
+    if (entrada.numerada) {
+        // Volvemos a marcar solo las butacas que siguen libres
+        for (var i = 0; i < guardado.butacas.length; i++) {
+            var casilla = grilla.querySelector('[data-codigo="' + guardado.butacas[i] + '"]');
+            if (casilla != null && casilla.disabled == false && butacas.length < maximoPosible()) {
+                casilla.checked = true;
+                butacas.push(guardado.butacas[i]);
+            }
+        }
+    } else if (guardado.cantidad >= 1) {
+        cantidad = Math.min(guardado.cantidad, maximoPosible());
+    }
+
+    actualizarResumen();
+}
+
+
+// ---------- Mapa de butacas ----------
+
 function dibujarButacas() {
 
     var total = entrada.stock;
@@ -129,7 +180,6 @@ function dibujarButacas() {
         var filaDiv = document.createElement('div');
         filaDiv.className = 'ct-seatrow';
 
-        // Numero de fila a la izquierda
         var etiqueta = document.createElement('span');
         etiqueta.className = 'ct-seatrow__lbl';
         etiqueta.textContent = 'F' + fila;
@@ -148,14 +198,18 @@ function dibujarButacas() {
             boton.className = 'ct-seat';
             boton.setAttribute('data-codigo', codigo);
 
-            // Pasillo en el medio
-            if (columna == 10) {
+            // Cada butaca dice quien es (lectores de pantalla y mouse)
+            var nombreButaca = 'Fila ' + fila + ', butaca ' + columna;
+            boton.setAttribute('aria-label', nombreButaca);
+            boton.title = nombreButaca;
+
+            if (columna == PASILLO) {
                 boton.className = 'ct-seat is-gap';
             }
 
-            // Si ya esta vendida, no se puede tocar
             if (entrada.ocupadas.indexOf(codigo) != -1) {
                 boton.disabled = true;
+                boton.title = nombreButaca + ' (ocupada)';
             }
 
             filaDiv.appendChild(boton);
@@ -167,55 +221,112 @@ function dibujarButacas() {
 }
 
 
-// Actualiza la lista de butacas, el total y el boton
+// Busca las mejores butacas libres: las filas de adelante, todas juntas
+function elegirMejores() {
+
+    var n = parseInt(document.getElementById('auto-qty').value);
+    if (n > maximoPosible()) {
+        n = maximoPosible();
+    }
+
+    // Limpiamos lo que habia elegido
+    var marcadas = grilla.querySelectorAll('.ct-seat:checked');
+    for (var i = 0; i < marcadas.length; i++) {
+        marcadas[i].checked = false;
+    }
+    butacas = [];
+
+    var filas = grilla.children;
+
+    for (var f = 0; f < filas.length; f++) {
+
+        var asientos = filas[f].querySelectorAll('.ct-seat');
+        var seguidas = 0;
+
+        for (var c = 0; c < asientos.length; c++) {
+
+            // Una racha se corta si esta ocupada o si cruza el pasillo
+            if (asientos[c].disabled || c == PASILLO) {
+                seguidas = 0;
+            }
+            if (asientos[c].disabled == false) {
+                seguidas = seguidas + 1;
+            }
+
+            if (seguidas == n) {
+                for (var k = c - n + 1; k <= c; k++) {
+                    asientos[k].checked = true;
+                    butacas.push(asientos[k].getAttribute('data-codigo'));
+                }
+                mostrarError('');
+                guardarSeleccion();
+                actualizarResumen();
+                return;
+            }
+        }
+    }
+
+    mostrarError('No hay ' + n + ' butacas juntas en esta ubicación. Probá con menos o elegilas en el mapa.');
+    actualizarResumen();
+}
+
+
+// ---------- Resumen ----------
+
 function actualizarResumen() {
 
-    // Lista de butacas elegidas
     listaButacas.innerHTML = '';
     for (var i = 0; i < butacas.length; i++) {
         var partes = butacas[i].split('-');
-        var etiqueta = document.createElement('span');
-        etiqueta.className = 'ct-chip';
-        etiqueta.textContent = 'Fila ' + partes[0] + ' · Butaca ' + partes[1];
-        listaButacas.appendChild(etiqueta);
+        var chip = document.createElement('span');
+        chip.className = 'ct-chip';
+        chip.textContent = 'Fila ' + partes[0] + ' · Butaca ' + partes[1];
+        listaButacas.appendChild(chip);
     }
 
     textoCantidad.textContent = cantidad;
 
-    // Si todavia no eligio ninguna entrada
+    var total = 0;
+    var textoBoton = 'Continuar con el pago';
+    var habilitado = false;
+
     if (entrada == null) {
         textoResumen.textContent = 'Elegí un tipo de entrada para continuar.';
-        textoTotal.textContent = formatoPrecio(0);
-        botonComprar.disabled = true;
-        return;
+    } else {
+        var n = cuantasEntradas();
+
+        if (entrada.numerada && n == 0) {
+            textoResumen.textContent = entrada.tipo + ': elegí al menos una butaca.';
+        } else if (n == 1) {
+            textoResumen.textContent = '1 entrada · ' + entrada.tipo;
+        } else {
+            textoResumen.textContent = n + ' entradas · ' + entrada.tipo;
+        }
+
+        total = entrada.precio * n;
+        habilitado = (puedeComprar && n >= 1);
+
+        if (logueado == false) {
+            textoBoton = 'Iniciar sesión para pagar';
+        }
     }
 
-    var n = cuantasEntradas();
-
-    if (entrada.numerada && n == 0) {
-        textoResumen.textContent = entrada.tipo + ' · elegí al menos una butaca';
-    } else if (n == 1) {
-        textoResumen.textContent = '1 entrada · ' + entrada.tipo;
-    } else {
-        textoResumen.textContent = n + ' entradas · ' + entrada.tipo;
+    for (var t = 0; t < totales.length; t++) {
+        totales[t].textContent = formatoPrecio(total);
     }
-
-    textoTotal.textContent = formatoPrecio(entrada.precio * n);
-
-    if (puedeComprar && n >= 1) {
-        botonComprar.disabled = false;
-    } else {
-        botonComprar.disabled = true;
+    for (var b = 0; b < botonesComprar.length; b++) {
+        botonesComprar[b].disabled = !habilitado;
+        botonesComprar[b].querySelector('.js-buy-label').textContent = textoBoton;
     }
 }
 
 
-// Cuando el usuario elige un tipo de entrada
-function alElegirEntrada(evento) {
+// ---------- Eventos ----------
+
+function alElegirEntrada(evento, sinScroll) {
 
     var radio = evento.target;
 
-    // Guardamos los datos de la entrada elegida
     entrada = {
         id: radio.value,
         tipo: radio.dataset.tipo,
@@ -230,21 +341,35 @@ function alElegirEntrada(evento) {
     cantidad = 1;
     mostrarError('');
 
+    panelVacio.hidden = true;
     panelButacas.hidden = true;
     panelCampo.hidden = true;
 
+    var panelActivo = null;
+
     if (entrada.numerada) {
+        tituloPaso2.textContent = 'Elegí tus butacas';
+        ayudaPaso2.textContent = 'Tocá las butacas libres. Podés elegir hasta ' + maximoPosible() + '.';
         dibujarButacas();
         panelButacas.hidden = false;
+        panelActivo = panelButacas;
     } else {
+        tituloPaso2.textContent = 'Elegí la cantidad';
+        ayudaPaso2.textContent = 'Hasta ' + maximoPosible() + ' entradas por compra.';
         panelCampo.hidden = false;
+        panelActivo = panelCampo;
     }
 
+    // En el celular llevamos a la persona al paso 2
+    if (sinScroll != true && window.innerWidth < 992) {
+        panelActivo.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    guardarSeleccion();
     actualizarResumen();
 }
 
 
-// Cuando el usuario toca una butaca
 function alTocarButaca(evento) {
 
     var casilla = evento.target;
@@ -256,7 +381,6 @@ function alTocarButaca(evento) {
     var codigo = casilla.getAttribute('data-codigo');
 
     if (casilla.checked) {
-        // La marcó: si ya llegó al máximo, la desmarcamos
         if (butacas.length >= maximoPosible()) {
             casilla.checked = false;
             mostrarError('Podés elegir hasta ' + maximoPosible() + ' butacas por compra.');
@@ -264,7 +388,6 @@ function alTocarButaca(evento) {
         }
         butacas.push(codigo);
     } else {
-        // La desmarcó: la sacamos de la lista
         var posicion = butacas.indexOf(codigo);
         if (posicion != -1) {
             butacas.splice(posicion, 1);
@@ -272,15 +395,16 @@ function alTocarButaca(evento) {
     }
 
     mostrarError('');
+    guardarSeleccion();
     actualizarResumen();
 }
 
 
-// Botones + y - de la cantidad (entradas de campo)
 function bajarCantidad() {
     if (cantidad > 1) {
         cantidad = cantidad - 1;
         mostrarError('');
+        guardarSeleccion();
         actualizarResumen();
     }
 }
@@ -292,11 +416,11 @@ function subirCantidad() {
     } else {
         mostrarError('Máximo ' + maximoPosible() + ' entradas por compra.');
     }
+    guardarSeleccion();
     actualizarResumen();
 }
 
 
-// Cuando toca "Continuar con el pago"
 function alEnviar(evento) {
 
     if (entrada == null) {
@@ -311,7 +435,15 @@ function alEnviar(evento) {
         return;
     }
 
-    // Pasamos la cantidad y las butacas al formulario
+    // Sin sesion: guardamos la seleccion y mandamos al login
+    // (el PHP ya guardo esta pagina para volver despues)
+    if (logueado == false) {
+        evento.preventDefault();
+        guardarSeleccion();
+        window.location.href = urlLogin;
+        return;
+    }
+
     document.getElementById('f-qty').value = cuantasEntradas();
 
     if (entrada.numerada) {
@@ -334,23 +466,22 @@ function prepararEntradas() {
     }
 
     grilla.addEventListener('change', alTocarButaca);
+    document.getElementById('auto-pick').addEventListener('click', elegirMejores);
     document.getElementById('qty-minus').addEventListener('click', bajarCantidad);
     document.getElementById('qty-plus').addEventListener('click', subirCantidad);
     formulario.addEventListener('submit', alEnviar);
 
     actualizarResumen();
+    recuperarSeleccion();
 }
 
 
 // ============================================================
 // 3. MAPA (OpenStreetMap) Y LUGARES CERCANOS (Overpass)
-//    No hace falta ninguna clave: OpenStreetMap es libre.
 // ============================================================
 
 var mapa = null;
 
-// Busca una direccion en Nominatim. Cuando termina llama a "alTerminar"
-// con {lat, lon} o con null si no encontro nada.
 function buscarDireccion(texto, alTerminar) {
 
     var direccion = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(texto);
@@ -371,8 +502,6 @@ function buscarDireccion(texto, alTerminar) {
         });
 }
 
-
-// Distancia en metros entre dos puntos
 function calcularDistancia(lat1, lon1, lat2, lon2) {
     var radio = 6371000;
     var grados = Math.PI / 180;
@@ -384,8 +513,6 @@ function calcularDistancia(lat1, lon1, lat2, lon2) {
     return Math.round(radio * c);
 }
 
-
-// Dice a que grupo pertenece un lugar de OpenStreetMap
 function buscarGrupo(etiquetas) {
     if (etiquetas.railway == 'subway_entrance' || etiquetas.railway == 'station') {
         return 'transporte';
@@ -402,8 +529,6 @@ function buscarGrupo(etiquetas) {
     return '';
 }
 
-
-// Muestra un grupo de lugares en la lista de la derecha
 function mostrarGrupo(titulo, icono, color, lugares) {
 
     if (lugares.length == 0) {
@@ -412,7 +537,6 @@ function mostrarGrupo(titulo, icono, color, lugares) {
 
     var lista = document.getElementById('near-list');
 
-    // Los mas cercanos primero
     lugares.sort(function (a, b) {
         return a.distancia - b.distancia;
     });
@@ -424,7 +548,6 @@ function mostrarGrupo(titulo, icono, color, lugares) {
     var ul = document.createElement('ul');
     ul.className = 'list-unstyled mb-0';
 
-    // Mostramos como maximo 4 de cada grupo
     for (var i = 0; i < lugares.length && i < 4; i++) {
 
         var lugar = lugares[i];
@@ -438,7 +561,6 @@ function mostrarGrupo(titulo, icono, color, lugares) {
         li.appendChild(metros);
         ul.appendChild(li);
 
-        // Puntito en el mapa
         var punto = L.circleMarker([lugar.lat, lugar.lon], {
             radius: 6,
             color: '#0b0b14',
@@ -453,8 +575,6 @@ function mostrarGrupo(titulo, icono, color, lugares) {
     lista.appendChild(ul);
 }
 
-
-// Pide a Overpass los lugares que hay cerca
 function buscarLugaresCercanos(lat, lon) {
 
     var consulta = '[out:json][timeout:25];(' +
@@ -495,7 +615,6 @@ function buscarLugaresCercanos(lat, lon) {
                     continue;
                 }
 
-                // Si no tiene nombre, le ponemos uno generico
                 var nombre = etiquetas.name;
                 if (nombre == undefined) {
                     if (grupo == 'colectivo') {
@@ -538,14 +657,13 @@ function buscarLugaresCercanos(lat, lon) {
         });
 }
 
-
-// Pone el marcador del lugar y busca lo que hay cerca
 function mostrarLugarEnMapa(posicion, esExacta) {
 
     var estado = document.getElementById('map-status');
 
     if (posicion == null) {
-        estado.textContent = 'No pudimos ubicar el lugar en el mapa.';
+        estado.textContent = 'No pudimos ubicar el lugar en el mapa. Probá con la dirección: ' +
+            datos.dataset.direccion + ', ' + datos.dataset.ciudad + '.';
         document.getElementById('near-list').innerHTML = '';
         return;
     }
@@ -562,7 +680,6 @@ function mostrarLugarEnMapa(posicion, esExacta) {
     marcador.addTo(mapa);
     marcador.bindPopup(datos.dataset.lugar + ' - ' + datos.dataset.direccion);
 
-    // Link para ir en OpenStreetMap
     var link = document.getElementById('map-link');
     link.href = 'https://www.openstreetmap.org/directions?to=' + posicion.lat + '%2C' + posicion.lon;
     link.hidden = false;
@@ -574,14 +691,12 @@ function mostrarLugarEnMapa(posicion, esExacta) {
     }
 }
 
-
 function prepararMapa() {
 
     if (document.getElementById('venue-map') == null || typeof L == 'undefined') {
         return;
     }
 
-    // Creamos el mapa (empieza en Buenos Aires)
     mapa = L.map('venue-map', { scrollWheelZoom: false });
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
@@ -593,7 +708,6 @@ function prepararMapa() {
     var direccion = datos.dataset.direccion;
     var ciudad = datos.dataset.ciudad;
 
-    // Primero probamos con la direccion
     buscarDireccion(direccion + ', ' + ciudad + ', Argentina', function (primero) {
 
         if (primero != null) {
@@ -601,8 +715,6 @@ function prepararMapa() {
             return;
         }
 
-        // Si no la encuentra, probamos con el nombre del lugar
-        // (esperamos 1 segundo porque Nominatim no deja pedir mas rapido)
         setTimeout(function () {
             buscarDireccion(lugar + ', ' + ciudad + ', Argentina', function (segundo) {
 
@@ -611,7 +723,6 @@ function prepararMapa() {
                     return;
                 }
 
-                // Ultimo intento: solo la ciudad
                 setTimeout(function () {
                     buscarDireccion(ciudad + ', Argentina', function (tercero) {
                         mostrarLugarEnMapa(tercero, false);
@@ -622,9 +733,33 @@ function prepararMapa() {
     });
 }
 
+// El mapa hace pedidos a servicios externos: lo armamos recien
+// cuando la persona se acerca a la seccion "Como llegar".
+function prepararMapaDiferido() {
+
+    var seccion = document.getElementById('como-llegar');
+    if (seccion == null) {
+        return;
+    }
+
+    if (typeof IntersectionObserver == 'undefined') {
+        prepararMapa();
+        return;
+    }
+
+    var observador = new IntersectionObserver(function (entradas) {
+        if (entradas[0].isIntersecting) {
+            observador.disconnect();
+            prepararMapa();
+        }
+    }, { rootMargin: '400px 0px' });
+
+    observador.observe(seccion);
+}
+
 
 // ============================================================
-// 4. MENU DE SECCIONES (marca la seccion que se esta viendo)
+// 4. MENU DE SECCIONES Y BARRA DE COMPRA
 // ============================================================
 
 function prepararMenu() {
@@ -634,7 +769,6 @@ function prepararMenu() {
         return;
     }
 
-    // Marca como activo el enlace de la seccion que se ve
     function marcar(id) {
         for (var i = 0; i < enlaces.length; i++) {
             if (enlaces[i].getAttribute('href') == '#' + id) {
@@ -662,6 +796,26 @@ function prepararMenu() {
     }
 }
 
+// La barra de abajo (celular) solo se ve mientras estas en la seccion de entradas
+function prepararBarraCompra() {
+
+    var barra = document.getElementById('buybar');
+    var seccion = document.getElementById('entradas');
+    if (barra == null || seccion == null || typeof IntersectionObserver == 'undefined') {
+        return;
+    }
+
+    var observador = new IntersectionObserver(function (entradas) {
+        if (entradas[0].isIntersecting) {
+            barra.classList.add('is-visible');
+        } else {
+            barra.classList.remove('is-visible');
+        }
+    });
+
+    observador.observe(seccion);
+}
+
 
 // ============================================================
 // ARRANCAMOS TODO
@@ -669,5 +823,6 @@ function prepararMenu() {
 
 ponerCuentaRegresiva();
 prepararEntradas();
-prepararMapa();
+prepararMapaDiferido();
 prepararMenu();
+prepararBarraCompra();

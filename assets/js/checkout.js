@@ -2,6 +2,7 @@
    AllTicket · checkout
    - muestra el panel del medio de pago elegido
    - valida la tarjeta en el navegador (Luhn, vencimiento, CVV)
+   - evita el doble envío del formulario
    - los datos de la tarjeta NO se envían (esos inputs no tienen "name")
 ========================================================= */
 (function () {
@@ -92,7 +93,7 @@
         return '';
     }
 
-    // ---- enviar ----
+    // ---- enviar (validación) ----
     form.addEventListener('submit', function (ev) {
         var elegido = form.querySelector('input[name="payment_method"]:checked');
 
@@ -111,5 +112,27 @@
             return;
         }
         showError('');
+    });
+
+    // ---- evitar doble envío ----
+    // Se registra DESPUÉS de la validación: solo actúa si el envío sigue en pie.
+    form.addEventListener('submit', function (ev) {
+        if (ev.defaultPrevented) { return; }          // la validación ya lo frenó
+        if (form.dataset.enviando === '1') {          // segundo intento
+            ev.preventDefault();
+            return;
+        }
+        form.dataset.enviando = '1';
+        var btn = form.querySelector('button[type="submit"]');
+        if (btn) { setTimeout(function () { btn.disabled = true; }, 0); }
+    });
+
+    // si el navegador restaura la página al volver con "atrás", se rehabilita el botón
+    window.addEventListener('pageshow', function (ev) {
+        if (ev.persisted) {
+            form.dataset.enviando = '';
+            var btn = form.querySelector('button[type="submit"]');
+            if (btn) { btn.disabled = false; }
+        }
     });
 })();

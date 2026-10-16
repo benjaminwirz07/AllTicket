@@ -5,17 +5,14 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Pagina de login de tu proyecto (la misma que usa checkout.php)
 $loginUrl = '/src/views/auth/login.php';
-
-// Mismo criterio que checkout.php para saber si hay alguien logueado
 $userId = $_SESSION['user']['id'] ?? ($_SESSION['user_id'] ?? null);
 $logueado = ($userId != null);
 
 date_default_timezone_set('America/Argentina/Buenos_Aires');
 
 // ============================================================
-// 1. LEEMOS EL ID DEL RECITAL (viene en la URL: ?id=...)
+// 1. ID DEL RECITAL (?id=...)
 // ============================================================
 
 $id = "";
@@ -31,40 +28,76 @@ $entradas = [];
 // 2. FUNCIONES
 // ============================================================
 
-// Dice si la entrada es VIP
 function esVip($tipo)
 {
-    if (stripos($tipo, 'vip') !== false) {
-        return true;
-    }
-    return false;
+    return (stripos($tipo, 'vip') !== false);
 }
 
-// Dice si la entrada tiene butaca numerada (VIP o Platea)
 function esNumerada($tipo)
 {
-    if (stripos($tipo, 'vip') !== false) {
-        return true;
-    }
-    if (stripos($tipo, 'platea') !== false) {
-        return true;
-    }
-    return false;
+    return (stripos($tipo, 'vip') !== false || stripos($tipo, 'platea') !== false);
 }
 
-// Cuenta cuantos dias faltan para el show
 function diasRestantes($fecha)
 {
     $hoy = strtotime(date('Y-m-d'));
     $dia = strtotime($fecha);
-    $dias = ($dia - $hoy) / 86400;
-    return round($dias);
+    return round(($dia - $hoy) / 86400);
+}
+
+// CAMBIO G: vence reservas held (24 h) y ventas pendientes; devuelve el stock
+// (misma función que usa checkout.php)
+if (!function_exists('vencerReservas')) {
+    function vencerReservas(PDO $pdo)
+    {
+        $propia = !$pdo->inTransaction();
+        if ($propia) { $pdo->beginTransaction(); }
+        try {
+            $ids = $pdo->query(
+                "SELECT s.id FROM sales s
+                  WHERE s.status = 'pending'
+                    AND (s.sale_date <= NOW() - INTERVAL 24 HOUR
+                         OR EXISTS (SELECT 1 FROM seat_reservations r
+                                     WHERE r.sale_id = s.id AND r.status = 'held' AND r.expires_at <= NOW()))"
+            )->fetchAll(PDO::FETCH_COLUMN);
+
+            $cancelar = $pdo->prepare("UPDATE sales SET status = 'cancelled' WHERE id = ? AND status = 'pending'");
+            $devolver = $pdo->prepare(
+                "UPDATE tickets t JOIN sale_details d ON d.ticket_id = t.id
+                    SET t.available = LEAST(t.stock, t.available + d.quantity)
+                  WHERE d.sale_id = ?"
+            );
+            $liberar = $pdo->prepare("UPDATE seat_reservations SET status = 'expired' WHERE sale_id = ? AND status = 'held'");
+
+            foreach ($ids as $idVenta) {
+                $cancelar->execute([$idVenta]);
+                if ($cancelar->rowCount() === 1) {
+                    $devolver->execute([$idVenta]);
+                    $liberar->execute([$idVenta]);
+                }
+            }
+
+            $pdo->exec("UPDATE seat_reservations SET status = 'expired' WHERE status = 'held' AND expires_at <= NOW()");
+
+            if ($propia) { $pdo->commit(); }
+        } catch (PDOException $e) {
+            if ($propia && $pdo->inTransaction()) { $pdo->rollBack(); }
+            throw $e;
+        }
+    }
 }
 
 
 // ============================================================
-// 3. TRAEMOS EL RECITAL DE LA BASE DE DATOS
+// 3. RECITAL Y ENTRADAS
 // ============================================================
+
+// CAMBIO G: liberar reservas vencidas antes de mostrar la disponibilidad
+try {
+    vencerReservas($pdo);
+} catch (PDOException $e) {
+    error_log('Error al vencer reservas: ' . $e->getMessage());
+}
 
 try {
 
@@ -86,7 +119,6 @@ try {
         $stmt->execute([":id" => $id]);
         $concert = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        // Las entradas de este recital (de la mas barata a la mas cara)
         if ($concert) {
             $stmtTickets = $pdo->prepare(
                 "SELECT id, type, price, stock, available
@@ -106,8 +138,7 @@ try {
 
 
 // ============================================================
-// 4. BUTACAS QUE YA SE VENDIERON
-//    (si todavia no corriste la migracion, la tabla no existe y seguimos igual)
+// 4. BUTACAS VENDIDAS
 // ============================================================
 
 if ($concert) {
@@ -115,24 +146,21 @@ if ($concert) {
     $butacasVendidas = [];
 
     try {
-        $stmtSeats = $pdo->prepare("SELECT ticket_id, seat_code FROM seat_reservations WHERE concert_id = :id");
+        // CAMBIO H: solo cuentan las butacas held o confirmed
+        $stmtSeats = $pdo->prepare("SELECT ticket_id, seat_code FROM seat_reservations WHERE concert_id = :id AND status IN ('held', 'confirmed')");
         $stmtSeats->execute([":id" => $id]);
         $butacasVendidas = $stmtSeats->fetchAll(PDO::FETCH_ASSOC);
     } catch (PDOException $e) {
         $butacasVendidas = [];
     }
 
-    // A cada entrada le guardamos su lista de butacas ocupadas: "1-2,1-3,"
     foreach ($entradas as $numero => $entrada) {
-
         $lista = "";
-
         foreach ($butacasVendidas as $butaca) {
             if ($butaca['ticket_id'] == $entrada['id']) {
                 $lista = $lista . $butaca['seat_code'] . ",";
             }
         }
-
         $entradas[$numero]['ocupadas'] = $lista;
     }
 }
@@ -143,14 +171,16 @@ if ($concert) {
 // ============================================================
 
 $dias = 0;
+$diasCompletos = 0;
 $sePuedeComprar = false;
 $fechaCompleta = "";
+$precioDesde = null;
+$marquesina = [];
 
 // Si no esta logueado, guardamos esta pagina para volver despues del login
 if (!$logueado) {
     $_SESSION['volver_a'] = $_SERVER['REQUEST_URI'] . '#entradas';
 }
-$marquesina = [];
 
 if ($concert) {
 
@@ -160,29 +190,34 @@ if ($concert) {
         $sePuedeComprar = true;
     }
 
-    // Fecha y hora juntas, para la cuenta regresiva
+    // Precio mas bajo entre las entradas que todavia tienen lugar
+    foreach ($entradas as $entrada) {
+        if ((int)$entrada['available'] > 0) {
+            $precioDesde = $entrada['price'];
+            break; // ya vienen ordenadas de menor a mayor
+        }
+    }
+
     $fechaCompleta = $concert['date'] . "T" . substr($concert['time'], 0, 5) . ":00-03:00";
 
-    // Textos de la marquesina
     $marquesina = [
         $concert['artist'],
         formatFecha($concert['date'], $concert['time']),
         $concert['venue'],
-        "vivi un show único",
-        "entreas oficiales, sin reventa",
+        "viví un show único",
+        "entradas oficiales, sin reventa",
         "¡no te lo pierdas!",
     ];
 
-    // Link para agregar el show a Google Calendar (dura 3 horas)
     $inicio = strtotime($concert['date'] . ' ' . $concert['time']);
     $fin = $inicio + 3 * 3600;
+    $diasCompletos = max(0, (int)floor(($inicio - time()) / 86400));
     $linkCalendario = 'https://calendar.google.com/calendar/render?action=TEMPLATE'
         . '&text=' . urlencode($concert['name'])
         . '&dates=' . date('Ymd\THis', $inicio) . '/' . date('Ymd\THis', $fin)
         . '&ctz=America/Argentina/Buenos_Aires'
         . '&location=' . urlencode($concert['venue'] . ', ' . $concert['address'] . ', ' . $concert['city']);
 
-    // Link para compartir por WhatsApp
     $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
     $urlPagina = ($https ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
     $linkWhatsapp = 'https://wa.me/?text=' . urlencode(
@@ -202,7 +237,6 @@ ob_start();
 
     <?php if (!$concert) { ?>
 
-        <!-- RECITAL NO ENCONTRADO -->
         <section class="py-5">
             <div class="container-xl text-center py-5">
                 <i class="bi bi-emoji-frown fs-1 text-violet-neon"></i>
@@ -217,7 +251,7 @@ ob_start();
     <?php } else { ?>
 
         <!-- =================================================
-             HERO: ocupa toda la pantalla
+             HERO: qué, cuándo, dónde y cuánto — y un solo botón principal
         ================================================== -->
         <section class="ct-hero" id="inicio">
 
@@ -228,72 +262,317 @@ ob_start();
 
                 <div class="ct-hero__text">
 
-                <a href="/src/views/index.php#eventos" class="ct-hero__back">
-                    <i class="bi bi-arrow-left me-1"></i>Volver a recitales
-                </a>
-
-                <?php if (!empty($concert['genre'])) { ?>
-                    <span class="badge bg-violet-neon rounded-pill mb-3"><?= e($concert['genre']) ?></span>
-                <?php } ?>
-
-                <h1 class="ct-hero__title"><?= e($concert['name']) ?></h1>
-                <p class="ct-hero__artist"><?= e($concert['artist']) ?></p>
-
-                <ul class="ct-hero__facts list-unstyled">
-                    <li><i class="bi bi-calendar-event"></i><?= e(formatFecha($concert['date'], $concert['time'])) ?></li>
-                    <li><i class="bi bi-geo-alt"></i><?= e($concert['venue']) ?>, <?= e($concert['city']) ?></li>
-                    <li><i class="bi bi-people"></i><?= e(number_format((int)$concert['capacity'], 0, ',', '.')) ?> personas</li>
-                </ul>
-
-                <!-- CUENTA REGRESIVA -->
-                <?php if ($dias >= 0) { ?>
-                    <p class="ct-hero__eyebrow">
-                        <?php if ($dias == 0) { ?>
-                            ¡El show es hoy!
-                        <?php } elseif ($dias == 1) { ?>
-                            ¡El show es mañana!
-                        <?php } else { ?>
-                            Faltan <strong><?= $dias ?> días</strong> para el show
-                        <?php } ?>
-                    </p>
-
-                    <div class="ct-countdown" id="countdown" aria-live="off">
-                        <div class="ct-countdown__box"><span class="ct-countdown__num" data-cd="d"><?= $dias ?></span><span class="ct-countdown__lbl">días</span></div>
-                        <div class="ct-countdown__box"><span class="ct-countdown__num" data-cd="h">--</span><span class="ct-countdown__lbl">horas</span></div>
-                        <div class="ct-countdown__box"><span class="ct-countdown__num" data-cd="m">--</span><span class="ct-countdown__lbl">min</span></div>
-                        <div class="ct-countdown__box"><span class="ct-countdown__num" data-cd="s">--</span><span class="ct-countdown__lbl">seg</span></div>
-                    </div>
-                <?php } else { ?>
-                    <div class="alert alert-warning d-inline-block">Este recital ya no está disponible para la compra.</div>
-                <?php } ?>
-
-                <?php if ($concert['status'] != 'active' && $dias >= 0) { ?>
-                    <div class="alert alert-warning d-inline-block mt-3">Este recital no está a la venta.</div>
-                <?php } ?>
-
-                <div class="d-flex flex-wrap gap-3 mt-4">
-                    <a href="#entradas" class="btn btn-violet-glow btn-lg px-5 rounded-pill">
-                        Elegir entradas <i class="bi bi-arrow-down ms-2"></i>
+                    <a href="/src/views/index.php#eventos" class="ct-hero__back">
+                        <i class="bi bi-arrow-left me-1"></i>Volver a recitales
                     </a>
-                    <a href="#como-llegar" class="btn btn-outline-light btn-lg px-4 rounded-pill">
-                        <i class="bi bi-geo-alt me-1"></i>Cómo llegar
-                    </a>
-                </div>
 
-                <?php if ($dias >= 0) { ?>
-                    <div class="ct-hero__links">
-                        <a href="<?= e($linkCalendario) ?>" target="_blank" rel="noopener">
-                            <i class="bi bi-calendar-plus"></i>Agregar al calendario
-                        </a>
-                        <a href="<?= e($linkWhatsapp) ?>" target="_blank" rel="noopener">
-                            <i class="bi bi-whatsapp"></i>Compartir
-                        </a>
-                    </div>
-                <?php } ?>
+                    <?php if (!empty($concert['genre'])) { ?>
+                        <span class="badge bg-violet-neon rounded-pill mb-3"><?= e($concert['genre']) ?></span>
+                    <?php } ?>
+
+                    <h1 class="ct-hero__title"><?= e($concert['name']) ?></h1>
+                    <p class="ct-hero__artist"><?= e($concert['artist']) ?></p>
+
+                    <ul class="ct-hero__facts list-unstyled">
+                        <li><i class="bi bi-calendar-event"></i><?= e(formatFecha($concert['date'], $concert['time'])) ?></li>
+                        <li><i class="bi bi-geo-alt"></i><?= e($concert['venue']) ?>, <?= e($concert['city']) ?></li>
+                        <li><i class="bi bi-people"></i><?= e(number_format((int)$concert['capacity'], 0, ',', '.')) ?> personas</li>
+                    </ul>
+
+                    <?php if ($dias >= 0) { ?>
+                        <p class="ct-hero__eyebrow">
+                            <?php if ($dias == 0) { ?>
+                                ¡El show es hoy!
+                            <?php } elseif ($dias == 1) { ?>
+                                ¡El show es mañana!
+                            <?php } else { ?>
+                                Faltan <strong><?= $diasCompletos ?> días</strong> para el show
+                            <?php } ?>
+                        </p>
+
+                        <div class="ct-countdown" id="countdown" aria-live="off">
+                            <div class="ct-countdown__box"><span class="ct-countdown__num" data-cd="d"><?= $diasCompletos ?></span><span class="ct-countdown__lbl">días</span></div>
+                            <div class="ct-countdown__box"><span class="ct-countdown__num" data-cd="h">--</span><span class="ct-countdown__lbl">horas</span></div>
+                            <div class="ct-countdown__box"><span class="ct-countdown__num" data-cd="m">--</span><span class="ct-countdown__lbl">min</span></div>
+                            <div class="ct-countdown__box"><span class="ct-countdown__num" data-cd="s">--</span><span class="ct-countdown__lbl">seg</span></div>
+                        </div>
+                    <?php } else { ?>
+                        <div class="alert alert-warning d-inline-block">Este recital ya terminó.</div>
+                    <?php } ?>
+
+                    <?php if ($concert['status'] != 'active' && $dias >= 0) { ?>
+                        <div class="alert alert-warning d-inline-block mt-3">Este recital no está a la venta por ahora.</div>
+                    <?php } ?>
+
+                    <?php if ($sePuedeComprar && !empty($entradas)) { ?>
+                        <div class="ct-hero__cta">
+                            <a href="#entradas" class="btn btn-violet-glow btn-lg px-5 rounded-pill">
+                                Elegir entradas <i class="bi bi-arrow-down ms-2"></i>
+                            </a>
+                            <span class="ct-hero__from">
+                                <?php if ($precioDesde !== null) { ?>
+                                    Desde <strong><?= e(formatPrecio($precioDesde)) ?></strong>
+                                <?php } else { ?>
+                                    Entradas agotadas
+                                <?php } ?>
+                            </span>
+                        </div>
+                    <?php } ?>
+
+                    <?php if ($dias >= 0) { ?>
+                        <div class="ct-hero__links">
+                            <a href="<?= e($linkCalendario) ?>" target="_blank" rel="noopener">
+                                <i class="bi bi-calendar-plus"></i>Agregar al calendario
+                            </a>
+                            <a href="<?= e($linkWhatsapp) ?>" target="_blank" rel="noopener">
+                                <i class="bi bi-whatsapp"></i>Compartir
+                            </a>
+                            <a href="#como-llegar">
+                                <i class="bi bi-geo-alt"></i>Cómo llegar
+                            </a>
+                        </div>
+                    <?php } ?>
 
                 </div>
 
                 <img class="ct-hero__photo" src="/<?= e($concert['image']) ?>" alt="<?= e($concert['artist']) ?>">
+
+            </div>
+        </section>
+
+
+        <!-- MENÚ DE SECCIONES (mismo orden que la página) -->
+        <nav class="ct-subnav" aria-label="Secciones del recital">
+            <div class="container-xl ct-subnav__inner">
+                <a href="#entradas">Entradas</a>
+                <a href="#info">Info</a>
+                <a href="#como-llegar">Cómo llegar</a>
+                <a href="#faq">Preguntas</a>
+            </div>
+        </nav>
+
+
+        <!-- =================================================
+             COMPRA: va primero, es lo que la persona vino a hacer
+        ================================================== -->
+        <section id="entradas" class="py-5 ct-buy">
+            <div class="container-xl">
+
+                <?php if (empty($entradas)) { ?>
+
+                    <h2 class="h4 fw-bold text-white mb-2">Entradas</h2>
+                    <p class="text-secondary-custom">Todavía no hay entradas cargadas para este recital.</p>
+
+                <?php } else { ?>
+
+                    <form action="/src/views/concerts/checkout.php" method="POST" id="form-compra" novalidate>
+
+                        <input type="hidden" name="concert_id" value="<?= e($concert['id']) ?>">
+                        <input type="hidden" name="quantity" id="f-qty" value="1">
+                        <input type="hidden" name="seats" id="f-seats" value="">
+
+                        <div class="row g-4 align-items-start">
+
+                            <div class="col-12 col-lg-8">
+
+                                <!-- PASO 1 -->
+                                <div class="ct-step">
+                                    <div class="ct-step__head">
+                                        <span class="ct-step__n">1</span>
+                                        <div>
+                                            <h2 class="ct-step__title">Elegí tu ubicación</h2>
+                                            <p class="ct-step__hint">En las numeradas elegís tu butaca; en las demás, entrás y te ubicás donde quieras.</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-grid gap-3" role="radiogroup" aria-label="Tipo de entrada">
+
+                                        <?php foreach ($entradas as $i => $entrada) { ?>
+
+                                            <?php
+                                            $agotada   = ((int)$entrada['available'] <= 0);
+                                            $vip       = esVip($entrada['type']);
+                                            $numerada  = esNumerada($entrada['type']);
+                                            $idInput   = "entrada-" . $i;
+
+                                            $stockTotal = (int)$entrada['stock'];
+                                            $porcentaje = 0;
+                                            if ($stockTotal > 0) {
+                                                $porcentaje = round(((int)$entrada['available'] / $stockTotal) * 100);
+                                            }
+                                            ?>
+
+                                            <div>
+                                                <input type="radio" class="btn-check" name="ticket_id"
+                                                    id="<?= $idInput ?>" value="<?= e($entrada['id']) ?>"
+                                                    data-tipo="<?= e($entrada['type']) ?>"
+                                                    data-precio="<?= e($entrada['price']) ?>"
+                                                    data-disponibles="<?= (int)$entrada['available'] ?>"
+                                                    data-stock="<?= (int)$entrada['stock'] ?>"
+                                                    data-numerada="<?= $numerada ? 'si' : 'no' ?>"
+                                                    data-ocupadas="<?= e($entrada['ocupadas']) ?>"
+                                                    <?php if ($agotada || !$sePuedeComprar) { echo "disabled"; } ?>>
+
+                                                <label for="<?= $idInput ?>" class="ct-ticket">
+                                                    <div class="d-flex justify-content-between align-items-center gap-3">
+
+                                                        <div>
+                                                            <h3 class="h5 fw-bold text-white mb-1">
+                                                                <?php if ($vip) { ?><i class="bi bi-star-fill text-warning me-1"></i><?php } ?>
+                                                                <?= e($entrada['type']) ?>
+                                                                <?php if ($agotada) { ?>
+                                                                    <span class="badge text-bg-secondary ms-1">Agotada</span>
+                                                                <?php } elseif ((int)$entrada['available'] <= 20) { ?>
+                                                                    <span class="badge text-bg-danger ms-1">¡Últimas!</span>
+                                                                <?php } ?>
+                                                            </h3>
+
+                                                            <p class="small text-secondary-custom mb-0">
+                                                                <?= $agotada ? "Sin disponibilidad" : (int)$entrada['available'] . " disponibles" ?>
+                                                            </p>
+
+                                                            <div class="ct-meter<?php if ($porcentaje <= 20) { echo " is-low"; } ?>" aria-hidden="true">
+                                                                <span style="width: <?= (int)$porcentaje ?>%"></span>
+                                                            </div>
+
+                                                            <span class="ct-ticket__tag">
+                                                                <?php if ($numerada) { ?>
+                                                                    <i class="bi bi-grid-3x3-gap"></i> Butaca numerada: elegís tu asiento
+                                                                <?php } else { ?>
+                                                                    <i class="bi bi-people"></i> Ingreso libre: sin butaca asignada
+                                                                <?php } ?>
+                                                            </span>
+                                                        </div>
+
+                                                        <p class="fs-4 fw-bold text-white mb-0 text-nowrap"><?= e(formatPrecio($entrada['price'])) ?></p>
+
+                                                    </div>
+                                                </label>
+                                            </div>
+
+                                        <?php } ?>
+
+                                    </div>
+                                </div>
+
+
+                                <!-- PASO 2: butacas o cantidad, según lo que se eligió -->
+                                <div class="ct-step">
+                                    <div class="ct-step__head">
+                                        <span class="ct-step__n">2</span>
+                                        <div>
+                                            <h2 class="ct-step__title" id="step2-title">Butacas o cantidad</h2>
+                                            <p class="ct-step__hint" id="step2-hint">Hasta 6 entradas por compra.</p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Antes de elegir ubicación -->
+                                    <div id="panel-empty" class="ct-empty">
+                                        <i class="bi bi-arrow-up-circle"></i>
+                                        Primero elegí una ubicación y acá aparecen las butacas o la cantidad.
+                                    </div>
+
+                                    <!-- Entradas numeradas -->
+                                    <div id="panel-seats" class="ct-seatbox" hidden>
+
+                                        <div class="ct-autopick">
+                                            <label for="auto-qty" class="small text-secondary-custom">¿No querés buscar? Elegimos por vos:</label>
+                                            <div class="d-flex gap-2">
+                                                <select id="auto-qty" class="form-select form-select-sm ct-autopick__sel" aria-label="Cantidad de butacas">
+                                                    <option value="1">1 butaca</option>
+                                                    <option value="2" selected>2 butacas juntas</option>
+                                                    <option value="3">3 butacas juntas</option>
+                                                    <option value="4">4 butacas juntas</option>
+                                                    <option value="5">5 butacas juntas</option>
+                                                    <option value="6">6 butacas juntas</option>
+                                                </select>
+                                                <button type="button" id="auto-pick" class="btn btn-sm btn-outline-violet rounded-pill px-3">
+                                                    <i class="bi bi-magic me-1"></i>Mejores disponibles
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div class="ct-legend mb-3">
+                                            <span><i style="background:rgba(255,255,255,.16)"></i>Libre</span>
+                                            <span><i style="background:linear-gradient(135deg,#a855f7,#22d3ee)"></i>Tu selección</span>
+                                            <span><i style="background:#2a2a38"></i>Ocupada</span>
+                                        </div>
+
+                                        <div class="ct-stage">ESCENARIO</div>
+                                        <div class="ct-seatscroll" id="seat-grid" role="group" aria-label="Mapa de butacas"></div>
+
+                                        <div class="mt-3" id="seat-chips" aria-live="polite"></div>
+                                    </div>
+
+                                    <!-- Entradas sin butaca -->
+                                    <div id="panel-field" class="ct-field" hidden>
+                                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                                            <p class="small text-secondary-custom mb-0">
+                                                Esta ubicación no tiene butaca asignada: ubicate donde prefieras dentro del sector.
+                                            </p>
+                                            <div>
+                                                <label class="small text-secondary-custom d-block mb-1">Cantidad de entradas</label>
+                                                <div class="ct-stepper">
+                                                    <button type="button" id="qty-minus" aria-label="Menos">−</button>
+                                                    <output id="qty-out">1</output>
+                                                    <button type="button" id="qty-plus" aria-label="Más">+</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+
+                            <!-- PASO 3: resumen (en el celular queda en la barra de abajo) -->
+                            <div class="col-12 col-lg-4">
+                                <div class="ct-summary">
+
+                                    <div class="ct-step__head mb-3">
+                                        <span class="ct-step__n">3</span>
+                                        <h2 class="ct-step__title">Revisá y pagá</h2>
+                                    </div>
+
+                                    <div class="small text-secondary-custom" id="sum-text" aria-live="polite">Elegí un tipo de entrada para continuar.</div>
+
+                                    <div class="d-flex justify-content-between align-items-center border-top border-secondary-subtle pt-3 mt-3">
+                                        <span class="text-secondary-custom">Total</span>
+                                        <span class="ct-summary__total text-white js-total">$ 0</span>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-violet-glow btn-lg w-100 rounded-pill mt-3 d-none d-lg-block js-buy" disabled>
+                                        <span class="js-buy-label">Continuar con el pago</span> <i class="bi bi-arrow-right ms-2"></i>
+                                    </button>
+
+                                    <?php if (!$logueado) { ?>
+                                        <p class="small text-secondary-custom mt-3 mb-0">
+                                            <i class="bi bi-info-circle me-1 text-violet-neon"></i>
+                                            Armá tu selección tranquilo. Para pagar te pedimos iniciar sesión y la selección te espera.
+                                        </p>
+                                    <?php } ?>
+
+                                    <p class="text-danger small mt-2 mb-0" id="form-error" role="alert" hidden></p>
+
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- Barra fija de compra (solo celular) -->
+                        <div class="ct-buybar" id="buybar">
+                            <div>
+                                <span class="ct-buybar__lbl">Total</span>
+                                <span class="ct-buybar__total js-total">$ 0</span>
+                            </div>
+                            <button type="submit" class="btn btn-violet-glow rounded-pill px-4 js-buy" disabled>
+                                <span class="js-buy-label">Continuar con el pago</span>
+                            </button>
+                        </div>
+
+                    </form>
+
+                <?php } ?>
 
             </div>
         </section>
@@ -311,19 +590,8 @@ ob_start();
         </div>
 
 
-        <!-- MENÚ DE SECCIONES -->
-        <nav class="ct-subnav" aria-label="Secciones del recital">
-            <div class="container-xl ct-subnav__inner">
-                <a href="#info">Info</a>
-                <a href="#entradas">Entradas</a>
-                <a href="#como-llegar">Cómo llegar</a>
-                <a href="#faq">Preguntas</a>
-            </div>
-        </nav>
-
-
         <!-- =================================================
-             QUÉ VA A PASAR EN EL SHOW
+             INFO DEL SHOW
         ================================================== -->
         <section id="info" class="py-5">
             <div class="container-xl">
@@ -362,198 +630,7 @@ ob_start();
 
 
         <!-- =================================================
-             ELEGIR UBICACIÓN
-        ================================================== -->
-        <section id="entradas" class="py-5 border-top border-dark-subtle">
-            <div class="container-xl">
-
-                <h2 class="h4 fw-bold text-white mb-1">Elegí tu ubicación</h2>
-                <p class="text-secondary-custom mb-4">Seleccioná el tipo de entrada. En las numeradas elegís tu butaca.</p>
-
-                <?php if (empty($entradas)) { ?>
-
-                    <p class="text-secondary-custom">Todavía no hay entradas cargadas para este recital.</p>
-
-                <?php } else { ?>
-
-                    <form action="/src/views/concerts/checkout.php" method="POST" id="form-compra" novalidate>
-
-                        <input type="hidden" name="concert_id" value="<?= e($concert['id']) ?>">
-                        <input type="hidden" name="quantity" id="f-qty" value="1">
-                        <input type="hidden" name="seats" id="f-seats" value="">
-
-                        <div class="row g-4 align-items-start">
-
-                            <!-- COLUMNA IZQUIERDA: entradas + butacas o cantidad -->
-                            <div class="col-12 col-lg-8">
-
-                                <!-- Tipos de entrada (lista vertical) -->
-                                <div class="d-grid gap-3 mb-4" role="radiogroup" aria-label="Tipo de entrada">
-
-                                    <?php foreach ($entradas as $i => $entrada) { ?>
-
-                                        <?php
-                                        $agotada   = ((int)$entrada['available'] <= 0);
-                                        $vip       = esVip($entrada['type']);
-                                        $numerada  = esNumerada($entrada['type']);
-                                        $idInput   = "entrada-" . $i;
-
-                                        // Porcentaje de entradas que quedan (para la barrita)
-                                        $stockTotal = (int)$entrada['stock'];
-                                        $porcentaje = 0;
-                                        if ($stockTotal > 0) {
-                                            $porcentaje = round(((int)$entrada['available'] / $stockTotal) * 100);
-                                        }
-                                        ?>
-
-                                        <div>
-
-                                            <input type="radio" class="btn-check" name="ticket_id"
-                                                id="<?= $idInput ?>" value="<?= e($entrada['id']) ?>"
-                                                data-tipo="<?= e($entrada['type']) ?>"
-                                                data-precio="<?= e($entrada['price']) ?>"
-                                                data-disponibles="<?= (int)$entrada['available'] ?>"
-                                                data-stock="<?= (int)$entrada['stock'] ?>"
-                                                data-numerada="<?php if ($numerada) { echo "si"; } else { echo "no"; } ?>"
-                                                data-ocupadas="<?= e($entrada['ocupadas']) ?>"
-                                                <?php if ($agotada || !$sePuedeComprar) { echo "disabled"; } ?>>
-
-                                            <label for="<?= $idInput ?>" class="ct-ticket">
-
-                                                <div class="d-flex justify-content-between align-items-center gap-3">
-
-                                                    <div>
-                                                        <h3 class="h5 fw-bold text-white mb-1">
-                                                            <?php if ($vip) { ?><i class="bi bi-star-fill text-warning me-1"></i><?php } ?>
-                                                            <?= e($entrada['type']) ?>
-                                                            <?php if ($agotada) { ?>
-                                                                <span class="badge text-bg-secondary ms-1">Agotada</span>
-                                                            <?php } elseif ((int)$entrada['available'] <= 20) { ?>
-                                                                <span class="badge text-bg-danger ms-1">¡Últimas!</span>
-                                                            <?php } ?>
-                                                        </h3>
-
-                                                        <p class="small text-secondary-custom mb-0">
-                                                            <?= $agotada ? "Sin disponibilidad" : (int)$entrada['available'] . " disponibles" ?>
-                                                        </p>
-
-                                                        <div class="ct-meter<?php if ($porcentaje <= 20) { echo " is-low"; } ?>" aria-hidden="true">
-                                                            <span style="width: <?= (int)$porcentaje ?>%"></span>
-                                                        </div>
-
-                                                        <span class="ct-ticket__tag">
-                                                            <?php if ($numerada) { ?>
-                                                                <i class="bi bi-grid-3x3-gap"></i> Butaca numerada · elegís tu asiento
-                                                            <?php } else { ?>
-                                                                <i class="bi bi-people"></i> Ingreso libre · sin butaca asignada
-                                                            <?php } ?>
-                                                        </span>
-                                                    </div>
-
-                                                    <p class="fs-4 fw-bold text-white mb-0 text-nowrap"><?= e(formatPrecio($entrada['price'])) ?></p>
-
-                                                </div>
-
-                                            </label>
-                                        </div>
-
-                                    <?php } ?>
-
-                                </div>
-
-
-                                <!-- Panel de BUTACAS (solo si la entrada es numerada) -->
-                                <div id="panel-seats" class="ct-seatbox" hidden>
-
-                                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-                                        <h3 class="h6 text-white fw-bold mb-0">
-                                            <i class="bi bi-grid-3x3-gap me-1 text-violet-neon"></i>
-                                            Elegí tus butacas <span class="text-secondary-custom fw-normal">(hasta 6)</span>
-                                        </h3>
-
-                                        <div class="ct-legend">
-                                            <span><i style="background:rgba(255,255,255,.16)"></i>Libre</span>
-                                            <span><i style="background:linear-gradient(135deg,#a855f7,#22d3ee)"></i>Tu selección</span>
-                                            <span><i style="background:#2a2a38"></i>Ocupada</span>
-                                        </div>
-                                    </div>
-
-                                    <div class="ct-stage">ESCENARIO</div>
-                                    <div class="ct-seatscroll" id="seat-grid" role="group" aria-label="Mapa de butacas"></div>
-
-                                    <div class="mt-3" id="seat-chips" aria-live="polite"></div>
-                                </div>
-
-
-                                <!-- Panel de CAMPO (entradas sin butaca) -->
-                                <div id="panel-field" class="ct-field" hidden>
-                                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-                                        <div>
-                                            <h3 class="h6 text-white fw-bold mb-1">
-                                                <i class="bi bi-people me-1 text-violet-neon"></i>Ingreso libre
-                                            </h3>
-                                            <p class="small text-secondary-custom mb-0">
-                                                Esta ubicación no tiene butaca asignada: ubicate donde prefieras dentro del sector.
-                                            </p>
-                                        </div>
-
-                                        <div>
-                                            <label class="small text-secondary-custom d-block mb-1">Cantidad de entradas</label>
-                                            <div class="ct-stepper">
-                                                <button type="button" id="qty-minus" aria-label="Menos">−</button>
-                                                <output id="qty-out">1</output>
-                                                <button type="button" id="qty-plus" aria-label="Más">+</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                            </div>
-
-
-                            <!-- COLUMNA DERECHA: resumen + botón -->
-                            <div class="col-12 col-lg-4">
-                                <div class="ct-summary">
-
-                                    <h3 class="h6 text-white fw-bold mb-3">
-                                        <i class="bi bi-receipt me-1 text-violet-neon"></i>Tu compra
-                                    </h3>
-
-                                    <div class="small text-secondary-custom" id="sum-text">Elegí un tipo de entrada para continuar.</div>
-
-                                    <div class="d-flex justify-content-between align-items-center border-top border-secondary-subtle pt-3 mt-3">
-                                        <span class="text-secondary-custom">Total</span>
-                                        <span class="ct-summary__total text-white" id="sum-total">$ 0</span>
-                                    </div>
-
-                                    <?php if (!$logueado) { ?>
-                                        <p class="small text-warning mt-3 mb-0">
-                                            <i class="bi bi-person-lock me-1"></i>Podés armar tu selección, pero para pagar necesitás
-                                            <a href="<?= e($loginUrl) ?>" class="text-warning fw-semibold">iniciar sesión</a>.
-                                        </p>
-                                    <?php } ?>
-
-                                    <button type="submit" id="btn-buy" class="btn btn-violet-glow btn-lg w-100 rounded-pill mt-3" disabled>
-                                        Continuar con el pago <i class="bi bi-arrow-right ms-2"></i>
-                                    </button>
-
-                                    <p class="text-danger small mt-2 mb-0" id="form-error" role="alert" hidden></p>
-
-                                </div>
-                            </div>
-
-                        </div>
-
-                    </form>
-
-                <?php } ?>
-
-            </div>
-        </section>
-
-
-        <!-- =================================================
-             CÓMO LLEGAR (OpenStreetMap + Overpass)
+             CÓMO LLEGAR (el mapa se carga recién al acercarse)
         ================================================== -->
         <section id="como-llegar" class="py-5 border-top border-dark-subtle">
             <div class="container-xl">
@@ -623,7 +700,7 @@ ob_start();
                     </details>
 
                     <details>
-                        <summary>¿Tuve un problema con mi compra, qué hago?</summary>
+                        <summary>Tuve un problema con mi compra, ¿qué hago?</summary>
                         <p>Escribinos a soporte@allticket.com con tu número de pedido y te ayudamos.</p>
                     </details>
 
@@ -640,8 +717,11 @@ ob_start();
 
     <!-- Datos que lee el JavaScript -->
     <div id="datos-show" hidden
+        data-concierto="<?= e($concert['id']) ?>"
         data-fecha="<?= e($fechaCompleta) ?>"
-        data-puede-comprar="<?php if ($sePuedeComprar && $logueado) { echo "si"; } else { echo "no"; } ?>"
+        data-puede-comprar="<?= $sePuedeComprar ? 'si' : 'no' ?>"
+        data-logueado="<?= $logueado ? 'si' : 'no' ?>"
+        data-login-url="<?= e($loginUrl) ?>"
         data-lugar="<?= e($concert['venue']) ?>"
         data-direccion="<?= e($concert['address']) ?>"
         data-ciudad="<?= e($concert['city']) ?>"></div>

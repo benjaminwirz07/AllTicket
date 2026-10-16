@@ -41,6 +41,45 @@ if (!function_exists('textoButaca')) {
         return 'Fila ' . $p[0] . ' · Butaca ' . $p[1];
     }
 }
+// CAMBIO D: vence reservas held (24 h) y ventas pendientes; devuelve el stock
+if (!function_exists('vencerReservas')) {
+    function vencerReservas(PDO $pdo) {
+        $propia = !$pdo->inTransaction();
+        if ($propia) { $pdo->beginTransaction(); }
+        try {
+            $ids = $pdo->query(
+                "SELECT s.id FROM sales s
+                  WHERE s.status = 'pending'
+                    AND (s.sale_date <= NOW() - INTERVAL 24 HOUR
+                         OR EXISTS (SELECT 1 FROM seat_reservations r
+                                     WHERE r.sale_id = s.id AND r.status = 'held' AND r.expires_at <= NOW()))"
+            )->fetchAll(PDO::FETCH_COLUMN);
+
+            $cancelar = $pdo->prepare("UPDATE sales SET status = 'cancelled' WHERE id = ? AND status = 'pending'");
+            $devolver = $pdo->prepare(
+                "UPDATE tickets t JOIN sale_details d ON d.ticket_id = t.id
+                    SET t.available = LEAST(t.stock, t.available + d.quantity)
+                  WHERE d.sale_id = ?"
+            );
+            $liberar = $pdo->prepare("UPDATE seat_reservations SET status = 'expired' WHERE sale_id = ? AND status = 'held'");
+
+            foreach ($ids as $id) {
+                $cancelar->execute([$id]);
+                if ($cancelar->rowCount() === 1) {
+                    $devolver->execute([$id]);
+                    $liberar->execute([$id]);
+                }
+            }
+
+            $pdo->exec("UPDATE seat_reservations SET status = 'expired' WHERE status = 'held' AND expires_at <= NOW()");
+
+            if ($propia) { $pdo->commit(); }
+        } catch (PDOException $e) {
+            if ($propia && $pdo->inTransaction()) { $pdo->rollBack(); }
+            throw $e;
+        }
+    }
+}
 
 if (empty($_SESSION['csrf'])) {
     $_SESSION['csrf'] = bin2hex(random_bytes(16));
@@ -104,6 +143,13 @@ if ($metodo === 'GET' && isset($_GET['ok'])) {
     if (!$userId) {
         $vista = 'login';
     } else {
+        // CAMBIO D: liberar reservas vencidas antes de consultar disponibilidad
+        try {
+            vencerReservas($pdo);
+        } catch (PDOException $e) {
+            error_log('Error al vencer reservas: ' . $e->getMessage());
+        }
+
         $stmt = $pdo->prepare(
             "SELECT t.id AS ticket_id, t.type, t.price, t.available, t.stock,
                     c.id AS concert_id, c.name, c.image, c.date, c.time, c.status,
@@ -141,7 +187,8 @@ if ($metodo === 'GET' && isset($_GET['ok'])) {
 
             if ($numerada && $butacas && !$errores) {
                 $marcas = implode(',', array_fill(0, count($butacas), '?'));
-                $q = $pdo->prepare("SELECT seat_code FROM seat_reservations WHERE concert_id = ? AND seat_code IN ($marcas)");
+                // CAMBIO E: solo cuentan las butacas held o confirmed
+                $q = $pdo->prepare("SELECT seat_code FROM seat_reservations WHERE concert_id = ? AND status IN ('held', 'confirmed') AND seat_code IN ($marcas)");
                 $q->execute(array_merge([$concertId], $butacas));
                 $tomadas = $q->fetchAll(PDO::FETCH_COLUMN);
                 if ($tomadas) {
@@ -163,6 +210,7 @@ if ($metodo === 'GET' && isset($_GET['ok'])) {
             } else {
                 try {
                     $pdo->beginTransaction();
+                    vencerReservas($pdo); // CAMBIO D: también dentro de la transacción
                     $lock = $pdo->prepare("SELECT available FROM tickets WHERE id = :id FOR UPDATE");
                     $lock->execute([':id' => $ticketId]);
                     $disp = (int) $lock->fetchColumn();
@@ -179,16 +227,27 @@ if ($metodo === 'GET' && isset($_GET['ok'])) {
                     $pdo->prepare("INSERT INTO sale_details (id, sale_id, ticket_id, quantity, price) VALUES (?, ?, ?, ?, ?)")
                         ->execute([uuidv4(), $ventaId, $ticketId, $cantidad, $datos['price']]);
 
-                    $insSeat = $pdo->prepare("INSERT INTO seat_reservations (id, concert_id, ticket_id, sale_id, seat_code) VALUES (?, ?, ?, ?, ?)");
+                    // CAMBIO F: pagada = confirmed; pendiente = held con vencimiento a 24 h
+                    $estadoReserva = $pagadoYa ? 'confirmed' : 'held';
+                    $expiraSql = $pagadoYa ? 'NULL' : 'NOW() + INTERVAL 24 HOUR';
+                    $insSeat = $pdo->prepare("INSERT INTO seat_reservations (id, concert_id, ticket_id, sale_id, seat_code, status, expires_at) VALUES (?, ?, ?, ?, ?, ?, $expiraSql)");
                     foreach ($butacas as $codigo) {
-                        $insSeat->execute([uuidv4(), $concertId, $ticketId, $ventaId, $codigo]);
+                        $insSeat->execute([uuidv4(), $concertId, $ticketId, $ventaId, $codigo, $estadoReserva]);
                     }
 
-                    $pdo->prepare("UPDATE tickets SET available = available - ? WHERE id = ?")->execute([$cantidad, $ticketId]);
+                    // CAMBIO C: el descuento verifica el stock por sí mismo
+                    $upd = $pdo->prepare("UPDATE tickets SET available = available - ? WHERE id = ? AND available >= ?");
+                    $upd->execute([$cantidad, $ticketId, $cantidad]);
+                    if ($upd->rowCount() !== 1) {
+                        throw new RuntimeException('No quedan tantas entradas disponibles.');
+                    }
+
                     $pdo->commit();
+                    unset($_SESSION['csrf']); // CAMBIO A: token consumido, un reenvío ya no es válido
                     header('Location: /src/views/concerts/checkout.php?ok=' . urlencode($ventaId));
                     exit;
                 } catch (PDOException $e) {
+                    error_log('Error en checkout: ' . $e->getMessage()); // CAMBIO B: deja rastro en el log
                     if ($pdo->inTransaction()) { $pdo->rollBack(); }
                     $errores[] = ($e->getCode() == '23000')
                         ? 'Alguna de las butacas se ocupó recién. Volvé y elegí otras.'
