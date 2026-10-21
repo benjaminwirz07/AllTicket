@@ -52,6 +52,14 @@ function requireAdmin(PDO $pdo): void
     http_response_code(403);
     exit('Acceso denegado.');
 }
+/**
+ * Solo para mostrar u ocultar elementos en las vistas.
+ * La seguridad real la da requireAdmin($pdo) en los controladores.
+ */
+function isAdmin(): bool
+{
+    return ($_SESSION['user']['role'] ?? '') === 'admin';
+}
 
 
 // ============================================================

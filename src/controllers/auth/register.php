@@ -76,16 +76,16 @@ if (!empty($birth_date)) {
     }
 }
 
-if (!empty($first_name) && mb_strlen($first_name) > 100) {
+if (!empty($first_name) && strlen($first_name) > 100) {
     $errors['first_name'] = 'El nombre no puede superar los 100 caracteres.';
 }
-if (!empty($second_name) && mb_strlen($second_name) > 100) {
+if (!empty($second_name) && strlen($second_name) > 100) {
     $errors['second_name'] = 'El segundo nombre no puede superar los 100 caracteres.';
 }
-if (!empty($last_name) && mb_strlen($last_name) > 100) {
+if (!empty($last_name) && strlen($last_name) > 100) {
     $errors['last_name'] = 'El apellido no puede superar los 100 caracteres.';
 }
-if (!empty($email) && mb_strlen($email) > 150) {
+if (!empty($email) && strlen($email) > 150) {
     $errors['email'] = 'El correo electrónico no puede superar los 150 caracteres.';
 }
 

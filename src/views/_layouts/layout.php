@@ -31,8 +31,7 @@ require_once __DIR__ . '/../../config/bootstrap.php';
 
     <link
         href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Roboto:wght@400;500;700&display=swap"
-        rel="stylesheet"
-    >
+        rel="stylesheet">
 
 
     <!-- =========================================================
@@ -41,10 +40,7 @@ require_once __DIR__ . '/../../config/bootstrap.php';
     <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
 
     <!-- Bootstrap Icons: usados en navbar y footer -->
-    <link
-        rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
-    >
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
     <!-- Bootstrap JS (versión "bundle", incluye Popper para el menú de Categorías).
          Se carga desde internet para no depender de un archivo local.
@@ -53,10 +49,10 @@ require_once __DIR__ . '/../../config/bootstrap.php';
 
 
     <!-- =========================================================
-         ESTILOS GLOBALES ALLTICKET
+         ESTILOS ALLTICKET
     ========================================================== -->
     <link rel="stylesheet" href="/assets/css/global.css">
-
+    <link rel="stylesheet" href="/assets/css/admin.css">
     <?php
     // Estilos específicos de la página actual (ej: index.css),
     // definidos por la vista antes de incluir este layout.
@@ -95,38 +91,23 @@ require_once __DIR__ . '/../../config/bootstrap.php';
     ========================================================== -->
     <header class="sticky-top">
 
-        <nav
-            class="navbar navbar-expand-lg navbar-dark bg-allticket border-bottom border-dark-subtle shadow-sm"
-        >
+        <nav class="navbar navbar-expand-lg navbar-dark bg-allticket border-bottom border-dark-subtle shadow-sm">
 
             <div class="container-fluid container-xl">
 
 
                 <!-- LOGO -->
-                <a
-                    class="navbar-brand d-flex align-items-center py-1"
-                    href="/src/views/index.php"
-                >
+                <a class="navbar-brand d-flex align-items-center py-1" href="/src/views/index.php">
 
-                    <img
-                        src="/assets/img/logo-Allticket1.png"
-                        alt="AllTicket Logo"
-                        class="brand-logo"
-                    >
+                    <img src="/assets/img/logo-Allticket1.png" alt="AllTicket Logo" class="brand-logo">
 
                 </a>
 
 
                 <!-- BOTÓN MENÚ RESPONSIVE -->
-                <button
-                    class="navbar-toggler border-0 shadow-none"
-                    type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target="#navbarAllTicket"
-                    aria-controls="navbarAllTicket"
-                    aria-expanded="false"
-                    aria-label="Abrir menú"
-                >
+                <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarAllTicket" aria-controls="navbarAllTicket" aria-expanded="false"
+                    aria-label="Abrir menú">
 
                     <span class="navbar-toggler-icon"></span>
 
@@ -134,23 +115,14 @@ require_once __DIR__ . '/../../config/bootstrap.php';
 
 
                 <!-- CONTENIDO NAVBAR -->
-                <div
-                    class="collapse navbar-collapse"
-                    id="navbarAllTicket"
-                >
+                <div class="collapse navbar-collapse" id="navbarAllTicket">
 
 
                     <!-- LINKS PRINCIPALES -->
-                    <ul
-                        class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4"
-                    >
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
 
                         <li class="nav-item">
-                            <a
-                                class="nav-link active"
-                                aria-current="page"
-                                href="/src/views/index.php"
-                            >
+                            <a class="nav-link active" aria-current="page" href="/src/views/index.php">
                                 Inicio
                             </a>
                         </li>
@@ -166,21 +138,21 @@ require_once __DIR__ . '/../../config/bootstrap.php';
                         <!-- NUEVO: Categorías -->
                         <li class="nav-item dropdown">
 
-                            <a
-                                class="nav-link dropdown-toggle"
-                                href="#"
-                                role="button"
-                                data-bs-toggle="dropdown"
-                                aria-expanded="false"
-                            >
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                                aria-expanded="false">
                                 Categorías
                             </a>
 
                             <ul class="dropdown-menu dropdown-menu-dark">
-                                <li><a class="dropdown-item" href="/src/views/index.php?categoria=rock#eventos">Rock</a></li>
-                                <li><a class="dropdown-item" href="/src/views/index.php?categoria=reggaeton#eventos">Reggaetón / Trap</a></li>
-                                <li><a class="dropdown-item" href="/src/views/index.php?categoria=pop#eventos">Pop</a></li>
-                                <li><a class="dropdown-item" href="/src/views/index.php?categoria=electronica#eventos">Electrónica</a></li>
+                                <li><a class="dropdown-item" href="/src/views/index.php?categoria=rock#eventos">Rock</a>
+                                </li>
+                                <li><a class="dropdown-item"
+                                        href="/src/views/index.php?categoria=reggaeton#eventos">Reggaetón / Trap</a>
+                                </li>
+                                <li><a class="dropdown-item" href="/src/views/index.php?categoria=pop#eventos">Pop</a>
+                                </li>
+                                <li><a class="dropdown-item"
+                                        href="/src/views/index.php?categoria=electronica#eventos">Electrónica</a></li>
                             </ul>
 
                         </li>
@@ -200,6 +172,14 @@ require_once __DIR__ . '/../../config/bootstrap.php';
                             </a>
                         </li>
 
+                        <?php if (isAdmin()): ?>
+                            <li class="nav-item">
+                                <a class="nav-link" href="/src/controllers/admin/index.php">
+                                    <i class="bi bi-gear me-1"></i>Panel admin
+                                </a>
+                            </li>
+                        <?php endif; ?>
+
                     </ul>
 
 
@@ -209,38 +189,18 @@ require_once __DIR__ . '/../../config/bootstrap.php';
                         <!-- BÚSQUEDA
                              La lupa ahora BUSCA: se expande el campo, se escribe,
                              y con Enter o la lupa va a los resultados. -->
-                        <form
-                            class="nav-search"
-                            id="navSearch"
-                            action="/src/views/index.php"
-                            method="GET"
-                            role="search"
-                            autocomplete="off"
-                        >
+                        <form class="nav-search" id="navSearch" action="/src/views/index.php" method="GET" role="search"
+                            autocomplete="off">
 
-                            <input
-                                type="search"
-                                name="q"
-                                id="navSearchInput"
-                                class="nav-search-input"
-                                placeholder="Buscar artista o evento..."
-                                aria-label="Buscar artista o evento"
-                            >
+                            <input type="search" name="q" id="navSearchInput" class="nav-search-input"
+                                placeholder="Buscar artista o evento..." aria-label="Buscar artista o evento">
 
-                            <button
-                                type="button"
-                                class="nav-search-toggle"
-                                id="navSearchToggle"
-                                aria-label="Buscar eventos"
-                            >
+                            <button type="button" class="nav-search-toggle" id="navSearchToggle"
+                                aria-label="Buscar eventos">
                                 <i class="bi bi-search"></i>
                             </button>
 
-                            <div
-                                class="nav-search-suggest"
-                                id="navSearchSuggest"
-                                hidden
-                            ></div>
+                            <div class="nav-search-suggest" id="navSearchSuggest" hidden></div>
 
                         </form>
 
@@ -261,10 +221,8 @@ require_once __DIR__ . '/../../config/bootstrap.php';
 
 
                             <!-- Cerrar sesión -->
-                            <a
-                                href="/src/controllers/auth/logout.php"
-                                class="btn btn-outline-danger btn-sm rounded-pill px-3"
-                            >
+                            <a href="/src/controllers/auth/logout.php"
+                                class="btn btn-outline-danger btn-sm rounded-pill px-3">
 
                                 <i class="bi bi-box-arrow-right me-1"></i>
 
@@ -276,10 +234,7 @@ require_once __DIR__ . '/../../config/bootstrap.php';
                         <?php else: ?>
 
                             <!-- Iniciar sesión -->
-                            <a
-                                href="/src/views/auth/login.php"
-                                class="btn btn-violet-glow btn-sm rounded-pill px-4"
-                            >
+                            <a href="/src/views/auth/login.php" class="btn btn-violet-glow btn-sm rounded-pill px-4">
 
                                 Iniciar Sesión
 
@@ -320,9 +275,7 @@ require_once __DIR__ . '/../../config/bootstrap.php';
     <!-- =========================================================
          FOOTER
     ========================================================== -->
-    <footer
-        class="bg-dark-footer text-light-50 py-5 border-top border-dark-subtle position-relative z-1"
-    >
+    <footer class="bg-dark-footer text-light-50 py-5 border-top border-dark-subtle position-relative z-1">
 
         <div class="container-xl">
 
@@ -333,16 +286,9 @@ require_once __DIR__ . '/../../config/bootstrap.php';
                 <!-- MARCA -->
                 <div class="col-12 col-md-4">
 
-                    <a
-                        class="d-inline-block text-decoration-none mb-3"
-                        href="/src/views/index.php"
-                    >
+                    <a class="d-inline-block text-decoration-none mb-3" href="/src/views/index.php">
 
-                        <img
-                            src="/assets/img/logo-Allticket1.png"
-                            alt="AllTicket Logo"
-                            class="brand-logo"
-                        >
+                        <img src="/assets/img/logo-Allticket1.png" alt="AllTicket Logo" class="brand-logo">
 
                     </a>
 
@@ -370,37 +316,27 @@ require_once __DIR__ . '/../../config/bootstrap.php';
                     <ul class="list-unstyled small d-flex flex-column gap-2 mb-0">
 
                         <li>
-                            <a
-                                href="/src/views/index.php"
-                                class="text-secondary-custom text-decoration-none nav-footer-link"
-                            >
+                            <a href="/src/views/index.php"
+                                class="text-secondary-custom text-decoration-none nav-footer-link">
                                 Inicio
                             </a>
                         </li>
 
                         <li>
-                            <a
-                                href="#eventos"
-                                class="text-secondary-custom text-decoration-none nav-footer-link"
-                            >
+                            <a href="#eventos" class="text-secondary-custom text-decoration-none nav-footer-link">
                                 Eventos
                             </a>
                         </li>
 
                         <li>
-                            <a
-                                href="#como-funciona"
-                                class="text-secondary-custom text-decoration-none nav-footer-link"
-                            >
+                            <a href="#como-funciona" class="text-secondary-custom text-decoration-none nav-footer-link">
                                 Cómo funciona
                             </a>
                         </li>
 
                         <li>
-                            <a
-                                href="/src/views/index.php#preguntas-frecuentes"
-                                class="text-secondary-custom text-decoration-none nav-footer-link"
-                            >
+                            <a href="/src/views/index.php#preguntas-frecuentes"
+                                class="text-secondary-custom text-decoration-none nav-footer-link">
                                 Ayuda
                             </a>
                         </li>
@@ -419,9 +355,7 @@ require_once __DIR__ . '/../../config/bootstrap.php';
                     </h5>
 
 
-                    <ul
-                        class="list-unstyled small d-flex flex-column gap-2 mb-0 text-secondary-custom"
-                    >
+                    <ul class="list-unstyled small d-flex flex-column gap-2 mb-0 text-secondary-custom">
 
                         <li>
                             <i class="bi bi-envelope me-2 text-violet-neon"></i>
@@ -442,9 +376,7 @@ require_once __DIR__ . '/../../config/bootstrap.php';
 
 
             <!-- COPYRIGHT -->
-            <div
-                class="border-top border-secondary-subtle pt-4 text-center small text-secondary-custom"
-            >
+            <div class="border-top border-secondary-subtle pt-4 text-center small text-secondary-custom">
 
                 <p class="mb-0">
 

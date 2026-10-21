@@ -54,6 +54,11 @@ function estaAbierto() {
     return formulario.classList.contains("is-open");
 }
 
+// Va a la página de resultados y baja directo a la sección de eventos
+function buscar(texto) {
+    window.location.href = "/src/views/index.php?q=" + encodeURIComponent(texto) + "#eventos";
+}
+
 // Recibe lo que escribió la persona y devuelve
 // una lista con los eventos que coinciden
 function buscarCoincidencias(texto) {
@@ -89,7 +94,7 @@ function mostrarSugerencias(lista, texto) {
     for (var i = 0; i < lista.length; i++) {
         var link = document.createElement("a");
         link.className = "suggest-item";
-        link.href = "/src/views/index.php?q=" + encodeURIComponent(lista[i]);
+        link.href = "/src/views/index.php?q=" + encodeURIComponent(lista[i]) + "#eventos";
         link.textContent = lista[i];
 
         cajaSugerencias.appendChild(link);
@@ -111,12 +116,22 @@ botonLupa.addEventListener("click", function () {
         abrirBuscador();
     } else if (campo.value.trim() !== "") {
         // Estaba abierto y escribió algo: buscamos
-        formulario.submit();
+        buscar(campo.value.trim());
     } else {
         // Estaba abierto y vacío: lo cerramos
         cerrarBuscador();
     }
 
+});
+
+// Cuando aprieta Enter (se envía el formulario)
+formulario.addEventListener("submit", function (evento) {
+    evento.preventDefault();
+
+    var texto = campo.value.trim();
+    if (texto !== "") {
+        buscar(texto);
+    }
 });
 
 // Cuando escribe una letra

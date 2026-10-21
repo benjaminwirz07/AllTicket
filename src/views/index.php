@@ -32,9 +32,9 @@ if (isset($_GET['ciudad'])) {
 // ============================================================
 
 $categorias = [
-    "rock"        => "Rock",
-    "reggaeton"   => "Reggaetón / Trap",
-    "pop"         => "Pop",
+    "rock" => "Rock",
+    "reggaeton" => "Reggaetón / Trap",
+    "pop" => "Pop",
     "electronica" => "Electrónica"
 ];
 
@@ -50,24 +50,24 @@ if ($categoria != "" && !array_key_exists($categoria, $categorias)) {
 
 $garantias = [
     [
-        "icono"  => "bi-patch-check",
+        "icono" => "bi-patch-check",
         "titulo" => "Entradas oficiales",
-        "texto"  => "Sin reventa ni sorpresas: comprás tu entrada oficial."
+        "texto" => "Sin reventa ni sorpresas: comprás tu entrada oficial."
     ],
     [
-        "icono"  => "bi-shield-lock",
+        "icono" => "bi-shield-lock",
         "titulo" => "Compra segura",
-        "texto"  => "Tus pagos se procesan con medios de pago homologados."
+        "texto" => "Tus pagos se procesan con medios de pago homologados."
     ],
     [
-        "icono"  => "bi-qr-code",
+        "icono" => "bi-qr-code",
         "titulo" => "Entrada en tu celular",
-        "texto"  => "Recibís tu ticket con código QR, sin imprimir nada."
+        "texto" => "Recibís tu ticket con código QR, sin imprimir nada."
     ],
     [
-        "icono"  => "bi-headset",
+        "icono" => "bi-headset",
         "titulo" => "Soporte",
-        "texto"  => "Escribinos a soporte@allticket.com y te ayudamos."
+        "texto" => "Escribinos a soporte@allticket.com y te ayudamos."
     ]
 ];
 
@@ -81,27 +81,27 @@ $garantias = [
 
 $preguntas = [
     [
-        "pregunta"  => "¿Cómo recibo mi entrada?",
+        "pregunta" => "¿Cómo recibo mi entrada?",
         "respuesta" => "Cuando se confirma el pago, te enviamos tu ticket digital con código QR directo a tu celular o e-mail."
     ],
     [
-        "pregunta"  => "¿Tengo que imprimir la entrada?",
+        "pregunta" => "¿Tengo que imprimir la entrada?",
         "respuesta" => "No. Alcanza con mostrar el código QR desde tu celular en la puerta del evento."
     ],
     [
-        "pregunta"  => "¿Las entradas son oficiales?",
+        "pregunta" => "¿Las entradas son oficiales?",
         "respuesta" => "Sí. En AllTicket no hay reventa: las entradas que comprás son oficiales."
     ],
     [
-        "pregunta"  => "¿Qué medios de pago puedo usar?",
+        "pregunta" => "¿Qué medios de pago puedo usar?",
         "respuesta" => "Podés pagar con los medios de pago homologados que aparecen disponibles al momento de la compra."
     ],
     [
-        "pregunta"  => "¿Qué pasa si se cancela o se reprograma el evento?",
+        "pregunta" => "¿Qué pasa si se cancela o se reprograma el evento?",
         "respuesta" => "Te avisamos por e-mail y te explicamos cómo seguir: devolución de tu compra o validez de la entrada para la nueva fecha."
     ],
     [
-        "pregunta"  => "¿Cómo me comunico con soporte?",
+        "pregunta" => "¿Cómo me comunico con soporte?",
         "respuesta" => "Escribinos a soporte@allticket.com y te respondemos lo antes posible."
     ]
 ];
@@ -136,12 +136,16 @@ function textoGenero($categoria)
 // Texto "Faltan X días" para la tarjeta
 function textoDias($fecha)
 {
-    $hoy  = new DateTime('today', new DateTimeZone('America/Argentina/Buenos_Aires'));
+    $hoy = new DateTime('today', new DateTimeZone('America/Argentina/Buenos_Aires'));
     $show = new DateTime($fecha, new DateTimeZone('America/Argentina/Buenos_Aires'));
-    $dias = (int)$hoy->diff($show)->format('%r%a');
+    $dias = (int) $hoy->diff($show)->format('%r%a');
 
-    if ($dias <= 0) { return "¡Es hoy!"; }
-    if ($dias == 1) { return "¡Es mañana!"; }
+    if ($dias <= 0) {
+        return "¡Es hoy!";
+    }
+    if ($dias == 1) {
+        return "¡Es mañana!";
+    }
     return "Faltan " . $dias . " días";
 }
 
@@ -376,14 +380,17 @@ ob_start();
 
             <!-- FILTROS: chips de categoría + selector de ciudad -->
 
-            <div class="filter-bar d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+            <div
+                class="filter-bar d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
 
                 <!-- Chips de categoría -->
                 <nav class="filter-chips" aria-label="Filtrar por categoría">
 
                     <!-- Chip "Todos": saca la categoría -->
                     <a href="<?= e(armarLink($busqueda, "", $ciudad)) ?>"
-                        class="filter-chip <?php if ($categoria == "") { echo "active"; } ?>">
+                        class="filter-chip <?php if ($categoria == "") {
+                            echo "active";
+                        } ?>">
                         Todos
                     </a>
 
@@ -391,7 +398,9 @@ ob_start();
                     <?php foreach ($categorias as $slug => $nombre) { ?>
 
                         <a href="<?= e(armarLink($busqueda, $slug, $ciudad)) ?>"
-                            class="filter-chip <?php if ($categoria == $slug) { echo "active"; } ?>">
+                            class="filter-chip <?php if ($categoria == $slug) {
+                                echo "active";
+                            } ?>">
                             <?= e($nombre) ?>
                         </a>
 
@@ -422,15 +431,15 @@ ob_start();
                                 <i class="bi bi-geo-alt"></i>
                             </span>
 
-                            <select id="filtro-ciudad" name="ciudad"
-                                class="form-select custom-input"
+                            <select id="filtro-ciudad" name="ciudad" class="form-select custom-input"
                                 onchange="this.form.submit()">
 
                                 <option value="">Todas las ciudades</option>
 
                                 <?php foreach ($ciudades as $unaCiudad) { ?>
-                                    <option value="<?= e($unaCiudad) ?>"
-                                        <?php if ($ciudad == $unaCiudad) { echo "selected"; } ?>>
+                                    <option value="<?= e($unaCiudad) ?>" <?php if ($ciudad == $unaCiudad) {
+                                          echo "selected";
+                                      } ?>>
                                         <?= e($unaCiudad) ?>
                                     </option>
                                 <?php } ?>
@@ -784,17 +793,14 @@ ob_start();
                     <div class="accordion-item">
 
                         <h3 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button"
-                                data-bs-toggle="collapse"
-                                data-bs-target="#<?= $idRespuesta ?>"
-                                aria-expanded="false"
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#<?= $idRespuesta ?>" aria-expanded="false"
                                 aria-controls="<?= $idRespuesta ?>">
                                 <?= e($item['pregunta']) ?>
                             </button>
                         </h3>
 
-                        <div id="<?= $idRespuesta ?>" class="accordion-collapse collapse"
-                            data-bs-parent="#faqAccordion">
+                        <div id="<?= $idRespuesta ?>" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
 
                             <div class="accordion-body">
                                 <?= e($item['respuesta']) ?>
@@ -813,7 +819,16 @@ ob_start();
     </section>
 
 </main>
-
+<?php if ($hayFiltros) { ?>
+    <script>
+        window.addEventListener("load", function () {
+            var seccion = document.getElementById("eventos");
+            if (seccion) {
+                seccion.scrollIntoView({ behavior: "smooth", block: "start" });
+            }
+        });
+    </script>
+<?php } ?>
 <!-- Números que cuentan al aparecer (+50K, 300+) -->
 <script src="/assets/js/contador.js"></script>
 

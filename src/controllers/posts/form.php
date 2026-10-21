@@ -1,7 +1,7 @@
 <?php
 
 require_once __DIR__ . '/../../config/bootstrap.php';
-
+requireAdmin($pdo);
 $post = null;
 
 if (isset($_GET['id'])) {

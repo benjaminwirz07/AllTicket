@@ -921,4 +921,6 @@ footer::before,
     .btn-outline-custom {
         width: 100%;
     }
+}.navbar-nav .nav-link {
+  white-space: nowrap;
 }

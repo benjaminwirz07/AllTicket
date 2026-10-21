@@ -327,6 +327,11 @@ function alElegirEntrada(evento, sinScroll) {
 
     var radio = evento.target;
 
+    // CAMBIO: descartamos los strings vacios (Campo no tiene butacas ocupadas)
+    var listaOcupadas = radio.dataset.ocupadas.split(',').filter(function (x) {
+        return x != '';
+    });
+
     entrada = {
         id: radio.value,
         tipo: radio.dataset.tipo,
@@ -334,7 +339,7 @@ function alElegirEntrada(evento, sinScroll) {
         disponibles: parseInt(radio.dataset.disponibles),
         stock: parseInt(radio.dataset.stock),
         numerada: (radio.dataset.numerada == 'si'),
-        ocupadas: radio.dataset.ocupadas.split(',')
+        ocupadas: listaOcupadas
     };
 
     butacas = [];
@@ -461,6 +466,12 @@ function prepararEntradas() {
     }
 
     var radios = document.querySelectorAll('input[name="ticket_id"]');
+
+    // DEPURACION: borrar esta linea cuando termines de probar
+    console.log('Tickets en la pagina:', Array.prototype.map.call(radios, function (r) {
+        return r.dataset.tipo + ' (disabled=' + r.disabled + ')';
+    }));
+
     for (var i = 0; i < radios.length; i++) {
         radios[i].addEventListener('change', alElegirEntrada);
     }

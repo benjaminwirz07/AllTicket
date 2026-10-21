@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../../config/bootstrap.php';
-
+requireAdmin($pdo);
 try {
     if (!isset($_POST['title'], $_POST['content'])) {
         throw new Exception('Faltan datos del formulario');

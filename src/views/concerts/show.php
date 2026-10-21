@@ -106,7 +106,7 @@ try {
         $stmt = $pdo->prepare(
             "SELECT
                 c.id, c.name, c.description, c.image, c.genre,
-                c.date, c.time, c.status,
+                c.date, c.time, c.status, c.artist_id,
                 a.name        AS artist,
                 a.description AS artist_description,
                 v.name        AS venue,
@@ -177,6 +177,17 @@ $fechaCompleta = "";
 $precioDesde = null;
 $marquesina = [];
 
+// Datos nuevos del hero
+$diaNum = "";
+$mesCorto = "";
+$diaSemana = "";
+$horaShow = "";
+$estadoVenta = 'ok';
+$resumen = "";
+$imagenArtista = null;
+$otrosShows = [];
+$iniciales = "";
+
 // Si no esta logueado, guardamos esta pagina para volver despues del login
 if (!$logueado) {
     $_SESSION['volver_a'] = $_SERVER['REQUEST_URI'] . '#entradas';
@@ -190,6 +201,16 @@ if ($concert) {
         $sePuedeComprar = true;
     }
 
+    // Fecha en partes (para la card de fecha del hero)
+    $meses  = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    $semana = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+
+    $tsShow    = strtotime($concert['date']);
+    $diaNum    = date('j', $tsShow);
+    $mesCorto  = $meses[(int)date('n', $tsShow) - 1];
+    $diaSemana = $semana[(int)date('w', $tsShow)];
+    $horaShow  = substr($concert['time'], 0, 5);
+
     // Precio mas bajo entre las entradas que todavia tienen lugar
     foreach ($entradas as $entrada) {
         if ((int)$entrada['available'] > 0) {
@@ -197,6 +218,69 @@ if ($concert) {
             break; // ya vienen ordenadas de menor a mayor
         }
     }
+
+    // Estado de la venta (chip sobre la foto)
+    $totalDisp = 0;
+    $totalStock = 0;
+    foreach ($entradas as $en) {
+        $totalDisp  += (int)$en['available'];
+        $totalStock += (int)$en['stock'];
+    }
+    if (!empty($entradas)) {
+        if ($totalDisp <= 0) {
+            $estadoVenta = 'agotado';
+        } elseif ($totalStock > 0 && ($totalDisp / $totalStock) <= 0.15) {
+            $estadoVenta = 'pocas';
+        }
+    }
+
+    // Texto corto del show para el hero
+    if (!empty($concert['description'])) {
+        $limpio  = trim(preg_replace('/\s+/', ' ', $concert['description']));
+        // Recorta a 190 caracteres sin usar mbstring (preg con /u respeta los acentos)
+        if (preg_match('/^.{1,190}/su', $limpio, $corte)) {
+            $resumen = $corte[0];
+            if (strlen($limpio) > strlen($resumen)) {
+                $resumen = rtrim($resumen) . '…';
+            }
+        }
+    }
+
+    // Foto propia del artista (si la tabla artists tiene columna image).
+    // Va en try/catch: si la columna no existe, simplemente no se usa.
+    try {
+        $stmtArt = $pdo->prepare("SELECT image FROM artists WHERE id = :a");
+        $stmtArt->execute([":a" => $concert['artist_id']]);
+        $filaArt = $stmtArt->fetch(PDO::FETCH_ASSOC);
+        if ($filaArt && !empty($filaArt['image'])) {
+            $imagenArtista = $filaArt['image'];
+        }
+    } catch (PDOException $e) {
+        $imagenArtista = null;
+    }
+
+    // Otros shows del mismo artista (cada uno con su propia foto)
+    try {
+        $stmtOtros = $pdo->prepare(
+            "SELECT id, name, image, date, time
+               FROM concerts
+              WHERE artist_id = :a AND id <> :id AND status = 'active' AND date >= CURDATE()
+              ORDER BY date ASC
+              LIMIT 3"
+        );
+        $stmtOtros->execute([":a" => $concert['artist_id'], ":id" => $concert['id']]);
+        $otrosShows = $stmtOtros->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        $otrosShows = [];
+    }
+
+    // Iniciales para el monograma (cuando no hay foto del artista)
+    foreach (array_slice(preg_split('/\s+/', trim($concert['artist'])), 0, 2) as $palabra) {
+        if (preg_match('/^./u', $palabra, $letra)) {
+            $iniciales .= $letra[0];
+        }
+    }
+    $iniciales = strtoupper($iniciales);
 
     $fechaCompleta = $concert['date'] . "T" . substr($concert['time'], 0, 5) . ":00-03:00";
 
@@ -229,6 +313,7 @@ ob_start();
 ?>
 
 <link rel="stylesheet" href="/assets/css/index.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,800..900&display=swap">
 <link rel="stylesheet" href="/assets/css/concert.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
@@ -255,40 +340,38 @@ ob_start();
         ================================================== -->
         <section class="ct-hero" id="inicio">
 
-            <img class="ct-hero__bg" src="/<?= e($concert['image']) ?>" alt="" aria-hidden="true">
+            <img class="ct-hero__bg" src="/<?= e($concert['image']) ?>" alt="<?= e($concert['artist']) ?>">
             <div class="ct-hero__shade" aria-hidden="true"></div>
 
             <div class="container-xl ct-hero__inner">
-
                 <div class="ct-hero__text">
 
                     <a href="/src/views/index.php#eventos" class="ct-hero__back">
                         <i class="bi bi-arrow-left me-1"></i>Volver a recitales
                     </a>
 
-                    <?php if (!empty($concert['genre'])) { ?>
-                        <span class="badge bg-violet-neon rounded-pill mb-3"><?= e($concert['genre']) ?></span>
+                    <h1 class="ct-hero__title"><?= e($concert['artist']) ?></h1>
+                    <?php if (strcasecmp(trim($concert['name']), trim($concert['artist'])) !== 0) { ?>
+                        <p class="ct-hero__sub"><?= e($concert['name']) ?></p>
                     <?php } ?>
 
-                    <h1 class="ct-hero__title"><?= e($concert['name']) ?></h1>
-                    <p class="ct-hero__artist"><?= e($concert['artist']) ?></p>
-
-                    <ul class="ct-hero__facts list-unstyled">
-                        <li><i class="bi bi-calendar-event"></i><?= e(formatFecha($concert['date'], $concert['time'])) ?></li>
-                        <li><i class="bi bi-geo-alt"></i><?= e($concert['venue']) ?>, <?= e($concert['city']) ?></li>
-                        <li><i class="bi bi-people"></i><?= e(number_format((int)$concert['capacity'], 0, ',', '.')) ?> personas</li>
-                    </ul>
+                    <div class="ct-when">
+                        <div class="ct-when__date">
+                            <span class="ct-when__day"><?= e($diaNum) ?></span>
+                            <span class="ct-when__mon"><?= e($mesCorto) ?></span>
+                        </div>
+                        <div class="ct-when__info">
+                            <strong><?= e($diaSemana) ?>, <?= e($horaShow) ?> hs</strong>
+                            <span><?= e($concert['venue']) ?> · <?= e($concert['city']) ?></span>
+                        </div>
+                    </div>
 
                     <?php if ($dias >= 0) { ?>
-                        <p class="ct-hero__eyebrow">
-                            <?php if ($dias == 0) { ?>
-                                ¡El show es hoy!
-                            <?php } elseif ($dias == 1) { ?>
-                                ¡El show es mañana!
-                            <?php } else { ?>
-                                Faltan <strong><?= $diasCompletos ?> días</strong> para el show
-                            <?php } ?>
-                        </p>
+                        <?php if ($dias == 0) { ?>
+                            <p class="ct-hero__eyebrow">¡El show es hoy!</p>
+                        <?php } elseif ($dias == 1) { ?>
+                            <p class="ct-hero__eyebrow">¡El show es mañana!</p>
+                        <?php } ?>
 
                         <div class="ct-countdown" id="countdown" aria-live="off">
                             <div class="ct-countdown__box"><span class="ct-countdown__num" data-cd="d"><?= $diasCompletos ?></span><span class="ct-countdown__lbl">días</span></div>
@@ -301,7 +384,7 @@ ob_start();
                     <?php } ?>
 
                     <?php if ($concert['status'] != 'active' && $dias >= 0) { ?>
-                        <div class="alert alert-warning d-inline-block mt-3">Este recital no está a la venta por ahora.</div>
+                        <div class="alert alert-warning d-inline-block mb-3">Este recital no está a la venta por ahora.</div>
                     <?php } ?>
 
                     <?php if ($sePuedeComprar && !empty($entradas)) { ?>
@@ -309,13 +392,17 @@ ob_start();
                             <a href="#entradas" class="btn btn-violet-glow btn-lg px-5 rounded-pill">
                                 Elegir entradas <i class="bi bi-arrow-down ms-2"></i>
                             </a>
-                            <span class="ct-hero__from">
+                           <!--<span class="ct-hero__from">
                                 <?php if ($precioDesde !== null) { ?>
                                     Desde <strong><?= e(formatPrecio($precioDesde)) ?></strong>
                                 <?php } else { ?>
                                     Entradas agotadas
                                 <?php } ?>
                             </span>
+                            -->
+                            <?php if ($estadoVenta == 'pocas') { ?>
+                                <span class="ct-hero__state"><span class="ct-dot is-low"></span>Quedan pocas</span>
+                            <?php } ?>
                         </div>
                     <?php } ?>
 
@@ -334,9 +421,6 @@ ob_start();
                     <?php } ?>
 
                 </div>
-
-                <img class="ct-hero__photo" src="/<?= e($concert['image']) ?>" alt="<?= e($concert['artist']) ?>">
-
             </div>
         </section>
 
@@ -344,12 +428,71 @@ ob_start();
         <!-- MENÚ DE SECCIONES (mismo orden que la página) -->
         <nav class="ct-subnav" aria-label="Secciones del recital">
             <div class="container-xl ct-subnav__inner">
+                <a href="#artista">Artista</a>
                 <a href="#entradas">Entradas</a>
                 <a href="#info">Info</a>
                 <a href="#como-llegar">Cómo llegar</a>
                 <a href="#faq">Preguntas</a>
             </div>
         </nav>
+
+
+        <!-- =================================================
+             SOBRE EL ARTISTA
+        ================================================== -->
+        <section id="artista" class="py-5 ct-artist">
+            <div class="container-xl">
+
+                <h2 class="ct-artist__name"><?= e($concert['artist']) ?></h2>
+                <?php if (!empty($concert['genre'])) { ?>
+                    <p class="ct-artist__genre"><?= e($concert['genre']) ?></p>
+                <?php } ?>
+
+                <div class="row g-4 g-lg-5">
+
+                    <div class="col-12 <?= $imagenArtista ? 'col-lg-7' : 'col-lg-8' ?>">
+
+                        <?php if (!empty($concert['artist_description'])) { ?>
+                            <p class="ct-artist__bio" style="white-space: pre-line;"><?= e($concert['artist_description']) ?></p>
+                        <?php } else { ?>
+                            <p class="ct-artist__bio">Pronto vamos a sumar más información sobre <?= e($concert['artist']) ?>.</p>
+                        <?php } ?>
+
+                        <?php if (!empty($otrosShows)) { ?>
+                            <h3 class="ct-h">Otras fechas</h3>
+                            <ul class="ct-dates list-unstyled">
+                                <?php foreach ($otrosShows as $otro) { ?>
+                                    <?php
+                                    $tsOtro = strtotime($otro['date']);
+                                    $textoFecha = date('j', $tsOtro) . ' de ' . $meses[(int)date('n', $tsOtro) - 1];
+                                    ?>
+                                    <li>
+                                        <a href="/src/views/concerts/show.php?id=<?= e($otro['id']) ?>">
+                                            <img src="/<?= e($otro['image']) ?>" alt="" loading="lazy">
+                                            <span class="ct-dates__txt">
+                                                <strong><?= e($otro['name']) ?></strong>
+                                                <small><?= e($textoFecha) ?></small>
+                                            </span>
+                                            <i class="bi bi-arrow-right"></i>
+                                        </a>
+                                    </li>
+                                <?php } ?>
+                            </ul>
+                        <?php } ?>
+
+                    </div>
+
+                    <?php if ($imagenArtista) { ?>
+                        <div class="col-12 col-lg-5">
+                            <div class="ct-artist__photo">
+                                <img src="/<?= e($imagenArtista) ?>" alt="<?= e($concert['artist']) ?>" loading="lazy">
+                            </div>
+                        </div>
+                    <?php } ?>
+
+                </div>
+            </div>
+        </section>
 
 
         <!-- =================================================
@@ -414,37 +557,44 @@ ob_start();
                                                     <?php if ($agotada || !$sePuedeComprar) { echo "disabled"; } ?>>
 
                                                 <label for="<?= $idInput ?>" class="ct-ticket">
-                                                    <div class="d-flex justify-content-between align-items-center gap-3">
+                                                    <div class="ct-ticket__row">
 
-                                                        <div>
-                                                            <h3 class="h5 fw-bold text-white mb-1">
-                                                                <?php if ($vip) { ?><i class="bi bi-star-fill text-warning me-1"></i><?php } ?>
-                                                                <?= e($entrada['type']) ?>
-                                                                <?php if ($agotada) { ?>
-                                                                    <span class="badge text-bg-secondary ms-1">Agotada</span>
-                                                                <?php } elseif ((int)$entrada['available'] <= 20) { ?>
-                                                                    <span class="badge text-bg-danger ms-1">¡Últimas!</span>
-                                                                <?php } ?>
-                                                            </h3>
-
-                                                            <p class="small text-secondary-custom mb-0">
-                                                                <?= $agotada ? "Sin disponibilidad" : (int)$entrada['available'] . " disponibles" ?>
-                                                            </p>
-
-                                                            <div class="ct-meter<?php if ($porcentaje <= 20) { echo " is-low"; } ?>" aria-hidden="true">
-                                                                <span style="width: <?= (int)$porcentaje ?>%"></span>
-                                                            </div>
-
-                                                            <span class="ct-ticket__tag">
-                                                                <?php if ($numerada) { ?>
-                                                                    <i class="bi bi-grid-3x3-gap"></i> Butaca numerada: elegís tu asiento
+                                                        <div class="ct-ticket__main">
+                                                            <span class="ct-ticket__icon<?= $vip ? ' is-vip' : '' ?>" aria-hidden="true">
+                                                                <?php if ($vip) { ?>
+                                                                    <i class="bi bi-star-fill"></i>
+                                                                <?php } elseif ($numerada) { ?>
+                                                                    <i class="bi bi-grid-3x3-gap-fill"></i>
                                                                 <?php } else { ?>
-                                                                    <i class="bi bi-people"></i> Ingreso libre: sin butaca asignada
+                                                                    <i class="bi bi-people-fill"></i>
                                                                 <?php } ?>
                                                             </span>
+
+                                                            <div class="ct-ticket__body">
+                                                                <h3 class="ct-ticket__name">
+                                                                    <?= e($entrada['type']) ?>
+                                                                    <?php if ($agotada) { ?>
+                                                                        <span class="badge text-bg-secondary ms-1">Agotada</span>
+                                                                    <?php } elseif ((int)$entrada['available'] <= 20) { ?>
+                                                                        <span class="badge text-bg-danger ms-1">¡Últimas!</span>
+                                                                    <?php } ?>
+                                                                </h3>
+
+                                                                <p class="small text-secondary-custom mb-0">
+                                                                    <?= $numerada ? "Elegís tu butaca" : "Ingreso libre, sin butaca asignada" ?>
+                                                                    · <?= $agotada ? "sin disponibilidad" : (int)$entrada['available'] . " disponibles" ?>
+                                                                </p>
+
+                                                                <div class="ct-meter<?php if ($porcentaje <= 20) { echo " is-low"; } ?>" aria-hidden="true">
+                                                                    <span style="width: <?= (int)$porcentaje ?>%"></span>
+                                                                </div>
+                                                            </div>
                                                         </div>
 
-                                                        <p class="fs-4 fw-bold text-white mb-0 text-nowrap"><?= e(formatPrecio($entrada['price'])) ?></p>
+                                                        <div class="ct-ticket__stub">
+                                                            <span class="ct-ticket__amount"><?= e(formatPrecio($entrada['price'])) ?></span>
+                                                            <small>por entrada</small>
+                                                        </div>
 
                                                     </div>
                                                 </label>
@@ -598,30 +748,22 @@ ob_start();
                 <div class="row g-5">
 
                     <div class="col-12 col-lg-7">
-                        <h2 class="h4 fw-bold text-white mb-3">Sobre el show</h2>
-
+                        <h2 class="ct-h">Sobre el show</h2>
                         <?php if (!empty($concert['description'])) { ?>
-                            <p class="text-secondary-custom" style="white-space: pre-line;"><?= e($concert['description']) ?></p>
+                            <p class="ct-prose" style="white-space: pre-line;"><?= e($concert['description']) ?></p>
                         <?php } else { ?>
-                            <p class="text-secondary-custom">Pronto vamos a sumar más detalles de este show.</p>
-                        <?php } ?>
-
-                        <?php if (!empty($concert['artist_description'])) { ?>
-                            <h2 class="h4 fw-bold text-white mt-5 mb-3">Sobre <?= e($concert['artist']) ?></h2>
-                            <p class="text-secondary-custom" style="white-space: pre-line;"><?= e($concert['artist_description']) ?></p>
+                            <p class="ct-prose">Pronto vamos a sumar más detalles de este show.</p>
                         <?php } ?>
                     </div>
 
                     <div class="col-12 col-lg-5">
-                        <div class="step-card p-4 rounded-4 border border-secondary-subtle">
-                            <h2 class="h5 fw-bold text-white mb-3">Información útil</h2>
-                            <ul class="list-unstyled small text-secondary-custom mb-0">
-                                <li class="mb-2"><i class="bi bi-qr-code me-2 text-violet-neon"></i>Tu entrada llega con código QR a tu celular.</li>
-                                <li class="mb-2"><i class="bi bi-patch-check me-2 text-violet-neon"></i>Entradas oficiales, sin reventa.</li>
-                                <li class="mb-2"><i class="bi bi-clock me-2 text-violet-neon"></i>Inicio del show: <?= e(substr($concert['time'], 0, 5)) ?> hs.</li>
-                                <li><i class="bi bi-headset me-2 text-violet-neon"></i>Soporte: soporte@allticket.com</li>
-                            </ul>
-                        </div>
+                        <h2 class="ct-h">Antes de ir</h2>
+                        <dl class="ct-dl">
+                            <div><dt>Inicio</dt><dd><?= e($horaShow) ?> hs en <?= e($concert['venue']) ?></dd></div>
+                            <div><dt>Entrada</dt><dd>Código QR en tu celular, no hace falta imprimir.</dd></div>
+                            <div><dt>Compra</dt><dd>Entradas oficiales, sin reventa.</dd></div>
+                            <div><dt>Soporte</dt><dd>soporte@allticket.com</dd></div>
+                        </dl>
                     </div>
 
                 </div>
