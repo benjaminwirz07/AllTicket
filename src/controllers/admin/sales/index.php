@@ -1,8 +1,8 @@
 <?php
 require_once __DIR__ . '/../../../config/bootstrap.php';
+requireAuth();
 requireAdmin($pdo);
-$flash = $_SESSION['flash'] ?? null;
-unset($_SESSION['flash']);
+$flash = consumeFlash();
 $estadosValidos = ['pending', 'paid', 'cancelled'];
 $filtro = $_GET['status'] ?? '';
 if (!in_array($filtro, $estadosValidos, true)) {
@@ -56,7 +56,9 @@ try {
           ORDER BY c.date DESC"
     )->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
-    exit('Error al consultar las ventas');
+    error_log('Error al consultar las ventas: ' . $e->getMessage());
+    http_response_code(500);
+    exit('No se pudieron cargar las ventas.');
 }
 
 require_once __DIR__ . '/../../../views/admin/sales/index.php';

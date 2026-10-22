@@ -308,6 +308,14 @@ header.sticky-top {
     transition: transform .25s ease, filter .25s ease;
 }
 
+.navbar-brand .brand-logo {
+    display: block;
+    flex: 0 0 auto;
+    width: auto;
+    max-width: none;
+    height: clamp(42px, 4.8vw, 64px);
+}
+
 .brand-logo:hover {
     transform: scale(1.04);
     filter: drop-shadow(0 0 8px rgba(112, 0, 255, .65));
@@ -870,7 +878,7 @@ footer::before,
 /* =============================================================
    12. RESPONSIVE GLOBAL
 ============================================================= */
-@media (max-width: 991.98px) {
+@media (max-width: 1399.98px) {
     .navbar-collapse {
         background: rgba(5, 6, 10, .92);
         backdrop-filter: blur(14px);
@@ -906,17 +914,7 @@ footer::before,
     }
 }
 
-@media (max-width: 767.98px) {
-    .brand-logo {
-        height: 32px;
-    }
-}
-
 @media (max-width: 575.98px) {
-    .brand-logo {
-        height: 28px;
-    }
-
     .btn-violet,
     .btn-outline-custom {
         width: 100%;

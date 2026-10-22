@@ -1,9 +1,9 @@
 <?php
 require_once __DIR__ . '/../../../config/bootstrap.php';
+requireAuth();
 requireAdmin($pdo);
 
-$flash = $_SESSION['flash'] ?? null;
-unset($_SESSION['flash']);
+$flash = consumeFlash();
 
 try {
     $stmt = $pdo->query(
@@ -16,7 +16,9 @@ try {
     );
     $concerts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
-    exit('Error al consultar los recitales');
+    error_log('Error al consultar los recitales: ' . $e->getMessage());
+    http_response_code(500);
+    exit('No se pudieron cargar los recitales.');
 }
 
 require_once __DIR__ . '/../../../views/admin/concerts/index.php';

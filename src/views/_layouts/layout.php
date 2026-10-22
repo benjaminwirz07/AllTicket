@@ -2,11 +2,16 @@
 
 require_once __DIR__ . '/../../config/bootstrap.php';
 
-// Si no está logueado, redirigir al login
-//if (!isset($_SESSION['user'])) {
-//    header('Location: /src/views/auth/login.php');
-//    exit;
-//}
+$usuarioMostrar = '';
+if (isAuthenticated()) {
+    try {
+        $stmtUsuario = $pdo->prepare('SELECT usuario FROM users WHERE id = :id LIMIT 1');
+        $stmtUsuario->execute(['id' => currentUserId()]);
+        $usuarioMostrar = (string) ($stmtUsuario->fetchColumn() ?: '');
+    } catch (PDOException $e) {
+        error_log('Error al consultar el usuario en el layout: ' . $e->getMessage());
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -37,7 +42,7 @@ require_once __DIR__ . '/../../config/bootstrap.php';
     <!-- =========================================================
          BOOTSTRAP
     ========================================================== -->
-    <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="<?= e(url('/assets/css/bootstrap.min.css')) ?>">
 
     <!-- Bootstrap Icons: usados en navbar y footer -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -51,8 +56,9 @@ require_once __DIR__ . '/../../config/bootstrap.php';
     <!-- =========================================================
          ESTILOS ALLTICKET
     ========================================================== -->
-    <link rel="stylesheet" href="/assets/css/global.css">
-    <link rel="stylesheet" href="/assets/css/admin.css">
+    <link rel="stylesheet" href="<?= e(url('/assets/css/global.css')) ?>">
+    <link rel="stylesheet" href="<?= e(url('/assets/css/admin.css')) ?>">
+    <link rel="stylesheet" href="<?= e(url('/assets/css/chatbot.css')) ?>">
     <?php
     // Estilos específicos de la página actual (ej: index.css),
     // definidos por la vista antes de incluir este layout.
@@ -91,15 +97,15 @@ require_once __DIR__ . '/../../config/bootstrap.php';
     ========================================================== -->
     <header class="sticky-top">
 
-        <nav class="navbar navbar-expand-lg navbar-dark bg-allticket border-bottom border-dark-subtle shadow-sm">
+        <nav class="navbar navbar-expand-xxl navbar-dark bg-allticket border-bottom border-dark-subtle shadow-sm">
 
             <div class="container-fluid container-xl">
 
 
                 <!-- LOGO -->
-                <a class="navbar-brand d-flex align-items-center py-1" href="/src/views/index.php">
+                <a class="navbar-brand d-flex align-items-center py-1" href="<?= e(url('/src/views/index.php')) ?>">
 
-                    <img src="/assets/img/logo-Allticket1.png" alt="AllTicket Logo" class="brand-logo">
+                    <img src="<?= e(url('/assets/img/logo-Allticket1.png')) ?>" alt="AllTicket Logo" class="brand-logo">
 
                 </a>
 
@@ -122,7 +128,7 @@ require_once __DIR__ . '/../../config/bootstrap.php';
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
 
                         <li class="nav-item">
-                            <a class="nav-link active" aria-current="page" href="/src/views/index.php">
+                            <a class="nav-link active" aria-current="page" href="<?= e(url('/src/views/index.php')) ?>">
                                 Inicio
                             </a>
                         </li>
@@ -131,6 +137,12 @@ require_once __DIR__ . '/../../config/bootstrap.php';
                         <li class="nav-item">
                             <a class="nav-link" href="#eventos">
                                 Eventos & Recitales
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" href="<?= e(url('/src/views/index.php#noticias')) ?>">
+                                Noticias
                             </a>
                         </li>
 
@@ -144,15 +156,15 @@ require_once __DIR__ . '/../../config/bootstrap.php';
                             </a>
 
                             <ul class="dropdown-menu dropdown-menu-dark">
-                                <li><a class="dropdown-item" href="/src/views/index.php?categoria=rock#eventos">Rock</a>
+                                <li><a class="dropdown-item" href="<?= e(url('/src/views/index.php?categoria=rock#eventos')) ?>">Rock</a>
                                 </li>
                                 <li><a class="dropdown-item"
-                                        href="/src/views/index.php?categoria=reggaeton#eventos">Reggaetón / Trap</a>
+                                        href="<?= e(url('/src/views/index.php?categoria=reggaeton#eventos')) ?>">Reggaetón / Trap</a>
                                 </li>
-                                <li><a class="dropdown-item" href="/src/views/index.php?categoria=pop#eventos">Pop</a>
+                                <li><a class="dropdown-item" href="<?= e(url('/src/views/index.php?categoria=pop#eventos')) ?>">Pop</a>
                                 </li>
                                 <li><a class="dropdown-item"
-                                        href="/src/views/index.php?categoria=electronica#eventos">Electrónica</a></li>
+                                        href="<?= e(url('/src/views/index.php?categoria=electronica#eventos')) ?>">Electrónica</a></li>
                             </ul>
 
                         </li>
@@ -167,14 +179,14 @@ require_once __DIR__ . '/../../config/bootstrap.php';
 
                         <!-- Ayuda: lleva a las preguntas frecuentes del inicio -->
                         <li class="nav-item">
-                            <a class="nav-link" href="/src/views/index.php#preguntas-frecuentes">
+                            <a class="nav-link" href="<?= e(url('/src/views/index.php#preguntas-frecuentes')) ?>">
                                 Ayuda
                             </a>
                         </li>
 
                         <?php if (isAdmin()): ?>
                             <li class="nav-item">
-                                <a class="nav-link" href="/src/controllers/admin/index.php">
+                                <a class="nav-link" href="<?= e(url('/src/controllers/admin/index.php')) ?>">
                                     <i class="bi bi-gear me-1"></i>Panel admin
                                 </a>
                             </li>
@@ -189,7 +201,7 @@ require_once __DIR__ . '/../../config/bootstrap.php';
                         <!-- BÚSQUEDA
                              La lupa ahora BUSCA: se expande el campo, se escribe,
                              y con Enter o la lupa va a los resultados. -->
-                        <form class="nav-search" id="navSearch" action="/src/views/index.php" method="GET" role="search"
+                        <form class="nav-search" id="navSearch" action="<?= e(url('/src/views/index.php')) ?>" method="GET" role="search"
                             autocomplete="off">
 
                             <input type="search" name="q" id="navSearchInput" class="nav-search-input"
@@ -205,36 +217,31 @@ require_once __DIR__ . '/../../config/bootstrap.php';
                         </form>
 
 
-                        <?php if (isset($_SESSION['user']['first_name'])): ?>
+                        <?php if (isAuthenticated()): ?>
 
                             <!-- Nombre del usuario -->
-                            <span class="text-light small d-none d-md-inline">
+                            <span class="text-light small d-none d-md-inline text-nowrap">
 
                                 <i class="bi bi-person-circle me-1 text-primary-neon"></i>
 
-                                Hola,
-                                <?= htmlspecialchars(
-                                    $_SESSION['user']['first_name'] ?? 'Usuario'
-                                ) ?>
+                                Hola, <?= e($usuarioMostrar !== '' ? $usuarioMostrar : 'Mi cuenta') ?>
 
                             </span>
 
 
                             <!-- Cerrar sesión -->
-                            <a href="/src/controllers/auth/logout.php"
-                                class="btn btn-outline-danger btn-sm rounded-pill px-3">
-
-                                <i class="bi bi-box-arrow-right me-1"></i>
-
-                                Cerrar sesión
-
-                            </a>
+                            <form action="<?= e(url('/src/controllers/auth/logout.php')) ?>" method="POST" class="d-inline flex-shrink-0">
+                                <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
+                                <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3 text-nowrap">
+                                    <i class="bi bi-box-arrow-right me-1" aria-hidden="true"></i>Cerrar sesión
+                                </button>
+                            </form>
 
 
                         <?php else: ?>
 
                             <!-- Iniciar sesión -->
-                            <a href="/src/views/auth/login.php" class="btn btn-violet-glow btn-sm rounded-pill px-4">
+                            <a href="<?= e(url('/src/views/auth/login.php')) ?>" class="btn btn-violet-glow btn-sm rounded-pill px-4">
 
                                 Iniciar Sesión
 
@@ -263,6 +270,17 @@ require_once __DIR__ . '/../../config/bootstrap.php';
     <div id="main-content" class="site-main">
 
         <?php
+        $globalFlash = consumeFlash();
+        if ($globalFlash !== null):
+            $flashType = in_array($globalFlash['type'], ['success', 'danger', 'warning', 'info'], true)
+                ? $globalFlash['type']
+                : 'info';
+        ?>
+            <div class="container-xl pt-3">
+                <div class="alert alert-<?= e($flashType) ?>" role="status"><?= e($globalFlash['msg']) ?></div>
+            </div>
+        <?php
+        endif;
         if (isset($pageContent)) {
             echo $pageContent;
         }
@@ -286,9 +304,9 @@ require_once __DIR__ . '/../../config/bootstrap.php';
                 <!-- MARCA -->
                 <div class="col-12 col-md-4">
 
-                    <a class="d-inline-block text-decoration-none mb-3" href="/src/views/index.php">
+                    <a class="d-inline-block text-decoration-none mb-3" href="<?= e(url('/src/views/index.php')) ?>">
 
-                        <img src="/assets/img/logo-Allticket1.png" alt="AllTicket Logo" class="brand-logo">
+                        <img src="<?= e(url('/assets/img/logo-Allticket1.png')) ?>" alt="AllTicket Logo" class="brand-logo">
 
                     </a>
 
@@ -316,7 +334,7 @@ require_once __DIR__ . '/../../config/bootstrap.php';
                     <ul class="list-unstyled small d-flex flex-column gap-2 mb-0">
 
                         <li>
-                            <a href="/src/views/index.php"
+                            <a href="<?= e(url('/src/views/index.php')) ?>"
                                 class="text-secondary-custom text-decoration-none nav-footer-link">
                                 Inicio
                             </a>
@@ -329,13 +347,20 @@ require_once __DIR__ . '/../../config/bootstrap.php';
                         </li>
 
                         <li>
+                            <a href="<?= e(url('/src/views/index.php#noticias')) ?>"
+                                class="text-secondary-custom text-decoration-none nav-footer-link">
+                                Noticias
+                            </a>
+                        </li>
+
+                        <li>
                             <a href="#como-funciona" class="text-secondary-custom text-decoration-none nav-footer-link">
                                 Cómo funciona
                             </a>
                         </li>
 
                         <li>
-                            <a href="/src/views/index.php#preguntas-frecuentes"
+                            <a href="<?= e(url('/src/views/index.php#preguntas-frecuentes')) ?>"
                                 class="text-secondary-custom text-decoration-none nav-footer-link">
                                 Ayuda
                             </a>
@@ -393,20 +418,52 @@ require_once __DIR__ . '/../../config/bootstrap.php';
 
     </footer>
 
+    <button id="chatbotLauncher" class="chatbot-launcher" type="button"
+        aria-label="Abrir asistente virtual" aria-controls="chatbotPanel" aria-expanded="false">
+        <img src="<?= e(url('/assets/img/chatbot/chat.png')) ?>" alt="">
+    </button>
+
+    <section id="chatbotPanel" class="chatbot-panel" aria-label="Asistente virtual" hidden>
+        <header class="chatbot-header">
+            <div class="chatbot-header__identity">
+                <img src="<?= e(url('/assets/img/chatbot/chat.png')) ?>" alt="">
+                <span>Asistente AllTicket</span>
+            </div>
+            <button id="chatbotClose" class="chatbot-close" type="button" aria-label="Cerrar asistente">&times;</button>
+        </header>
+        <p class="chatbot-privacy">Guardamos el historial de esta sesión. No envíes datos de pago ni información sensible.</p>
+        <div id="chatbotLog" class="chatbot-log" role="log" aria-live="polite" aria-relevant="additions"></div>
+        <p id="chatbotError" class="chatbot-error" role="alert" hidden></p>
+        <form id="chatbotForm" class="chatbot-form">
+            <input type="hidden" id="chatbotCsrf" value="<?= e(csrfToken()) ?>">
+            <label class="visually-hidden" for="chatbotInput">Escribí tu mensaje</label>
+            <input id="chatbotInput" class="form-control custom-input" type="text" maxlength="1000"
+                placeholder="Preguntá por eventos o entradas..." autocomplete="off" disabled>
+            <button id="chatbotSend" class="btn btn-violet-glow" type="submit" disabled>Enviar</button>
+        </form>
+    </section>
 
     <?php
-    // Nombres de los eventos próximos para las sugerencias de la lupa.
-    // Salen de la base de datos, así siempre están actualizados.
+    // Nombres de eventos y artistas con recitales próximos para las sugerencias.
     $nombresEventos = [];
 
     if (isset($pdo)) {
         try {
             $stmtNombres = $pdo->query(
-                "SELECT DISTINCT name
-                   FROM concerts
-                  WHERE status = 'active'
-                    AND date >= CURDATE()
-                  ORDER BY name ASC"
+                "SELECT nombre
+                   FROM (
+                       SELECT c.name AS nombre
+                         FROM concerts c
+                        WHERE c.status = 'active'
+                          AND c.date >= CURDATE()
+                       UNION
+                       SELECT a.name AS nombre
+                         FROM artists a
+                         JOIN concerts c ON c.artist_id = a.id
+                        WHERE c.status = 'active'
+                          AND c.date >= CURDATE()
+                   ) AS sugerencias
+                  ORDER BY nombre ASC"
             );
             $nombresEventos = $stmtNombres->fetchAll(PDO::FETCH_COLUMN);
         } catch (PDOException $e) {
@@ -445,7 +502,8 @@ require_once __DIR__ . '/../../config/bootstrap.php';
     </script>
 
     <!-- Buscador del header (lupa + sugerencias) -->
-    <script src="/assets/js/nav-search.js"></script>
+    <script src="<?= e(url('/assets/js/nav-search.js')) ?>"></script>
+    <script src="<?= e(url('/assets/js/chatbot.js')) ?>"></script>
 
 </body>
 

@@ -1,12 +1,8 @@
 <?php
 require_once __DIR__ . '/../../config/bootstrap.php';
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
 $loginUrl = '/src/views/auth/login.php';
-$userId = $_SESSION['user']['id'] ?? ($_SESSION['user_id'] ?? null);
+$userId = currentUserId();
 $logueado = ($userId != null);
 
 date_default_timezone_set('America/Argentina/Buenos_Aires');
@@ -15,9 +11,10 @@ date_default_timezone_set('America/Argentina/Buenos_Aires');
 // 1. ID DEL RECITAL (?id=...)
 // ============================================================
 
-$id = "";
-if (isset($_GET['id'])) {
-    $id = trim($_GET['id']);
+$id = inputUuid($_GET, 'id');
+if ($id === '') {
+    http_response_code(400);
+    exit('Solicitud no válida');
 }
 
 $concert = null;
@@ -508,8 +505,9 @@ ob_start();
 
                 <?php } else { ?>
 
-                    <form action="/src/views/concerts/checkout.php" method="POST" id="form-compra" novalidate>
+                    <form action="<?= e(url('/src/controllers/concerts/checkout.php')) ?>" method="POST" id="form-compra" novalidate>
 
+                        <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
                         <input type="hidden" name="concert_id" value="<?= e($concert['id']) ?>">
                         <input type="hidden" name="quantity" id="f-qty" value="1">
                         <input type="hidden" name="seats" id="f-seats" value="">
@@ -643,9 +641,9 @@ ob_start();
                                         </div>
 
                                         <div class="ct-legend mb-3">
-                                            <span><i style="background:rgba(255,255,255,.16)"></i>Libre</span>
+                                            <span><i style="background:rgba(255,255,255,.45)"></i>Libre</span>
                                             <span><i style="background:linear-gradient(135deg,#a855f7,#22d3ee)"></i>Tu selección</span>
-                                            <span><i style="background:#2a2a38"></i>Ocupada</span>
+                                            <span><i style="background:rgba(255,255,255,.05);outline:1px solid rgba(255,255,255,.2)"></i>Ocupada</span>
                                         </div>
 
                                         <div class="ct-stage">ESCENARIO</div>

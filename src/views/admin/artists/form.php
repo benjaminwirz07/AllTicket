@@ -1,4 +1,8 @@
 <?php
+require_once __DIR__ . '/../../../config/bootstrap.php';
+requireAuth();
+requireAdmin($pdo);
+
 $artist = $artist ?? null;
 $errors = $errors ?? [];
 $editando = !empty($artist['id']);
@@ -12,6 +16,7 @@ ob_start();
 
     <form method="POST" action="/src/controllers/admin/artists/save.php" enctype="multipart/form-data"
         style="max-width: 640px;">
+        <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
         <?php if ($editando): ?>
             <input type="hidden" name="id" value="<?= e($artist['id']) ?>">
         <?php endif; ?>

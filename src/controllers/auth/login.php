@@ -1,13 +1,11 @@
 <?php
 require_once __DIR__ . '/../../config/bootstrap.php';
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: /src/views/auth/login.php');
-    exit;
-}
+requireMethod('POST');
+requireCsrfToken();
 
-$email    = trim($_POST['email'] ?? '');
-$password = $_POST['password'] ?? '';
+$email    = inputEmail($_POST, 'email');
+$password = is_string($_POST['password'] ?? null) ? (string) $_POST['password'] : '';
 $errors   = [];
 
 if ($email === '') {
@@ -23,31 +21,30 @@ if ($password === '') {
 if (!empty($errors)) {
     $_SESSION['errors'] = $errors;
     $_SESSION['old']    = ['email' => $email];
-    header('Location: /src/views/auth/login.php');
-    exit;
+    redirectToLogin();
 }
 
 try {
-    $stmt = $pdo->prepare('SELECT * FROM users WHERE email = :email LIMIT 1');
+    $stmt = $pdo->prepare('SELECT id, password, role FROM users WHERE email = :email LIMIT 1');
     $stmt->execute(['email' => $email]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$user || !password_verify($password, $user['password'])) {
         $_SESSION['errors'] = ['auth' => 'Las credenciales ingresadas son incorrectas.'];
         $_SESSION['old']    = ['email' => $email];
-        header('Location: /src/views/auth/login.php');
-        exit;
+        redirectToLogin();
     }
 
     session_regenerate_id(true);
-    unset($user['password']);
-    $_SESSION['user'] = $user;
+    $_SESSION['user'] = [
+        'id' => (string) $user['id'],
+        'role' => (string) $user['role'],
+    ];
 
-    header('Location: /src/views/index.php');
-    exit;
+    redirectTo('/src/views/index.php');
 
 } catch (PDOException $e) {
+    error_log('Error al iniciar sesión: ' . $e->getMessage());
     $_SESSION['errors'] = ['db' => 'Ocurrió un error al procesar el ingreso. Inténtalo más tarde.'];
-    header('Location: /src/views/auth/login.php');
-    exit;
+    redirectToLogin();
 }

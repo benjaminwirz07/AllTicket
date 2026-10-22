@@ -1,23 +1,28 @@
 <?php
 require_once __DIR__ . '/../../../config/bootstrap.php';
+requireAuth();
 requireAdmin($pdo);
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST' || empty($_POST['id'])) {
-    http_response_code(405);
-    exit('Método no permitido');
+requireMethod('POST');
+requireCsrfToken();
+
+ $id = inputUuid($_POST, 'id');
+if ($id === '') {
+    http_response_code(400);
+    exit('Solicitud no válida');
 }
 
 try {
     $stmt = $pdo->prepare('DELETE FROM artists WHERE id = :id');
-    $stmt->execute(['id' => $_POST['id']]);
-    $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Artista eliminado.'];
+    $stmt->execute(['id' => $id]);
+    setFlash('success', 'Artista eliminado.');
 } catch (PDOException $e) {
     if ($e->getCode() === '23000') {
-        $_SESSION['flash'] = ['type' => 'danger', 'msg' => 'No se puede eliminar: el artista tiene recitales asociados.'];
+        setFlash('danger', 'No se puede eliminar: el artista tiene recitales asociados.');
     } else {
-        $_SESSION['flash'] = ['type' => 'danger', 'msg' => 'Error al eliminar el artista.'];
+        error_log('Error al eliminar el artista: ' . $e->getMessage());
+        setFlash('danger', 'Error al eliminar el artista.');
     }
 }
 
-header('Location: /src/controllers/admin/artists/index.php');
-exit;
+redirectTo('/src/controllers/admin/artists/index.php');

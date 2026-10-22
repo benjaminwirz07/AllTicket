@@ -1,20 +1,28 @@
 <?php
 require_once __DIR__ . '/../../config/bootstrap.php';
+requireAuth();
 requireAdmin($pdo);
+
+requireMethod('POST');
+requireCsrfToken();
+
 try {
-    if (!isset($_POST['title'], $_POST['content'])) {
-        throw new Exception('Faltan datos del formulario');
+    $id = inputUuid($_POST, 'id');
+    $title = inputString($_POST, 'title');
+    $content = inputString($_POST, 'content', false);
+    if ($id === '' || $title === '' || mb_strlen($title, 'UTF-8') > 255 || mb_strlen($content, 'UTF-8') > 20000) {
+        redirectWithFlash('/src/controllers/posts/index.php', 'danger', 'Revisá los datos de la publicación.');
     }
 
     $stmt = $pdo->prepare('UPDATE posts SET title = :title, content = :content WHERE id = :id');
     $stmt->execute([
-        'id' => $_POST['id'],
-        'title' => $_POST['title'],
-        'content' => $_POST['content'],
+        'id' => $id,
+        'title' => $title,
+        'content' => $content,
     ]);
 
-    header('Location: /src/controllers/posts/index.php');
-    exit;
+    redirectWithFlash('/src/controllers/posts/index.php', 'success', 'Publicación actualizada correctamente.');
 } catch (PDOException $e) {
-    exit('Error al actualizar el post');
+    error_log('Error al actualizar la publicación: ' . $e->getMessage());
+    redirectWithFlash('/src/controllers/posts/index.php', 'danger', 'No se pudo actualizar la publicación.');
 }

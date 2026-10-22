@@ -1,34 +1,46 @@
 <?php
 require_once __DIR__ . '/../../../config/bootstrap.php';
+requireAuth();
 requireAdmin($pdo);
 require_once __DIR__ . '/../../../config/uploads.php';
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    exit('Método no permitido');
+requireMethod('POST');
+requireCsrfToken();
+
+$id = inputString($_POST, 'id');
+if ($id !== '' && !isValidUuid($id)) {
+    http_response_code(400);
+    exit('Solicitud no válida');
 }
 
-$id = trim($_POST['id'] ?? '');
-
 $data = [
-    'artist_id'   => trim($_POST['artist_id'] ?? ''),
-    'venue_id'    => trim($_POST['venue_id'] ?? ''),
-    'name'        => trim($_POST['name'] ?? ''),
-    'description' => trim($_POST['description'] ?? ''),
-    'date'        => trim($_POST['date'] ?? ''),
-    'time'        => trim($_POST['time'] ?? ''),
-    'genre'       => trim($_POST['genre'] ?? ''),
-    'status'      => trim($_POST['status'] ?? 'active'),
+    'artist_id'   => inputUuid($_POST, 'artist_id'),
+    'venue_id'    => inputUuid($_POST, 'venue_id'),
+    'name'        => inputString($_POST, 'name'),
+    'description' => inputString($_POST, 'description'),
+    'date'        => inputDate($_POST, 'date'),
+    'time'        => inputString($_POST, 'time'),
+    'genre'       => inputString($_POST, 'genre'),
+    'status'      => inputString($_POST, 'status') ?: 'active',
 ];
 
 // Entradas: tickets[0..n][id|type|price|stock]
+$ticketsInput = $_POST['tickets'] ?? [];
+if (!is_array($ticketsInput) || count($ticketsInput) > 50) {
+    http_response_code(400);
+    exit('Solicitud no válida');
+}
 $tickets = [];
-foreach ((array) ($_POST['tickets'] ?? []) as $row) {
+foreach ($ticketsInput as $row) {
+    if (!is_array($row)) {
+        http_response_code(400);
+        exit('Solicitud no válida');
+    }
     $tickets[] = [
-        'id'    => trim($row['id'] ?? ''),
-        'type'  => trim($row['type'] ?? ''),
-        'price' => trim($row['price'] ?? ''),
-        'stock' => trim($row['stock'] ?? ''),
+        'id'    => inputString($row, 'id'),
+        'type'  => inputString($row, 'type'),
+        'price' => inputString($row, 'price'),
+        'stock' => inputString($row, 'stock'),
     ];
 }
 $data['tickets'] = $tickets;
@@ -41,8 +53,11 @@ if ($data['artist_id'] === '') {
 if ($data['venue_id'] === '') {
     $errors['venue_id'] = 'Elegí un lugar.';
 }
-if ($data['name'] === '' || strlen($data['name']) > 200) {
+if ($data['name'] === '' || mb_strlen($data['name'], 'UTF-8') > 200) {
     $errors['name'] = 'El nombre es obligatorio (máximo 200 caracteres).';
+}
+if (mb_strlen($data['description'], 'UTF-8') > 20000) {
+    $errors['description'] = 'La descripción no puede superar los 20.000 caracteres.';
 }
 
 $d = DateTime::createFromFormat('Y-m-d', $data['date']);
@@ -55,7 +70,7 @@ if (!$t || $t->format('H:i') !== $data['time']) {
     $errors['time'] = 'La hora no es válida.';
 }
 
-if (strlen($data['genre']) > 50) {
+if (mb_strlen($data['genre'], 'UTF-8') > 50) {
     $errors['genre'] = 'Máximo 50 caracteres.';
 }
 if (!in_array($data['status'], ['active', 'cancelled', 'finished'], true)) {
@@ -68,6 +83,10 @@ $aBorrar     = [];   // filas existentes que se vaciaron
 $tiposUsados = [];
 
 foreach ($tickets as $i => $tk) {
+    if ($tk['id'] !== '' && !isValidUuid($tk['id'])) {
+        $errors['tickets'][$i] = 'La entrada seleccionada no es válida.';
+        continue;
+    }
     $vacia = $tk['type'] === '' && $tk['price'] === '' && $tk['stock'] === '';
 
     if ($vacia) {
@@ -77,11 +96,18 @@ foreach ($tickets as $i => $tk) {
         continue;
     }
 
-    if ($tk['type'] === '' || strlen($tk['type']) > 100) {
+    if ($tk['type'] === '' || mb_strlen($tk['type'], 'UTF-8') > 100) {
         $errors['tickets'][$i] = 'Completá el tipo de entrada (máximo 100 caracteres).';
-    } elseif (!is_numeric($tk['price']) || (float) $tk['price'] < 0) {
+    } elseif (
+        preg_match('/^\d{1,8}(?:\.\d{1,2})?$/', $tk['price']) !== 1
+        || (float) $tk['price'] < 0
+    ) {
         $errors['tickets'][$i] = 'El precio debe ser un número mayor o igual a 0.';
-    } elseif (filter_var($tk['stock'], FILTER_VALIDATE_INT) === false || (int) $tk['stock'] < 0) {
+    } elseif (
+        filter_var($tk['stock'], FILTER_VALIDATE_INT) === false
+        || (int) $tk['stock'] < 0
+        || (int) $tk['stock'] > 2147483647
+    ) {
         $errors['tickets'][$i] = 'El stock debe ser un entero mayor o igual a 0.';
     } elseif (in_array(strtolower($tk['type']), $tiposUsados, true)) {
         $errors['tickets'][$i] = 'Ese tipo de entrada está repetido.';
@@ -124,8 +150,7 @@ if (!empty($errors)) {
     borrarImagenSubida($imagenNueva);
     $_SESSION['errors'] = $errors;
     $_SESSION['old']    = $data + ['id' => $id];
-    header('Location: ' . $volver);
-    exit;
+    redirectTo($volver);
 }
 
 $params = [
@@ -236,7 +261,7 @@ try {
         borrarImagenSubida($imagenActual);
     }
 
-    $_SESSION['flash'] = ['type' => 'success', 'msg' => $msg];
+    setFlash('success', $msg);
 } catch (RuntimeException $e) {
     borrarImagenSubida($imagenNueva);
     if ($pdo->inTransaction()) {
@@ -244,15 +269,14 @@ try {
     }
     $_SESSION['errors'] = ['general' => $e->getMessage()];
     $_SESSION['old']    = $data + ['id' => $id];
-    header('Location: ' . $volver);
-    exit;
+    redirectTo($volver);
 } catch (PDOException $e) {
     borrarImagenSubida($imagenNueva);
     if ($pdo->inTransaction()) {
         $pdo->rollBack();
     }
-    $_SESSION['flash'] = ['type' => 'danger', 'msg' => 'No se pudo guardar el recital.'];
+    error_log('Error al guardar el recital: ' . $e->getMessage());
+    setFlash('danger', 'No se pudo guardar el recital.');
 }
 
-header('Location: /src/controllers/admin/concerts/index.php');
-exit;
+redirectTo('/src/controllers/admin/concerts/index.php');

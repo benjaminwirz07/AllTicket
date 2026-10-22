@@ -1,4 +1,8 @@
 <?php
+require_once __DIR__ . '/../../config/bootstrap.php';
+requireAuth();
+requireAdmin($pdo);
+
 $secciones = [
     ['/src/controllers/admin/concerts/index.php', 'bi-ticket-perforated', 'Recitales', 'Crear, editar y cancelar recitales y sus entradas.'],
     ['/src/controllers/admin/sales/index.php',    'bi-receipt',           'Ventas',    'Compras, estados de pago y entradas vendidas.'],
@@ -12,7 +16,7 @@ ob_start();
 <main class="container-xl py-5 text-light">
     <header class="mb-4">
         <h1 class="h3 fw-bold text-white mb-1">Panel de administración</h1>
-        <p class="text-secondary-custom mb-0">Hola, <?= e($_SESSION['user']['first_name'] ?? 'admin') ?>. Este es el estado de AllTicket.</p>
+        <p class="text-secondary-custom mb-0">Hola, admin. Este es el estado de AllTicket.</p>
     </header>
 
     <!-- Números -->

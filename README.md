@@ -12,8 +12,9 @@ El objetivo es comprender cómo se organiza un proyecto PHP con separación de v
 
 ## Requisitos previos
 
-- PHP instalado (versión 7.4+ recomendada).
+- PHP instalado (versión 8.0 o superior).
 - Extensión `pdo_mysql` habilitada en `php.ini`.
+- Extensiones `mbstring` y `fileinfo` habilitadas (validación de texto y cargas de imágenes).
 - MySQL/MariaDB local o remoto para crear la base de datos.
 - Editor de código (por ejemplo Visual Studio Code).
 
@@ -40,6 +41,11 @@ El objetivo es comprender cómo se organiza un proyecto PHP con separación de v
 - Van a tener que abrir la terminal de mySQL
 - Dentro del archivo `schema.sql` se van a encontrar con contenido que pueden pegar dentro de la terminal
 - Asegurense de luego configurar los valores en el .env
+- `schema.sql` borra y recrea la base de datos. Si ya tenés datos y solo necesitás el límite de intentos del newsletter, ejecutá `newsletter_rate_limit.sql` una vez sobre la base existente.
+
+### Instalar el historial del chatbot
+
+El asistente guarda los mensajes en MySQL. Después de crear la base de datos, ejecutá una sola vez `chatbot.sql` en esa misma base. Este archivo solo crea la tabla del chat y no borra ni modifica las demás tablas. El asistente es automático y responde preguntas frecuentes sobre eventos, entradas, compras y noticias; no es un servicio de inteligencia artificial.
 
 ## Estructura del repositorio
 
@@ -85,13 +91,21 @@ El objetivo es comprender cómo se organiza un proyecto PHP con separación de v
 
 1. El navegador entra por `index.php`.
 2. `index.php` redirige a `src/views/index.php`.
-3. `src/views/index.php` incluye el layout privado `src/views/_layouts/layout.php`.
-4. `layout.php` verifica si el usuario está logueado:
-   - Si no hay sesión, redirige a `src/views/auth/login.php`.
-   - Si hay sesión, muestra el contenido privado.
-5. Desde `src/views/auth/login.php`, el usuario intenta iniciar sesión.
-6. Desde `src/views/auth/register.php`, el usuario puede crear una cuenta.
-7. `src/controllers/auth/logout.php` cierra la sesión y vuelve al login.
+3. `src/views/index.php` consulta los datos públicos y renderiza el layout compartido.
+4. Las páginas públicas pueden visitarse sin iniciar sesión; las rutas privadas/admin comprueban los permisos desde sus controladores.
+5. Desde `src/views/auth/login.php`, el usuario inicia sesión; desde `src/views/auth/register.php`, puede crear una cuenta.
+6. `src/controllers/auth/logout.php` cierra la sesión mediante un formulario POST protegido con CSRF.
+
+## Reglas de seguridad del proyecto
+
+- `src/config/bootstrap.php` es el único punto que inicia la sesión.
+- Las operaciones privadas usan `requireAuth()`; las rutas administrativas también verifican el rol actual en la base con `requireAdmin($pdo)`.
+- Login y registro requieren CSRF; todas las acciones que cambian datos deben aceptar POST y comprobar el token CSRF.
+- Los IDs de entidades se validan como UUID antes de consultar o modificar registros.
+- La sesión solo guarda el ID y el rol del usuario. Los datos de perfil se consultan desde la base cuando hacen falta.
+- Las imágenes subidas aceptan únicamente JPEG, PNG y WebP, con límite de 2 MB y validación del MIME/contenido.
+- Newsletter limita a cinco intentos por dirección IP cada quince minutos. En una base existente, instalar la tabla mediante `newsletter_rate_limit.sql`.
+- Las rutas internas se deben construir con `url()` y las redirecciones con `redirectTo()` / `redirectWithFlash()`.
 
 ## Notas para los alumnos
 

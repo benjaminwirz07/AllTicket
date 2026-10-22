@@ -1,4 +1,9 @@
-<?php ob_start(); ?>
+<?php
+require_once __DIR__ . '/../../../config/bootstrap.php';
+requireAuth();
+requireAdmin($pdo);
+ob_start();
+?>
 
 <main class="container-xl py-5 text-light">
   <header class="row mb-4">
@@ -43,6 +48,7 @@
                    href="/src/controllers/admin/venues/form.php?id=<?= urlencode($venue['id']) ?>">Editar</a>
                 <form method="POST" action="/src/controllers/admin/venues/delete.php" class="d-inline"
                       onsubmit="return confirm('¿Eliminar este lugar?');">
+                  <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
                   <input type="hidden" name="id" value="<?= e($venue['id']) ?>">
                   <button class="btn btn-sm btn-danger" type="submit">Eliminar</button>
                 </form>

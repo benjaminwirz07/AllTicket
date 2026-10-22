@@ -1,14 +1,12 @@
 <?php
 require_once __DIR__ . '/../../config/bootstrap.php';
 
-if (isset($_SESSION['user'])) {
-    header('Location: /src/views/index.php');
-    exit;
-}
+requireGuest();
 
 $errors  = $_SESSION['errors'] ?? [];
 $old     = $_SESSION['old'] ?? [];
-$success = $_SESSION['success'] ?? null;
+$flash   = consumeFlash();
+$success = $_SESSION['success'] ?? ($flash['msg'] ?? null);
 unset($_SESSION['errors'], $_SESSION['old'], $_SESSION['success']);
 
 $e = static fn($value): string => htmlspecialchars(
@@ -28,7 +26,7 @@ $e = static fn($value): string => htmlspecialchars(
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <link rel="stylesheet" href="/assets/css/custom.css">
+    <link rel="stylesheet" href="<?= e(url('/assets/css/custom.css')) ?>">
     <style>
         .alert-success-custom {
             display: flex;
@@ -47,7 +45,7 @@ $e = static fn($value): string => htmlspecialchars(
 <body>
     <main class="login-page">
         <div class="brand-logo-container text-center mb-4">
-            <img src="/assets/img/logo-Allticket2.png" alt="AllTicket Logo" class="brand-logo img-fluid">
+            <img src="<?= e(url('/assets/img/logo-Allticket2.png')) ?>" alt="AllTicket Logo" class="brand-logo img-fluid">
         </div>
 
         <section class="login-card text-center">
@@ -74,7 +72,8 @@ $e = static fn($value): string => htmlspecialchars(
                     </div>
                 <?php endif; ?>
 
-                <form action="/src/controllers/auth/login.php" method="POST">
+                <form action="<?= e(url('/src/controllers/auth/login.php')) ?>" method="POST">
+                    <input type="hidden" name="csrf_token" value="<?= $e(csrfToken()) ?>">
                     <div class="mb-3 text-start">
                         <label class="form-label-custom" for="email">Correo electrónico</label>
                         <div class="input-box<?= isset($errors['email']) ? ' input-error' : '' ?>">
@@ -117,7 +116,7 @@ $e = static fn($value): string => htmlspecialchars(
                     <span></span>
                 </div>
 
-                <a href="/src/views/auth/register.php" class="register-button">
+                <a href="<?= e(url('/src/views/auth/register.php')) ?>" class="register-button">
                     <i class="fa-regular fa-user"></i>
                     Crear cuenta
                 </a>

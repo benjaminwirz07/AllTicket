@@ -1,4 +1,8 @@
 <?php
+require_once __DIR__ . '/../../../config/bootstrap.php';
+requireAuth();
+requireAdmin($pdo);
+
 $concert = $concert ?? null;
 $errors = $errors ?? [];
 $editando = !empty($concert['id']);
@@ -25,6 +29,7 @@ ob_start();
     <?php endif; ?>
 
     <form method="POST" action="/src/controllers/admin/concerts/save.php" enctype="multipart/form-data" style="max-width: 720px;">
+        <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
         <?php if ($editando): ?>
             <input type="hidden" name="id" value="<?= e($concert['id']) ?>">
         <?php endif; ?>

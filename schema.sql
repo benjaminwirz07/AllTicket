@@ -321,5 +321,45 @@ CREATE TABLE seat_reservations (
 ) ENGINE=InnoDB;
 
 -- =====================================================
+-- 10. CHATBOT MESSAGES
+-- =====================================================
+CREATE TABLE IF NOT EXISTS chatbot_messages (
+    id         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    chat_id    CHAR(64) NOT NULL,
+    sender     ENUM('user', 'assistant') NOT NULL,
+    message    TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (id),
+    KEY idx_chatbot_messages_chat (chat_id, id)
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci;
+
+-- =====================================================
+-- 11. NEWSLETTER SUBSCRIBERS
+-- =====================================================
+CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+    id         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    email      VARCHAR(254) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_newsletter_subscribers_email (email)
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS newsletter_rate_limits (
+    ip_hash           CHAR(64) NOT NULL,
+    window_started_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    attempts          TINYINT UNSIGNED NOT NULL DEFAULT 0,
+
+    PRIMARY KEY (ip_hash),
+    KEY idx_newsletter_rate_window (window_started_at)
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci;
+-- =====================================================
 -- FIN DEL ESQUEMA
 -- =====================================================

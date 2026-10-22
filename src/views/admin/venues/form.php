@@ -1,4 +1,8 @@
 <?php
+require_once __DIR__ . '/../../../config/bootstrap.php';
+requireAuth();
+requireAdmin($pdo);
+
 $venue  = $venue ?? null;
 $errors = $errors ?? [];
 $editando = !empty($venue['id']);
@@ -11,6 +15,7 @@ ob_start();
   </header>
 
   <form method="POST" action="/src/controllers/admin/venues/save.php" style="max-width: 640px;">
+    <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
     <?php if ($editando): ?>
       <input type="hidden" name="id" value="<?= e($venue['id']) ?>">
     <?php endif; ?>

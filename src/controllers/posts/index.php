@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../../config/bootstrap.php';
+requireAuth();
 requireAdmin($pdo);
 try {
     $query = '
@@ -19,5 +20,7 @@ try {
 
     require_once __DIR__ . '/../../views/posts/index.php';
 } catch (PDOException $e) {
-    exit('Error al consultar los posts');
+    error_log('Error al consultar las publicaciones: ' . $e->getMessage());
+    http_response_code(500);
+    exit('No se pudieron cargar las publicaciones.');
 }

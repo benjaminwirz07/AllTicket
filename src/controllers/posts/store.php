@@ -1,20 +1,27 @@
 <?php
 require_once __DIR__ . '/../../config/bootstrap.php';
+requireAuth();
 requireAdmin($pdo);
+
+requireMethod('POST');
+requireCsrfToken();
+
 try {
-    if (!isset($_POST['title'], $_POST['content'])) {
-        throw new Exception('Faltan datos del formulario');
+    $title = inputString($_POST, 'title');
+    $content = inputString($_POST, 'content', false);
+    if ($title === '' || mb_strlen($title, 'UTF-8') > 255 || mb_strlen($content, 'UTF-8') > 20000) {
+        redirectWithFlash('/src/controllers/posts/index.php', 'danger', 'Revisá el título y el contenido de la publicación.');
     }
 
     $stmt = $pdo->prepare('INSERT INTO posts (title, content, user_id) VALUES (:title, :content, :user_id)');
     $stmt->execute([
-        'title' => $_POST['title'],
-        'content' => $_POST['content'],
-        'user_id' => $_SESSION['user']['id'],
+        'title' => $title,
+        'content' => $content,
+        'user_id' => currentUserId(),
     ]);
 
-    header('Location: /src/controllers/posts/index.php');
-    exit;
+    redirectWithFlash('/src/controllers/posts/index.php', 'success', 'Publicación creada correctamente.');
 } catch (PDOException $e) {
-    exit('Error al crear el post');
+    error_log('Error al crear la publicación: ' . $e->getMessage());
+    redirectWithFlash('/src/controllers/posts/index.php', 'danger', 'No se pudo crear la publicación.');
 }

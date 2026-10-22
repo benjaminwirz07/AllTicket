@@ -1,9 +1,6 @@
 <?php
-require_once __DIR__ . '/../../config/bootstrap.php'; # Acá linkea las configuraciones de bootstrap.php
-if (isset($_SESSION['user'])) {
-  header('Location: /src/views/index.php');
-  exit;
-}
+require_once __DIR__ . '/../../config/bootstrap.php';
+requireGuest();
 ?>
 
 <!DOCTYPE html>

@@ -1,4 +1,8 @@
-<?php ob_start();
+<?php
+require_once __DIR__ . '/../../../config/bootstrap.php';
+requireAuth();
+requireAdmin($pdo);
+ob_start();
 $estados = ['active' => 'Activo', 'cancelled' => 'Cancelado', 'finished' => 'Finalizado'];
 ?>
 
@@ -46,6 +50,7 @@ $estados = ['active' => 'Activo', 'cancelled' => 'Cancelado', 'finished' => 'Fin
                 <?php if ($c['status'] === 'active'): ?>
                   <form method="POST" action="/src/controllers/admin/concerts/cancel.php" class="d-inline"
                         onsubmit="return confirm('¿Cancelar este recital? Dejará de verse en el home.');">
+                    <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
                     <input type="hidden" name="id" value="<?= e($c['id']) ?>">
                     <button class="btn btn-sm btn-danger" type="submit">Cancelar</button>
                   </form>

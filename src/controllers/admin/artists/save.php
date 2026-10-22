@@ -1,24 +1,30 @@
 <?php
 require_once __DIR__ . '/../../../config/bootstrap.php';
 require_once __DIR__ . '/../../../config/uploads.php';
+requireAuth();
 requireAdmin($pdo);
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    exit('Método no permitido');
+requireMethod('POST');
+requireCsrfToken();
+
+$id = inputString($_POST, 'id');
+if ($id !== '' && !isValidUuid($id)) {
+    http_response_code(400);
+    exit('Solicitud no válida');
 }
 
-$id = trim($_POST['id'] ?? '');
-
 $data = [
-    'name'        => trim($_POST['name'] ?? ''),
-    'description' => trim($_POST['description'] ?? ''),
+    'name'        => inputString($_POST, 'name'),
+    'description' => inputString($_POST, 'description'),
 ];
 
 $errors = [];
 
-if ($data['name'] === '' || strlen($data['name']) > 150) {
+if ($data['name'] === '' || mb_strlen($data['name'], 'UTF-8') > 150) {
     $errors['name'] = 'El nombre es obligatorio (máximo 150 caracteres).';
+}
+if (mb_strlen($data['description'], 'UTF-8') > 20000) {
+    $errors['description'] = 'La descripción no puede superar los 20.000 caracteres.';
 }
 
 // Imagen actual (si estamos editando)
@@ -42,8 +48,7 @@ if (empty($errors)) {
 if (!empty($errors)) {
     $_SESSION['errors'] = $errors;
     $_SESSION['old']    = $data + ['id' => $id];
-    header('Location: /src/controllers/admin/artists/form.php' . ($id !== '' ? '?id=' . urlencode($id) : ''));
-    exit;
+    redirectTo('/src/controllers/admin/artists/form.php' . ($id !== '' ? '?id=' . urlencode($id) : ''));
 }
 
 $params = [
@@ -58,13 +63,13 @@ try {
             'INSERT INTO artists (name, description, image) VALUES (:name, :description, :image)'
         );
         $stmt->execute($params);
-        $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Artista creado correctamente.'];
+        setFlash('success', 'Artista creado correctamente.');
     } else {
         $stmt = $pdo->prepare(
             'UPDATE artists SET name = :name, description = :description, image = :image WHERE id = :id'
         );
         $stmt->execute($params + ['id' => $id]);
-        $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Artista actualizado correctamente.'];
+        setFlash('success', 'Artista actualizado correctamente.');
 
         if ($imagenNueva !== null) {
             borrarImagenSubida($imagenActual);
@@ -72,8 +77,8 @@ try {
     }
 } catch (PDOException $e) {
     borrarImagenSubida($imagenNueva);
-    $_SESSION['flash'] = ['type' => 'danger', 'msg' => 'No se pudo guardar el artista.'];
+    error_log('Error al guardar el artista: ' . $e->getMessage());
+    setFlash('danger', 'No se pudo guardar el artista.');
 }
 
-header('Location: /src/controllers/admin/artists/index.php');
-exit;
+redirectTo('/src/controllers/admin/artists/index.php');

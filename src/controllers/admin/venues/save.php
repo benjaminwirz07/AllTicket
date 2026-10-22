@@ -1,20 +1,23 @@
 <?php
 require_once __DIR__ . '/../../../config/bootstrap.php';
+requireAuth();
 requireAdmin($pdo);
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    exit('Método no permitido');
+requireMethod('POST');
+requireCsrfToken();
+
+$id = inputString($_POST, 'id');
+if ($id !== '' && !isValidUuid($id)) {
+    http_response_code(400);
+    exit('Solicitud no válida');
 }
 
-$id = trim($_POST['id'] ?? '');
-
 $data = [
-    'name'     => trim($_POST['name'] ?? ''),
-    'address'  => trim($_POST['address'] ?? ''),
-    'city'     => trim($_POST['city'] ?? ''),
-    'province' => trim($_POST['province'] ?? ''),
-    'capacity' => trim($_POST['capacity'] ?? ''),
+    'name'     => inputString($_POST, 'name'),
+    'address'  => inputString($_POST, 'address'),
+    'city'     => inputString($_POST, 'city'),
+    'province' => inputString($_POST, 'province'),
+    'capacity' => inputString($_POST, 'capacity'),
 ];
 
 $errors = [];
@@ -31,7 +34,11 @@ if ($data['city'] === '' || mb_strlen($data['city']) > 100) {
 if (mb_strlen($data['province']) > 100) {
     $errors['province'] = 'La provincia admite hasta 100 caracteres.';
 }
-if (filter_var($data['capacity'], FILTER_VALIDATE_INT) === false || (int) $data['capacity'] <= 0) {
+if (
+    filter_var($data['capacity'], FILTER_VALIDATE_INT) === false
+    || (int) $data['capacity'] <= 0
+    || (int) $data['capacity'] > 2147483647
+) {
     $errors['capacity'] = 'La capacidad debe ser un número entero mayor a 0.';
 }
 
@@ -39,8 +46,7 @@ if (!empty($errors)) {
     $_SESSION['errors'] = $errors;
     $_SESSION['old']    = $data + ['id' => $id];
     $volver = '/src/controllers/admin/venues/form.php' . ($id !== '' ? '?id=' . urlencode($id) : '');
-    header('Location: ' . $volver);
-    exit;
+    redirectTo($volver);
 }
 
 $params = [
@@ -58,7 +64,7 @@ try {
              VALUES (:name, :address, :city, :province, :capacity)'
         );
         $stmt->execute($params);
-        $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Lugar creado correctamente.'];
+        setFlash('success', 'Lugar creado correctamente.');
     } else {
         $params['id'] = $id;
         $stmt = $pdo->prepare(
@@ -68,11 +74,11 @@ try {
               WHERE id = :id'
         );
         $stmt->execute($params);
-        $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Lugar actualizado correctamente.'];
+        setFlash('success', 'Lugar actualizado correctamente.');
     }
 } catch (PDOException $e) {
-    $_SESSION['flash'] = ['type' => 'danger', 'msg' => 'No se pudo guardar el lugar.'];
+    error_log('Error al guardar el lugar: ' . $e->getMessage());
+    setFlash('danger', 'No se pudo guardar el lugar.');
 }
 
-header('Location: /src/controllers/admin/venues/index.php');
-exit;
+redirectTo('/src/controllers/admin/venues/index.php');

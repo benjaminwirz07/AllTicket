@@ -7,6 +7,9 @@ const IMG_MAX_BYTES = 2 * 1024 * 1024; // 2 MB
  */
 function guardarImagen(array $archivo, string $subcarpeta): ?string
 {
+    if (!in_array($subcarpeta, ['artists', 'concerts'], true)) {
+        throw new InvalidArgumentException('Carpeta de destino no válida.');
+    }
     if (!isset($archivo['error']) || $archivo['error'] === UPLOAD_ERR_NO_FILE) {
         return null;
     }
@@ -16,21 +19,40 @@ function guardarImagen(array $archivo, string $subcarpeta): ?string
     if ($archivo['error'] !== UPLOAD_ERR_OK) {
         throw new RuntimeException('No se pudo subir la imagen. Probá de nuevo.');
     }
-    if ($archivo['size'] > IMG_MAX_BYTES) {
+    if (!isset($archivo['size']) || !is_numeric($archivo['size']) || (int) $archivo['size'] > IMG_MAX_BYTES) {
         throw new RuntimeException('La imagen pesa demasiado (máximo 2 MB).');
     }
-    if (!is_uploaded_file($archivo['tmp_name'])) {
+    $temporaryPath = $archivo['tmp_name'] ?? null;
+    if (!is_string($temporaryPath) || !is_uploaded_file($temporaryPath)) {
         throw new RuntimeException('Archivo no válido.');
     }
 
-    // Se verifica el contenido real del archivo, no el nombre que trae
-    $info = @getimagesize($archivo['tmp_name']);
+    set_error_handler(static function (int $severity, string $message): bool {
+        throw new ErrorException($message, 0, $severity);
+    });
+    try {
+        $info = getimagesize($temporaryPath);
+    } catch (ErrorException $e) {
+        throw new RuntimeException('Formato no válido. Subí un JPG, PNG o WebP.', 0, $e);
+    } finally {
+        restore_error_handler();
+    }
+
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $mime = $finfo->file($temporaryPath);
     $permitidos = [
-        IMAGETYPE_JPEG => 'jpg',
-        IMAGETYPE_PNG  => 'png',
-        IMAGETYPE_WEBP => 'webp',
+        IMAGETYPE_JPEG => ['extension' => 'jpg', 'mime' => 'image/jpeg'],
+        IMAGETYPE_PNG  => ['extension' => 'png', 'mime' => 'image/png'],
+        IMAGETYPE_WEBP => ['extension' => 'webp', 'mime' => 'image/webp'],
     ];
-    if ($info === false || !isset($permitidos[$info[2]])) {
+    if (
+        $info === false
+        || !isset($permitidos[$info[2]])
+        || $mime !== $permitidos[$info[2]]['mime']
+        || $info[0] < 1
+        || $info[1] < 1
+        || $info[0] * $info[1] > 20000000
+    ) {
         throw new RuntimeException('Formato no válido. Subí un JPG, PNG o WebP.');
     }
 
@@ -39,8 +61,9 @@ function guardarImagen(array $archivo, string $subcarpeta): ?string
         throw new RuntimeException('No se pudo crear la carpeta de imágenes.');
     }
 
-    $nombre = bin2hex(random_bytes(16)) . '.' . $permitidos[$info[2]];
-    if (!move_uploaded_file($archivo['tmp_name'], $carpeta . '/' . $nombre)) {
+    $nombre = bin2hex(random_bytes(16)) . '.' . $permitidos[$info[2]]['extension'];
+    $destino = $carpeta . DIRECTORY_SEPARATOR . $nombre;
+    if (file_exists($destino) || !move_uploaded_file($temporaryPath, $destino)) {
         throw new RuntimeException('No se pudo guardar la imagen.');
     }
 
@@ -55,6 +78,8 @@ function borrarImagenSubida(?string $ruta): void
     }
     $archivo = dirname(__DIR__, 2) . '/' . $ruta;
     if (is_file($archivo)) {
-        @unlink($archivo);
+        if (!unlink($archivo)) {
+            error_log('No se pudo borrar una imagen subida: ' . $archivo);
+        }
     }
 }

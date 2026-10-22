@@ -1,4 +1,8 @@
 <?php
+require_once __DIR__ . '/../../../config/bootstrap.php';
+requireAuth();
+requireAdmin($pdo);
+
 $estados = [
     'pending' => ['Pendiente', 'warning'],
     'paid' => ['Pagada', 'success'],
@@ -34,6 +38,7 @@ ob_start();
             <?php if ($sale['status'] === 'pending'): ?>
                 <form method="POST" action="/src/controllers/admin/sales/update_status.php"
                     onsubmit="return confirm('¿Confirmar que se recibió el pago de este pedido?');">
+                    <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
                     <input type="hidden" name="id" value="<?= e($sale['id']) ?>">
                     <input type="hidden" name="action" value="confirm">
                     <button class="btn btn-success rounded-pill px-4" type="submit">Confirmar pago</button>
@@ -42,6 +47,7 @@ ob_start();
 
             <form method="POST" action="/src/controllers/admin/sales/update_status.php"
                 onsubmit="return confirm('¿Cancelar esta venta? Se liberan las butacas y se devuelve el stock.');">
+                <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
                 <input type="hidden" name="id" value="<?= e($sale['id']) ?>">
                 <input type="hidden" name="action" value="cancel">
                 <button class="btn btn-danger rounded-pill px-4" type="submit">Cancelar venta</button>

@@ -1,14 +1,13 @@
 <?php
 require_once __DIR__ . '/../../../config/bootstrap.php';
+requireAuth();
 requireAdmin($pdo);
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    exit('Método no permitido');
-}
+requireMethod('POST');
+requireCsrfToken();
 
-$id     = trim($_POST['id'] ?? '');
-$accion = $_POST['action'] ?? '';
+$id     = inputUuid($_POST, 'id');
+$accion = inputString($_POST, 'action');
 
 if ($id === '' || !in_array($accion, ['confirm', 'cancel'], true)) {
     http_response_code(400);
@@ -72,19 +71,18 @@ try {
     }
 
     $pdo->commit();
-    $_SESSION['flash'] = ['type' => 'success', 'msg' => $msg];
+    setFlash('success', $msg);
 } catch (RuntimeException $e) {
     if ($pdo->inTransaction()) {
         $pdo->rollBack();
     }
-    $_SESSION['flash'] = ['type' => 'danger', 'msg' => $e->getMessage()];
+    setFlash('danger', $e->getMessage());
 } catch (PDOException $e) {
     if ($pdo->inTransaction()) {
         $pdo->rollBack();
     }
     error_log('Error al actualizar venta: ' . $e->getMessage());
-    $_SESSION['flash'] = ['type' => 'danger', 'msg' => 'No se pudo actualizar la venta.'];
+    setFlash('danger', 'No se pudo actualizar la venta.');
 }
 
-header('Location: ' . $volver);
-exit;
+redirectTo($volver);

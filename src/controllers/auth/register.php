@@ -1,36 +1,24 @@
 <?php
 require_once __DIR__ . '/../../config/bootstrap.php';
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: ../../views/auth/register.php');
-    exit;
-}
+requireMethod('POST');
+requireCsrfToken();
 
-$csrfToken = $_POST['csrf_token'] ?? '';
-if (
-    empty($_SESSION['csrf_token']) ||
-    !is_string($csrfToken) ||
-    !hash_equals($_SESSION['csrf_token'], $csrfToken)
-) {
-    $_SESSION['errors'] = ['general' => 'La sesión expiró o el formulario no es válido. Intentá nuevamente.'];
-    header('Location: ../../views/auth/register.php');
-    exit;
-}
+$email          = inputEmail($_POST, 'email');
+$password       = is_string($_POST['password'] ?? null) ? (string) $_POST['password'] : '';
+$repeatPassword = is_string($_POST['repeatPassword'] ?? null) ? (string) $_POST['repeatPassword'] : '';
 
-$email          = trim($_POST['email'] ?? '');
-$password       = $_POST['password'] ?? '';
-$repeatPassword = $_POST['repeatPassword'] ?? '';
-
-$usuario     = trim($_POST['usuario'] ?? '');
-$first_name  = trim($_POST['first_name'] ?? '');
-$second_name = trim($_POST['second_name'] ?? '');
-$last_name   = trim($_POST['last_name'] ?? '');
-$dni         = trim($_POST['dni'] ?? '');
-$genero      = strtoupper(trim($_POST['genero'] ?? ''));
-$phone       = trim($_POST['phone'] ?? '');
-$city        = trim($_POST['city'] ?? '');
-$province    = trim($_POST['province'] ?? '');
-$birth_date  = trim($_POST['birth_date'] ?? '');
+$usuario     = inputString($_POST, 'usuario');
+$first_name  = inputString($_POST, 'first_name');
+$second_name = inputString($_POST, 'second_name');
+$last_name   = inputString($_POST, 'last_name');
+$dni         = inputString($_POST, 'dni');
+$genero      = strtoupper(inputString($_POST, 'genero'));
+$phone       = inputString($_POST, 'phone');
+$city        = inputString($_POST, 'city');
+$province    = inputString($_POST, 'province');
+$birthDateInput = inputString($_POST, 'birth_date');
+$birth_date  = inputDate($_POST, 'birth_date');
 
 $generosPermitidos = ['F', 'M', 'X'];
 $errors = [];
@@ -67,7 +55,9 @@ if (!empty($phone) && !preg_match('/^\d{10}$/', $phone)) {
     $errors['phone'] = 'El teléfono debe tener exactamente 10 números, sin 0 ni 15.';
 }
 
-if (!empty($birth_date)) {
+if ($birthDateInput !== '' && $birth_date === '') {
+    $errors['birth_date'] = 'Ingresá una fecha de nacimiento válida.';
+} elseif (!empty($birth_date)) {
     $birthDateTime = DateTime::createFromFormat('Y-m-d', $birth_date);
     if (!$birthDateTime || $birthDateTime->format('Y-m-d') !== $birth_date) {
         $errors['birth_date'] = 'Ingresá una fecha de nacimiento válida.';
@@ -76,28 +66,35 @@ if (!empty($birth_date)) {
     }
 }
 
-if (!empty($first_name) && strlen($first_name) > 100) {
+if (!empty($first_name) && mb_strlen($first_name, 'UTF-8') > 100) {
     $errors['first_name'] = 'El nombre no puede superar los 100 caracteres.';
 }
-if (!empty($second_name) && strlen($second_name) > 100) {
+if (!empty($second_name) && mb_strlen($second_name, 'UTF-8') > 100) {
     $errors['second_name'] = 'El segundo nombre no puede superar los 100 caracteres.';
 }
-if (!empty($last_name) && strlen($last_name) > 100) {
+if (!empty($last_name) && mb_strlen($last_name, 'UTF-8') > 100) {
     $errors['last_name'] = 'El apellido no puede superar los 100 caracteres.';
 }
-if (!empty($email) && strlen($email) > 150) {
+if (!empty($email) && mb_strlen($email, 'UTF-8') > 150) {
     $errors['email'] = 'El correo electrónico no puede superar los 150 caracteres.';
+}
+if (mb_strlen($city, 'UTF-8') > 100) {
+    $errors['city'] = 'La ciudad no puede superar los 100 caracteres.';
+}
+if (mb_strlen($province, 'UTF-8') > 100) {
+    $errors['province'] = 'La provincia no puede superar los 100 caracteres.';
 }
 
 if (empty($password)) {
     $errors['password'] = 'La contraseña es obligatoria.';
 } elseif (
     strlen($password) < 8 ||
+    strlen($password) > 72 ||
     !preg_match('/[A-Z]/', $password) ||
     !preg_match('/[0-9]/', $password) ||
     !preg_match('/[^A-Za-z0-9]/', $password)
 ) {
-    $errors['password'] = 'La contraseña debe tener mínimo 8 caracteres, una mayúscula, un número y un símbolo.';
+    $errors['password'] = 'La contraseña debe tener entre 8 y 72 caracteres, una mayúscula, un número y un símbolo.';
 }
 
 if ($password !== $repeatPassword) {
@@ -145,8 +142,7 @@ if ($usuario !== '' && empty($errors['usuario'])) {
 if (!empty($errors)) {
     $_SESSION['errors'] = $errors;
     $_SESSION['old']    = $old;
-    header('Location: ../../views/auth/register.php');
-    exit;
+    redirectTo('/src/views/auth/register.php');
 }
 
 try {
@@ -180,14 +176,12 @@ try {
     ]);
 
     unset($_SESSION['csrf_token']);
-    $_SESSION['success'] = '¡Cuenta creada con éxito! Ya podés iniciar sesión.';
-    header('Location: ../../views/auth/login.php');
-    exit;
+    setFlash('success', '¡Cuenta creada con éxito! Ya podés iniciar sesión.');
+    redirectTo('/src/views/auth/login.php');
 
 } catch (PDOException $e) {
     error_log('Error al registrar usuario: ' . $e->getMessage());
     $_SESSION['errors'] = ['general' => 'Ocurrió un error en el servidor. Intentá nuevamente más tarde.'];
     $_SESSION['old']    = $old;
-    header('Location: ../../views/auth/register.php');
-    exit;
+    redirectTo('/src/views/auth/register.php');
 }

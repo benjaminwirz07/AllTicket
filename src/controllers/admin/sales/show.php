@@ -1,12 +1,11 @@
 <?php
 require_once __DIR__ . '/../../../config/bootstrap.php';
+requireAuth();
 requireAdmin($pdo);
-$flash = $_SESSION['flash'] ?? null;
-unset($_SESSION['flash']);
-$id = trim($_GET['id'] ?? '');
+$flash = consumeFlash();
+$id = inputUuid($_GET, 'id');
 if ($id === '') {
-    header('Location: /src/controllers/admin/sales/index.php');
-    exit;
+    redirectTo('/src/controllers/admin/sales/index.php');
 }
 
 try {
@@ -50,7 +49,9 @@ try {
         $seatsByTicket[$r['ticket_id']][] = $r;
     }
 } catch (PDOException $e) {
-    exit('Error al consultar la venta');
+    error_log('Error al consultar la venta: ' . $e->getMessage());
+    http_response_code(500);
+    exit('No se pudo cargar la venta.');
 }
 
 require_once __DIR__ . '/../../../views/admin/sales/show.php';

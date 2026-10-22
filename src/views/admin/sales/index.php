@@ -1,4 +1,8 @@
 <?php
+require_once __DIR__ . '/../../../config/bootstrap.php';
+requireAuth();
+requireAdmin($pdo);
+
 $estados = [
     'pending' => ['Pendiente', 'warning'],
     'paid' => ['Pagada', 'success'],

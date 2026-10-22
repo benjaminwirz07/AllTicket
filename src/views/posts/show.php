@@ -6,7 +6,7 @@
       <h1 class="h3 fw-bold text-white">Detalle del post</h1>
     </div>
     <div class="col d-flex justify-content-end align-items-center">
-      <a class="btn btn-outline-violet rounded-pill px-4" href="/src/controllers/posts/index.php">Volver al listado</a>
+      <a class="btn btn-outline-violet rounded-pill px-4" href="/src/views/index.php#noticias">Volver a noticias</a>
     </div>
   </header>
 
@@ -22,6 +22,7 @@
               <a class="btn btn-sm btn-secondary me-2" href="/src/controllers/posts/form.php?id=<?= e($post['id']) ?>">Editar</a>
               <form method="POST" action="/src/controllers/posts/delete.php" class="d-inline"
                     onsubmit="return confirm('¿Estás seguro de que deseas eliminar este post?');">
+                <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
                 <input type="hidden" name="id" value="<?= e($post['id']) ?>">
                 <button class="btn btn-sm btn-danger" type="submit">Eliminar</button>
               </form>
