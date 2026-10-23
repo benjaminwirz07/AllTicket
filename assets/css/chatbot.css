@@ -106,8 +106,8 @@
 
 .chatbot-message--user {
     align-self: flex-end;
-    border-color: rgba(112, 0, 255, .35);
-    background: rgba(112, 0, 255, .22);
+    border-color: rgba(124, 58, 237, .35);
+    background: rgba(124, 58, 237, .22);
 }
 
 .chatbot-message--assistant {

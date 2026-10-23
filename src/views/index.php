@@ -410,7 +410,7 @@ try {
 $pageStyles = '<link rel="stylesheet" href="' . e(url('/assets/css/index.css')) . '">';
 ob_start();
 ?>
-<main class="bg-main-dark text-light min-vh-100 position-relative z-1 overflow-hidden"><!-- =====================================================
+<main class="home-page bg-main-dark text-light min-vh-100 position-relative z-1 overflow-hidden"><!-- =====================================================
          HERO FULL-BLEED
     ====================================================== -->
 
@@ -431,7 +431,7 @@ ob_start();
             <h1 class="hero-title-v2 mb-4">
                 <span class="hero-line-1">Momentos inolvidables</span>
                 <br>
-                <span class="hero-line-2">a solo un click.</span>
+                <span class="hero-line-2"><em>a solo un click.</em></span>
             </h1>
 
             <p class="lead hero-description mb-4 fs-5">
@@ -443,7 +443,7 @@ ob_start();
             <div class="d-flex flex-wrap justify-content-center gap-3 mb-2">
 
                 <a href="#eventos"
-                    class="btn btn-violet-glow btn-lg px-5 rounded-pill d-inline-flex align-items-center">
+                    class="btn btn-violet-glow btn-home-gradient btn-lg px-5 rounded-pill d-inline-flex align-items-center">
                     Buscar eventos
                     <i class="bi bi-arrow-right ms-2"></i>
                 </a>
@@ -948,8 +948,7 @@ ob_start();
                             <a href="<?= e(armarLink($artista['name'], '', '')) ?>"
                                 class="text-decoration-none d-block">
 
-                                <div class="ratio ratio-1x1 rounded-circle overflow-hidden mx-auto mb-3 border border-secondary-subtle"
-                                    style="max-width: 120px;">
+                                <div class="ratio ratio-1x1 rounded-circle overflow-hidden mx-auto mb-3 border border-secondary-subtle featured-artist-image">
                                     <?php if (!empty($artista['image'])): ?>
                                         <img src="/<?= e($artista['image']) ?>" alt="<?= e($artista['name']) ?>"
                                             class="w-100 h-100 object-fit-cover" loading="lazy">
@@ -1257,8 +1256,7 @@ ob_start();
 
     <section id="newsletter" class="py-5 home-section-divider">
         <div class="container-xl">
-            <div class="step-card p-4 p-lg-5 rounded-4 border border-secondary-subtle text-center mx-auto"
-                style="max-width: 720px;">
+            <div class="step-card p-4 p-lg-5 rounded-4 border border-secondary-subtle text-center mx-auto newsletter-card">
 
                 <div class="step-icon mb-3 fs-2 text-violet-neon">
                     <i class="bi bi-bell" aria-hidden="true"></i>
@@ -1299,7 +1297,7 @@ ob_start();
                     </div>
 
                     <div class="col-12 col-md-auto">
-                        <button type="submit" class="btn btn-violet-glow rounded-pill px-4">Avisame</button>
+                        <button type="submit" class="btn btn-violet-glow btn-home-gradient rounded-pill px-4">Avisame</button>
                     </div>
 
                 </form>

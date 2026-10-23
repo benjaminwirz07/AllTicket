@@ -235,7 +235,10 @@ if ($metodo === 'GET' && isset($_GET['ok'])) {
         if ($errores) {
             $vista = 'error';
         } elseif ($confirma) {
-            if (!isset($metodos[$metodoSel])) {
+            if (!isset($_POST['accept_terms']) || $_POST['accept_terms'] !== '1') {
+                $errores[] = 'Tenés que aceptar los términos y condiciones.';
+                $vista = 'resumen';
+            } elseif (!isset($metodos[$metodoSel])) {
                 $errores[] = 'Elegí un medio de pago.';
                 $vista = 'resumen';
             } else {

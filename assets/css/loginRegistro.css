@@ -1,6 +1,6 @@
 /* ==========================================================================
    ALLTICKET - AUTH (login + registro) - DARK/NEON EDITION
-   Paleta: Violeta Neón, Azul Eléctrico, Negro Profundo
+   Paleta: Violeta, Magenta y fondos oscuros
 
    Índice:
      1. Variables
@@ -20,23 +20,22 @@
    1. VARIABLES
    -------------------------------------------------------------------------- */
 :root {
-    --bg-dark: #07070d;
-    --bg-card: rgba(13, 13, 26, 0.75);
-    --bg-card-border: rgba(139, 92, 246, 0.25);
-
-    --primary-violet: #8b5cf6;
-    --primary-violet-glow: rgba(139, 92, 246, 0.45);
-    --secondary-blue: #3b82f6;
-    --secondary-blue-glow: rgba(59, 130, 246, 0.35);
-    --accent-cyan: #06b6d4;
+    --bg-dark: #080711;
+    --bg-card: rgba(21, 19, 33, 0.75);
+    --bg-card-border: rgba(196, 181, 253, 0.25);
+    --primary-violet: #7c3aed;
+    --primary-violet-glow: rgba(124, 58, 237, 0.4);
+    --secondary-magenta: #db2777;
+    --secondary-magenta-glow: rgba(219, 39, 119, 0.32);
+    --accent-rose: #f9a8d4;
 
     --text-main: #ffffff;
-    --text-muted: #94a3b8;
-    --text-placeholder: #64748b;
+    --text-muted: #c0bbcb;
+    --text-placeholder: #898397;
 
     --input-bg: rgba(9, 9, 20, 0.75);
     --input-border: rgba(255, 255, 255, 0.12);
-    --input-focus-border: #8b5cf6;
+    --input-focus-border: #7c3aed;
 
     --danger-color: #ff4d4d;
     --danger-glow: rgba(255, 77, 77, 0.3);
@@ -63,9 +62,9 @@ body {
     font-family: var(--font-family);
     background-color: var(--bg-dark);
     background-image:
-        radial-gradient(circle at 15% 15%, rgba(139, 92, 246, 0.3) 0%, transparent 45%),
-        radial-gradient(circle at 85% 75%, rgba(59, 130, 246, 0.25) 0%, transparent 50%),
-        radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.08) 0%, transparent 60%);
+        radial-gradient(circle at 15% 15%, rgba(124, 58, 237, 0.3) 0%, transparent 45%),
+        radial-gradient(circle at 85% 75%, rgba(219, 39, 119, 0.2) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(249, 168, 212, 0.08) 0%, transparent 60%);
     background-attachment: fixed;
     color: var(--text-main);
     overflow-x: hidden;
@@ -89,7 +88,7 @@ body::before {
     height: 350px;
     top: -50px;
     left: -50px;
-    background: rgba(139, 92, 246, 0.25);
+    background: rgba(124, 58, 237, 0.25);
 }
 
 body::after {
@@ -97,7 +96,7 @@ body::after {
     height: 400px;
     bottom: -80px;
     right: -80px;
-    background: rgba(59, 130, 246, 0.2);
+    background: rgba(219, 39, 119, 0.18);
     animation-delay: -6s;
 }
 
@@ -167,7 +166,7 @@ body::after {
     border: 1px solid var(--bg-card-border);
     box-shadow:
         0 20px 50px rgba(0, 0, 0, 0.65),
-        0 0 40px rgba(139, 92, 246, 0.12),
+        0 0 40px rgba(124, 58, 237, 0.12),
         inset 0 1px 0 rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
@@ -222,7 +221,7 @@ body::after {
         ellipse 40% 36% at 50% 50%,
         #7c3aed 0%,
         #7c3aed 45%,
-        #2563eb 72%,
+        #db2777 72%,
         transparent 100%
     );
     transform: translate3d(-32%, -30%, 0);
@@ -246,7 +245,7 @@ body::after {
     align-items: center;
     justify-content: center;
     background: linear-gradient(var(--bg-dark), var(--bg-dark)) padding-box,
-                linear-gradient(135deg, var(--primary-violet), var(--accent-cyan)) border-box;
+                linear-gradient(135deg, var(--primary-violet), var(--secondary-magenta)) border-box;
     border: 2px solid transparent;
     box-shadow: 0 0 20px var(--primary-violet-glow);
 }
@@ -339,9 +338,9 @@ body::after {
 
 .input-box:focus-within {
     border-color: var(--input-focus-border);
-    background: rgba(15, 15, 35, 0.9);
+    background: rgba(17, 15, 29, 0.9);
     box-shadow:
-        0 0 0 3px rgba(139, 92, 246, 0.22),
+        0 0 0 3px rgba(124, 58, 237, 0.22),
         0 0 20px var(--primary-violet-glow);
 }
 
@@ -418,7 +417,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 .eye:focus-visible {
-    outline: 2px solid var(--accent-cyan);
+    outline: 2px solid var(--accent-rose);
     outline-offset: 2px;
     border-radius: 4px;
 }
@@ -472,9 +471,13 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 .alert-success-custom {
-    background: rgba(74, 222, 128, 0.12);
-    border: 1px solid rgba(74, 222, 128, 0.3);
-    color: #86efac;
+    align-items: center;
+    padding: 12px 14px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    background: rgba(34, 197, 94, 0.12);
+    border: 1px solid rgba(34, 197, 94, 0.35);
+    color: #4ade80;
 }
 
 /* --------------------------------------------------------------------------
@@ -490,7 +493,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     font-weight: 700;
     font-family: var(--font-family);
     cursor: pointer;
-    background: linear-gradient(135deg, var(--primary-violet) 0%, var(--secondary-blue) 100%);
+    background: linear-gradient(135deg, var(--primary-violet) 0%, var(--secondary-magenta) 100%);
     box-shadow: 0 8px 25px var(--primary-violet-glow);
     transition: var(--transition-smooth);
     display: flex;
@@ -504,7 +507,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     transform: translateY(-2px);
     box-shadow:
         0 12px 30px var(--primary-violet-glow),
-        0 0 25px var(--secondary-blue-glow);
+        0 0 25px var(--secondary-magenta-glow);
     filter: brightness(1.1);
     color: #fff;
 }
@@ -517,19 +520,19 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     justify-content: center;
     gap: 10px;
     border-radius: var(--radius-md);
-    border: 1px solid rgba(139, 92, 246, 0.35);
+    border: 1px solid rgba(124, 58, 237, 0.35);
     color: var(--text-main);
     text-decoration: none;
     font-size: 13.5px;
     font-weight: 600;
-    background: rgba(139, 92, 246, 0.08);
+    background: rgba(124, 58, 237, 0.08);
     transition: var(--transition-smooth);
 }
 
 .register-button:hover {
-    background: rgba(139, 92, 246, 0.18);
+    background: rgba(124, 58, 237, 0.18);
     border-color: var(--primary-violet);
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.25);
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.25);
     color: #fff;
     transform: translateY(-2px);
 }
@@ -574,7 +577,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     font-size: 12.5px;
     text-align: left;
     background: rgba(10, 10, 22, 0.75);
-    border: 1px solid rgba(139, 92, 246, 0.3);
+    border: 1px solid rgba(124, 58, 237, 0.3);
     backdrop-filter: blur(12px);
     border-radius: 12px;
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
@@ -649,7 +652,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     text-transform: uppercase;
     letter-spacing: 1.5px;
     font-weight: 700;
-    color: var(--accent-cyan);
+    color: var(--accent-rose);
     margin-bottom: 12px;
     display: flex;
     align-items: center;

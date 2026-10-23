@@ -97,7 +97,7 @@ if (isAuthenticated()) {
     ========================================================== -->
     <header class="sticky-top">
 
-        <nav class="navbar navbar-expand-xxl navbar-dark bg-allticket border-bottom border-dark-subtle shadow-sm">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-allticket border-bottom border-dark-subtle shadow-sm">
 
             <div class="container-fluid container-xl">
 
@@ -132,6 +132,14 @@ if (isAuthenticated()) {
                                 Inicio
                             </a>
                         </li>
+
+                        <?php if (isAuthenticated()): ?>
+                            <li class="nav-item">
+                                <a class="nav-link" href="<?= e(url('/src/controllers/tickets/index.php')) ?>">
+                                    Mis entradas
+                                </a>
+                            </li>
+                        <?php endif; ?>
 
 
                         <li class="nav-item">

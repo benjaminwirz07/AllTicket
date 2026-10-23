@@ -151,16 +151,16 @@ ob_start();
                     <div class="ct-panel" data-panel="efectivo" hidden>
                         <p class="small text-secondary-custom mb-0">Al confirmar generamos tu número de pedido para que pagues en Rapipago o Pago Fácil.</p>
                     </div>
-                    <p class="ct-field-error" id="pay-error" role="alert" hidden></p>
+                    <p class="ct-field-error" id="pay-error" role="alert" <?= $errores ? '' : 'hidden' ?>><?= e(implode(' ', $errores)) ?></p>
                     <div class="form-check mt-4">
-                        <input class="form-check-input" type="checkbox" id="terminos">
+                        <input class="form-check-input" type="checkbox" id="terminos" name="accept_terms" value="1" required>
                         <label class="form-check-label small text-secondary-custom" for="terminos">Acepto los términos y condiciones de compra.</label>
                     </div>
                 </div>
                 <div class="col-12 col-lg-5">
                     <div class="step-card p-4 rounded-4 border border-secondary-subtle position-sticky" style="top: 90px;">
                         <div class="d-flex gap-3 mb-3">
-                            <img src="/<?= e($datos['image']) ?>" alt="" class="rounded-3" style="width: 88px; height: 88px; object-fit: cover;">
+                            <img src="<?= e(url('/' . ltrim($datos['image'], '/'))) ?>" alt="" class="rounded-3" style="width: 88px; height: 88px; object-fit: cover;">
                             <div>
                                 <h2 class="h6 fw-bold text-white mb-1"><?= e($datos['name']) ?></h2>
                                 <p class="small text-secondary-custom mb-0">
@@ -186,7 +186,7 @@ ob_start();
                             <span class="text-secondary-custom">Total</span>
                             <span class="ct-summary__total text-white"><?= e(formatPrecio($total)) ?></span>
                         </div>
-                        <button type="submit" class="btn btn-violet-glow btn-lg w-100 rounded-pill mt-3">Confirmar y pagar <i class="bi bi-lock ms-2"></i></button>
+                        <button type="submit" class="btn btn-violet-glow btn-lg w-100 rounded-pill mt-3 ct-checkout-submit">Confirmar y pagar <i class="bi bi-lock ms-2"></i></button>
                         <?php if ($modoDemo) { ?>
                             <p class="small text-warning mt-3 mb-0"><i class="bi bi-info-circle me-1"></i>Modo demo: no se realiza ningún cobro real.</p>
                         <?php } ?>
