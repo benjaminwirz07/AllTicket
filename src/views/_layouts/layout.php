@@ -113,10 +113,12 @@ if (isAuthenticated()) {
                 <!-- BOTÓN MENÚ RESPONSIVE -->
                 <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse"
                     data-bs-target="#navbarAllTicket" aria-controls="navbarAllTicket" aria-expanded="false"
-                    aria-label="Abrir menú">
-
-                    <span class="navbar-toggler-icon"></span>
-
+                    aria-label="Alternar menú">
+                    <span class="hamburger-label" aria-hidden="true">
+                        <span class="line1"></span>
+                        <span class="line2"></span>
+                        <span class="line3"></span>
+                    </span>
                 </button>
 
 
@@ -512,6 +514,7 @@ if (isAuthenticated()) {
     <!-- Buscador del header (lupa + sugerencias) -->
     <script src="<?= e(url('/assets/js/nav-search.js')) ?>"></script>
     <script src="<?= e(url('/assets/js/chatbot.js')) ?>"></script>
+    <script src="<?= e(url('/assets/js/scroll-reveal.js')) ?>"></script>
 
 </body>
 
