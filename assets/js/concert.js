@@ -456,6 +456,26 @@ function alEnviar(evento) {
     } else {
         document.getElementById('f-seats').value = '';
     }
+
+    // loading: el formulario ya se envia, solo mostramos que esta cargando
+    ponerLoadingBotones();
+}
+
+
+// Pone el loader y bloquea los botones de compra mientras se envia
+function ponerLoadingBotones() {
+
+    for (var b = 0; b < botonesComprar.length; b++) {
+        var boton = botonesComprar[b];
+        var etiqueta = boton.querySelector('.js-buy-label');
+
+        if (etiqueta != null) {
+            etiqueta.innerHTML = '<span class="loader me-2" role="status" aria-hidden="true"></span>Cargando...';
+        }
+
+        boton.classList.add('is-loading');
+        boton.disabled = true;
+    }
 }
 
 

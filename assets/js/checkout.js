@@ -15,8 +15,21 @@
     var errBox = $('pay-error');
 
     function showError(msg) {
+        if (!errBox) { return; }
         errBox.textContent = msg || '';
         errBox.hidden = !msg;
+    }
+
+    // escribe un texto en un elemento solo si existe (no rompe si falta el HTML)
+    function ponerTexto(id, texto) {
+        var el = $(id);
+        if (el) { el.textContent = texto; }
+    }
+
+    // agrega un listener solo si el elemento existe
+    function al(id, evento, funcion) {
+        var el = $(id);
+        if (el) { el.addEventListener(evento, funcion); }
     }
 
     // ---- mostrar el panel del medio elegido ----
@@ -51,45 +64,61 @@
         return d.length > 0 && sum % 10 === 0;
     }
 
-    num.addEventListener('input', function () {
-        var d = soloDigitos(num.value).slice(0, 16);
-        var amex = /^3[47]/.test(d);
-        num.value = amex
-            ? d.replace(/^(\d{0,4})(\d{0,6})(\d{0,5}).*/, function (m, a, b, c) { return [a, b, c].filter(Boolean).join(' '); })
-            : d.replace(/(\d{4})(?=\d)/g, '$1 ');
-        $('cc-brand').textContent = marca(d);
-        $('cc-prev-num').textContent = (num.value || '•••• •••• •••• ••••');
-    });
+    if (num) {
+        num.addEventListener('input', function () {
+            var d = soloDigitos(num.value).slice(0, 16);
+            var amex = /^3[47]/.test(d);
+            num.value = amex
+                ? d.replace(/^(\d{0,4})(\d{0,6})(\d{0,5}).*/, function (m, a, b, c) { return [a, b, c].filter(Boolean).join(' '); })
+                : d.replace(/(\d{4})(?=\d)/g, '$1 ');
+            ponerTexto('cc-brand', marca(d));
+            ponerTexto('cc-prev-num', (num.value || '•••• •••• •••• ••••'));
+        });
+    }
 
-    name.addEventListener('input', function () {
-        $('cc-prev-name').textContent = name.value.toUpperCase() || 'NOMBRE APELLIDO';
-    });
+    if (name) {
+        name.addEventListener('input', function () {
+            ponerTexto('cc-prev-name', name.value.toUpperCase() || 'NOMBRE APELLIDO');
+        });
+    }
 
-    exp.addEventListener('input', function () {
-        var d = soloDigitos(exp.value).slice(0, 4);
-        exp.value = d.length > 2 ? d.slice(0, 2) + '/' + d.slice(2) : d;
-        $('cc-prev-exp').textContent = exp.value || 'MM/AA';
-    });
+    if (exp) {
+        exp.addEventListener('input', function () {
+            var d = soloDigitos(exp.value).slice(0, 4);
+            exp.value = d.length > 2 ? d.slice(0, 2) + '/' + d.slice(2) : d;
+            ponerTexto('cc-prev-exp', exp.value || 'MM/AA');
+        });
+    }
 
-    cvv.addEventListener('input', function () { cvv.value = soloDigitos(cvv.value).slice(0, 4); });
-    dni.addEventListener('input', function () { dni.value = soloDigitos(dni.value).slice(0, 9); });
+    al('cc-cvv', 'input', function (ev) { ev.target.value = soloDigitos(ev.target.value).slice(0, 4); });
+    al('cc-dni', 'input', function (ev) { ev.target.value = soloDigitos(ev.target.value).slice(0, 9); });
 
+    // valida solo los campos que existen; si el HTML de la tarjeta no esta, no bloquea
     function errorTarjeta() {
-        var d = soloDigitos(num.value);
-        var largo = /^3[47]/.test(d) ? 15 : 16;
+        if (num) {
+            var d = soloDigitos(num.value);
+            var largo = /^3[47]/.test(d) ? 15 : 16;
+            if (d.length !== largo || !luhn(d)) { return 'El número de tarjeta no es válido.'; }
+        }
 
-        if (d.length !== largo || !luhn(d)) { return 'El número de tarjeta no es válido.'; }
-        if (name.value.trim().length < 3) { return 'Ingresá el nombre del titular.'; }
+        if (name && name.value.trim().length < 3) { return 'Ingresá el nombre del titular.'; }
 
-        var m = /^(\d{2})\/(\d{2})$/.exec(exp.value);
-        if (!m || +m[1] < 1 || +m[1] > 12) { return 'El vencimiento no es válido.'; }
-        var hoy = new Date();
-        var finMes = new Date(2000 + (+m[2]), +m[1], 0, 23, 59, 59);
-        if (finMes < hoy) { return 'La tarjeta está vencida.'; }
+        if (exp) {
+            var m = /^(\d{2})\/(\d{2})$/.exec(exp.value);
+            if (!m || +m[1] < 1 || +m[1] > 12) { return 'El vencimiento no es válido.'; }
+            var hoy = new Date();
+            var finMes = new Date(2000 + (+m[2]), +m[1], 0, 23, 59, 59);
+            if (finMes < hoy) { return 'La tarjeta está vencida.'; }
+        }
 
-        var cvvLargo = /^3[47]/.test(d) ? 4 : 3;
-        if (cvv.value.length !== cvvLargo) { return 'El código de seguridad debe tener ' + cvvLargo + ' dígitos.'; }
-        if (dni.value.length < 7) { return 'Ingresá el DNI del titular.'; }
+        if (cvv) {
+            var amex = num ? /^3[47]/.test(soloDigitos(num.value)) : false;
+            var cvvLargo = amex ? 4 : 3;
+            if (cvv.value.length !== cvvLargo) { return 'El código de seguridad debe tener ' + cvvLargo + ' dígitos.'; }
+        }
+
+        if (dni && dni.value.length < 7) { return 'Ingresá el DNI del titular.'; }
+
         return '';
     }
 
@@ -106,7 +135,8 @@
             var e = errorTarjeta();
             if (e) { ev.preventDefault(); showError(e); return; }
         }
-        if (!$('terminos').checked) {
+        var terminos = $('terminos');
+        if (terminos && !terminos.checked) {
             ev.preventDefault();
             showError('Tenés que aceptar los términos y condiciones.');
             return;
@@ -124,7 +154,15 @@
         }
         form.dataset.enviando = '1';
         var btn = form.querySelector('button[type="submit"]');
-        if (btn) { setTimeout(function () { btn.disabled = true; }, 0); }
+        if (btn) {
+            // guardamos el HTML original para poder restaurarlo al volver con "atrás"
+            if (btn.dataset.htmlOriginal == null) { btn.dataset.htmlOriginal = btn.innerHTML; }
+            setTimeout(function () {
+                btn.disabled = true;
+                btn.classList.add('is-loading');
+                btn.innerHTML = '<span class="loader me-2" role="status" aria-hidden="true"></span>Procesando...';
+            }, 0);
+        }
     });
 
     // si el navegador restaura la página al volver con "atrás", se rehabilita el botón
@@ -132,7 +170,11 @@
         if (ev.persisted) {
             form.dataset.enviando = '';
             var btn = form.querySelector('button[type="submit"]');
-            if (btn) { btn.disabled = false; }
+            if (btn) {
+                btn.disabled = false;
+                btn.classList.remove('is-loading');
+                if (btn.dataset.htmlOriginal) { btn.innerHTML = btn.dataset.htmlOriginal; }
+            }
         }
     });
 })();
