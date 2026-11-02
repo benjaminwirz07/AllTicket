@@ -264,7 +264,7 @@ CREATE TABLE sale_details (
 -- Las reservas held deben tener expires_at.
 -- La aplicacion PHP debe vencerlas cuando corresponda.
 --
--- active_seat_key evita que un asiento tenga mas de una
+-- active_seat_flag evita que un asiento tenga mas de una
 -- reserva held/confirmed para el mismo recital.
 --
 -- Las reservas released/expired conservan su historial.
@@ -283,11 +283,10 @@ CREATE TABLE seat_reservations (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     expires_at DATETIME NULL,
 
-    active_seat_key VARCHAR(100)
+    active_seat_flag TINYINT
         GENERATED ALWAYS AS (
             CASE
-                WHEN status IN ('held', 'confirmed')
-                THEN CONCAT(concert_id, ':', seat_code)
+                WHEN status IN ('held', 'confirmed') THEN 1
                 ELSE NULL
             END
         ) STORED,
@@ -296,7 +295,7 @@ CREATE TABLE seat_reservations (
 
     -- MySQL permite varias claves NULL en un indice UNIQUE.
     -- Por eso los asientos liberados/vencidos pueden repetirse.
-    UNIQUE KEY uq_active_concert_seat (active_seat_key),
+    UNIQUE KEY uq_active_concert_seat (concert_id, seat_code, active_seat_flag),
 
     KEY idx_reservations_concert (concert_id),
     KEY idx_reservations_ticket (ticket_id),
