@@ -92,14 +92,23 @@ ob_start();
             </div>
             <div class="col-md-6 mb-3">
                 <label class="form-label" for="status">Estado</label>
-                <select class="form-select" id="status" name="status">
-                    <?php foreach (['active' => 'Activo', 'cancelled' => 'Cancelado', 'finished' => 'Finalizado'] as $val => $label): ?>
+                <?php if (($concert['status'] ?? 'active') === 'cancelled'): ?>
+                    <input type="hidden" name="status" value="cancelled">
+                <?php endif; ?>
+                <select class="form-select" id="status" <?= ($concert['status'] ?? 'active') === 'cancelled' ? '' : 'name="status"' ?>
+                    <?= ($concert['status'] ?? 'active') === 'cancelled' ? 'disabled' : '' ?>>
+                    <?php if (($concert['status'] ?? 'active') === 'cancelled'): ?>
+                        <option value="cancelled" selected>Cancelado</option>
+                    <?php else: ?>
+                        <?php foreach (['active' => 'Activo', 'finished' => 'Finalizado'] as $val => $label): ?>
                         <option value="<?= $val ?>" <?= ($concert['status'] ?? 'active') === $val ? 'selected' : '' ?>>
                             <?= $label ?>
                         </option>
                     <?php endforeach; ?>
+                    <?php endif; ?>
                 </select>
                 <?= $errorDe('status') ?>
+                <div class="form-text">Para cancelar un recital, usá la acción “Cancelar” de la lista. Así también se procesan sus pedidos pendientes.</div>
             </div>
         </div>
 

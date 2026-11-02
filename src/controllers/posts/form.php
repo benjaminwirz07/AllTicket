@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/../../config/bootstrap.php';
+require_once __DIR__ . '/../../config/news.php';
 requireAuth();
 requireAdmin($pdo);
 $post = null;
@@ -22,6 +23,10 @@ if (isset($_GET['id'])) {
   ]);
 
   $post = $stmt->fetch(PDO::FETCH_ASSOC);
+  if (!$post) {
+    http_response_code(404);
+    exit('No se encontró la publicación.');
+  }
 }
 
 require_once __DIR__ . '/../../views/posts/form.php';

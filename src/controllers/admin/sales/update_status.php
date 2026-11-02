@@ -43,10 +43,10 @@ try {
               WHERE sale_id = :id AND status = 'held'"
         )->execute(['id' => $id]);
 
-        $msg = 'Pago confirmado. La venta quedó como pagada.';
+        $msg = 'Compra marcada como pagada para la demo. No se recibió ni se procesó dinero.';
     } else {
-        if (!in_array($estado, ['pending', 'paid'], true)) {
-            throw new RuntimeException('Esta venta ya está cancelada.');
+        if ($estado !== 'pending') {
+            throw new RuntimeException('Solo se puede cancelar una venta pendiente. Las ventas pagadas no se pueden cancelar desde la demo.');
         }
 
         $pdo->prepare("UPDATE sales SET status = 'cancelled' WHERE id = :id")

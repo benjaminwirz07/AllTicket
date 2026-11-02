@@ -9,10 +9,11 @@ $estados = [
     'cancelled' => ['Cancelada', 'secondary'],
 ];
 $metodos = [
-    'mercadopago' => 'Mercado Pago',
-    'tarjeta' => 'Tarjeta',
-    'transferencia' => 'Transferencia',
-    'efectivo' => 'Efectivo',
+    'prueba' => 'Pago de prueba',
+    'transferencia' => 'Transferencia simulada',
+    'mercadopago' => 'Mercado Pago (demo anterior)',
+    'tarjeta' => 'Tarjeta (demo anterior)',
+    'efectivo' => 'Efectivo (demo anterior)',
 ];
 ob_start();
 ?>
@@ -31,8 +32,8 @@ ob_start();
     <!-- Resumen por recital -->
     <h2 class="h5 text-white mb-3">Resumen por recital</h2>
     <?php if (!empty($resumen)): ?>
-        <div class="table-responsive mb-5">
-            <table class="table table-dark align-middle">
+        <div class="table-responsive admin-table-wrap mb-5">
+            <table class="table table-dark align-middle admin-table">
                 <thead>
                     <tr>
                         <th>Recital</th>
@@ -40,7 +41,7 @@ ob_start();
                         <th class="text-end">Vendidas</th>
                         <th class="text-end">Pendientes</th>
                         <th class="text-end">Stock total</th>
-                        <th class="text-end">Recaudado</th>
+                        <th class="text-end">Total marcado como pagado (demo)</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -58,8 +59,8 @@ ob_start();
             </table>
         </div>
         <p class="small text-secondary-custom mb-5">
-            "Vendidas" y "Recaudado" cuentan solo las ventas pagadas. "Pendientes" son compras
-            que esperan el pago y se liberan solas a las 24 hs.
+            "Vendidas" y el total marcado como pagado son datos de demostración, no cobros reales.
+            "Pendientes" son compras que esperan la confirmación simulada y se liberan solas a las 24 hs.
         </p>
     <?php else: ?>
         <p class="text-secondary-custom mb-5">No hay recitales cargados.</p>
@@ -79,8 +80,8 @@ ob_start();
     </div>
 
     <?php if (!empty($sales)): ?>
-        <div class="table-responsive">
-            <table class="table table-dark align-middle">
+        <div class="table-responsive admin-table-wrap">
+            <table class="table table-dark align-middle admin-table admin-table--sales">
                 <thead>
                     <tr>
                         <th>Pedido</th>
@@ -98,7 +99,7 @@ ob_start();
                     <?php foreach ($sales as $s): ?>
                         <?php [$txtEstado, $colorEstado] = $estados[$s['status']] ?? [$s['status'], 'secondary']; ?>
                         <tr>
-                            <td><strong><?= e(strtoupper(substr($s['id'], 0, 8))) ?></strong></td>
+                            <td><strong class="admin-table__primary"><?= e(strtoupper(substr($s['id'], 0, 8))) ?></strong></td>
                             <td class="text-nowrap"><?= e($s['sale_date']) ?></td>
                             <td>
                                 <?= e($s['usuario']) ?><br>
@@ -109,7 +110,7 @@ ob_start();
                             <td class="text-end"><?= e(formatPrecio($s['total'])) ?></td>
                             <td><?= e($metodos[$s['payment_method']] ?? ($s['payment_method'] ?? '-')) ?></td>
                             <td><span class="badge text-bg-<?= e($colorEstado) ?>"><?= e($txtEstado) ?></span></td>
-                            <td class="text-end">
+                            <td class="admin-table__actions">
                                 <a class="btn btn-sm btn-secondary"
                                     href="/src/controllers/admin/sales/show.php?id=<?= urlencode($s['id']) ?>">Ver</a>
                             </td>

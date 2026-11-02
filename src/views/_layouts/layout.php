@@ -2,6 +2,9 @@
 
 require_once __DIR__ . '/../../config/bootstrap.php';
 
+// Página actual (para marcar el link activo del menú)
+$rutaActual = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? ''));
+
 $usuarioMostrar = '';
 if (isAuthenticated()) {
     try {
@@ -50,7 +53,7 @@ if (isAuthenticated()) {
     <!-- Bootstrap JS (versión "bundle", incluye Popper para el menú de Categorías).
          Se carga desde internet para no depender de un archivo local.
          Si preferís tenerlo local, bajá el mismo archivo a /assets/js/ y cambiá este src. -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
 
 
     <!-- =========================================================
@@ -130,14 +133,17 @@ if (isAuthenticated()) {
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
 
                         <li class="nav-item">
-                            <a class="nav-link active" aria-current="page" href="<?= e(url('/src/views/index.php')) ?>">
+                            <a class="nav-link<?= $rutaActual === '/src/views/index.php' ? ' active' : '' ?>"
+                                <?= $rutaActual === '/src/views/index.php' ? 'aria-current="page"' : '' ?>
+                                href="<?= e(url('/src/views/index.php')) ?>">
                                 Inicio
                             </a>
                         </li>
 
                         <?php if (isAuthenticated()): ?>
                             <li class="nav-item">
-                                <a class="nav-link" href="<?= e(url('/src/controllers/tickets/index.php')) ?>">
+                                <a class="nav-link<?= $rutaActual === '/src/controllers/tickets/index.php' ? ' active' : '' ?>"
+                                    href="<?= e(url('/src/controllers/tickets/index.php')) ?>">
                                     Mis entradas
                                 </a>
                             </li>
@@ -145,13 +151,13 @@ if (isAuthenticated()) {
 
 
                         <li class="nav-item">
-                            <a class="nav-link" href="#eventos">
+                            <a class="nav-link" href="<?= e(url('/src/views/index.php#eventos')) ?>">
                                 Eventos & Recitales
                             </a>
                         </li>
 
                         <li class="nav-item">
-                            <a class="nav-link" href="<?= e(url('/src/views/index.php#noticias')) ?>">
+                            <a class="nav-link" href="<?= e(url('/src/controllers/news/index.php')) ?>">
                                 Noticias
                             </a>
                         </li>
@@ -181,7 +187,7 @@ if (isAuthenticated()) {
 
 
                         <li class="nav-item">
-                            <a class="nav-link" href="#como-funciona">
+                            <a class="nav-link" href="<?= e(url('/src/views/index.php#como-funciona')) ?>">
                                 Cómo funciona
                             </a>
                         </li>
@@ -351,20 +357,20 @@ if (isAuthenticated()) {
                         </li>
 
                         <li>
-                            <a href="#eventos" class="text-secondary-custom text-decoration-none nav-footer-link">
+                            <a href="<?= e(url('/src/views/index.php#eventos')) ?>" class="text-secondary-custom text-decoration-none nav-footer-link">
                                 Eventos
                             </a>
                         </li>
 
                         <li>
-                            <a href="<?= e(url('/src/views/index.php#noticias')) ?>"
+                            <a href="<?= e(url('/src/controllers/news/index.php')) ?>"
                                 class="text-secondary-custom text-decoration-none nav-footer-link">
                                 Noticias
                             </a>
                         </li>
 
                         <li>
-                            <a href="#como-funciona" class="text-secondary-custom text-decoration-none nav-footer-link">
+                            <a href="<?= e(url('/src/views/index.php#como-funciona')) ?>" class="text-secondary-custom text-decoration-none nav-footer-link">
                                 Cómo funciona
                             </a>
                         </li>
@@ -512,9 +518,9 @@ if (isAuthenticated()) {
     </script>
 
     <!-- Buscador del header (lupa + sugerencias) -->
-    <script src="<?= e(url('/assets/js/nav-search.js')) ?>"></script>
-    <script src="<?= e(url('/assets/js/chatbot.js')) ?>"></script>
-    <script src="<?= e(url('/assets/js/scroll-reveal.js')) ?>"></script>
+    <script src="<?= e(url('/assets/js/nav-search.js')) ?>" defer></script>
+    <script src="<?= e(url('/assets/js/chatbot.js')) ?>" defer></script>
+    <script src="<?= e(url('/assets/js/scroll-reveal.js')) ?>" defer></script>
 
 </body>
 

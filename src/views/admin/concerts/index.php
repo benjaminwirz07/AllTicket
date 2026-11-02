@@ -24,8 +24,8 @@ $estados = ['active' => 'Activo', 'cancelled' => 'Cancelado', 'finished' => 'Fin
   <?php endif; ?>
 
   <?php if (!empty($concerts)): ?>
-    <div class="table-responsive">
-      <table class="table table-dark align-middle">
+    <div class="table-responsive admin-table-wrap">
+      <table class="table table-dark align-middle admin-table">
         <thead>
           <tr>
             <th>Recital</th>
@@ -39,17 +39,17 @@ $estados = ['active' => 'Activo', 'cancelled' => 'Cancelado', 'finished' => 'Fin
         <tbody>
           <?php foreach ($concerts as $c): ?>
             <tr>
-              <td><?= e($c['name']) ?></td>
+              <td><span class="admin-table__primary"><?= e($c['name']) ?></span></td>
               <td><?= e($c['artist']) ?></td>
               <td><?= e($c['venue']) ?></td>
               <td><?= e(formatFecha($c['date'], $c['time'])) ?></td>
-              <td><?= e($estados[$c['status']] ?? $c['status']) ?></td>
-              <td class="text-end text-nowrap">
+              <td><span class="badge text-bg-<?= $c['status'] === 'active' ? 'success' : ($c['status'] === 'cancelled' ? 'secondary' : 'info') ?>"><?= e($estados[$c['status']] ?? $c['status']) ?></span></td>
+              <td class="admin-table__actions">
                 <a class="btn btn-sm btn-secondary me-1"
                    href="/src/controllers/admin/concerts/form.php?id=<?= urlencode($c['id']) ?>">Editar</a>
                 <?php if ($c['status'] === 'active'): ?>
                   <form method="POST" action="/src/controllers/admin/concerts/cancel.php" class="d-inline"
-                        onsubmit="return confirm('¿Cancelar este recital? Dejará de verse en el home.');">
+                        onsubmit="return confirm('¿Cancelar este recital? Se cancelarán las compras pendientes, se liberarán sus butacas y se devolverá el stock. Las compras pagadas permanecerán registradas y no se procesarán reembolsos.');">
                     <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
                     <input type="hidden" name="id" value="<?= e($c['id']) ?>">
                     <button class="btn btn-sm btn-danger" type="submit">Cancelar</button>

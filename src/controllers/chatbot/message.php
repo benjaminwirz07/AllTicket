@@ -47,7 +47,7 @@ function generarRespuestaChatbot(PDO $pdo, string $mensaje): string
         }
 
         return "Estas son las últimas noticias:\n- " . implode("\n- ", $noticias)
-            . "\nLeé más en la sección Noticias de la página principal.";
+            . "\nLeé más en la sección Noticias del menú principal.";
     }
 
     if (preg_match('/\b(eventos|recitales|conciertos|disponibles|entradas|shows)\b/', $normalizado)) {

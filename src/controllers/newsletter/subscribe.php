@@ -1,11 +1,16 @@
-dale<?php
+<?php
 require_once __DIR__ . '/../../config/bootstrap.php';
 
 requireMethod('POST');
 
 requireCsrfToken();
 
-$destino = '/src/views/index.php';
+$returnTo = inputString($_POST, 'return_to');
+$destino = $returnTo === '/src/controllers/news/index.php'
+    ? '/src/controllers/news/index.php'
+    : '/src/views/index.php';
+$fragmento = $destino === '/src/controllers/news/index.php' ? '#subscription' : '#newsletter';
+$resultadoUrl = static fn(string $estado): string => $destino . '?newsletter=' . rawurlencode($estado) . $fragmento;
 $email = inputEmail($_POST, 'email');
 
 // Limita a cinco intentos por IP cada quince minutos sin guardar la IP en claro.
@@ -66,24 +71,24 @@ try {
     }
 
     if ($attempts > 5) {
-        redirectTo($destino . '?newsletter=rate_limited#newsletter');
+        redirectTo($resultadoUrl('rate_limited'));
     }
 } catch (PDOException $e) {
     if ($pdo->inTransaction()) {
         $pdo->rollBack();
     }
     error_log('Error al aplicar rate limit del newsletter: ' . $e->getMessage());
-    redirectTo($destino . '?newsletter=error#newsletter');
+    redirectTo($resultadoUrl('error'));
 } catch (RuntimeException $e) {
     if ($pdo->inTransaction()) {
         $pdo->rollBack();
     }
     error_log('Error al aplicar rate limit del newsletter: ' . $e->getMessage());
-    redirectTo($destino . '?newsletter=error#newsletter');
+    redirectTo($resultadoUrl('error'));
 }
 
 if ($email === '' || strlen($email) > 254 || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-    redirectTo($destino . '?newsletter=invalid#newsletter');
+    redirectTo($resultadoUrl('invalid'));
 }
 
 try {
@@ -95,4 +100,4 @@ try {
     $estado = 'error';
 }
 
-redirectTo($destino . '?newsletter=' . $estado . '#newsletter');
+redirectTo($resultadoUrl($estado));

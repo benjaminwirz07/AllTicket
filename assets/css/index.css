@@ -559,6 +559,16 @@
   .upcoming-show-details-copy h3 {
     font-size: 1.15rem;
   }
+
+  .filter-chips {
+    gap: 0.4rem;
+    justify-content: flex-start;
+  }
+
+  .filter-chip {
+    white-space: normal;
+    text-align: center;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -5,10 +5,11 @@ $estados = [
     'cancelled' => ['Cancelada', 'secondary'],
 ];
 $metodos = [
-    'mercadopago' => 'Mercado Pago',
-    'tarjeta' => 'Tarjeta de crédito o débito',
-    'transferencia' => 'Transferencia bancaria',
-    'efectivo' => 'Efectivo (Rapipago / Pago Fácil)',
+    'prueba' => 'Pago de prueba',
+    'transferencia' => 'Transferencia simulada',
+    'mercadopago' => 'Mercado Pago (registro anterior de demo)',
+    'tarjeta' => 'Tarjeta (registro anterior de demo)',
+    'efectivo' => 'Efectivo (registro anterior de demo)',
 ];
 $estadosButaca = [
     'held' => 'Reservada',
@@ -35,6 +36,7 @@ ob_start();
                     class="btn btn-violet-glow rounded-pill px-4">Ver eventos</a>
             </div>
         </div>
+
     <?php else: ?>
         <div class="d-grid gap-4">
             <?php foreach ($compras as $compra): ?>
@@ -116,6 +118,48 @@ ob_start();
                                                 <?php endif; ?>
                                             </div>
                                         </div>
+
+                                        <?php if ($compra['status'] === 'paid'): ?>
+                                            <?php $qrItems = $entradasQr[$entrada['sale_detail_id']] ?? []; ?>
+                                            <?php if ($qrItems !== []): ?>
+                                                <div class="d-flex flex-wrap gap-3 mt-4">
+                                                    <?php foreach ($qrItems as $qrItem): ?>
+                                                        <?php if ($qrItem['used_at'] === null): ?>
+                                                            <section class="ticket-print-card border border-secondary-subtle rounded-3 p-3 text-center"
+                                                                     data-ticket-print>
+                                                                <p class="small text-white mb-2">AllTicket · Entrada digital</p>
+                                                                <h4 class="ticket-print-card__event"><?= e($entrada['concert']) ?></h4>
+                                                                <p class="ticket-print-card__detail">
+                                                                    <?= e(formatFecha($entrada['date'], $entrada['time'])) ?>
+                                                                    ·
+                                                                    <?= e($entrada['venue']) ?>, <?= e($entrada['city']) ?>
+                                                                </p>
+                                                                <p class="ticket-print-card__detail">
+                                                                    A nombre de <?= e(trim($compra['first_name'] . ' ' . $compra['last_name'])) ?>
+                                                                </p>
+                                                                <p class="small text-white mb-2">
+                                                                    <?= e($entrada['type']) ?> · Entrada <?= (int) $qrItem['entry_number'] ?>
+                                                                    <?php if (!empty($qrItem['seat_code'])): ?>
+                                                                        · <?= e(textoButaca($qrItem['seat_code'])) ?>
+                                                                    <?php endif; ?>
+                                                                </p>
+                                                                <div class="ticket-qr" role="img"
+                                                                     aria-label="Código QR de la entrada <?= (int) $qrItem['entry_number'] ?>"
+                                                                     data-ticket-qr="<?= e(absoluteUrl('/src/controllers/tickets/validate.php?id=' . rawurlencode($qrItem['id']))) ?>"></div>
+                                                                <p class="small text-secondary-custom mt-2 mb-2">Presentá este código al ingresar.</p>
+                                                                <button class="btn btn-outline-violet rounded-pill px-3"
+                                                                        type="button" data-ticket-print-button>
+                                                                    <i class="bi bi-printer me-1" aria-hidden="true"></i>Imprimir entrada
+                                                                </button>
+                                                            </section>
+                                                        <?php else: ?>
+                                                            <p class="badge text-bg-secondary mb-0">Entrada <?= (int) $qrItem['entry_number'] ?>: ya ingresó</p>
+                                                        <?php endif; ?>
+                                                    <?php endforeach; ?>
+                                                </div>
+                                            <?php endif; ?>
+                                        <?php endif; ?>
+
                                     </article>
                                 <?php endforeach; ?>
                             </div>
@@ -153,6 +197,9 @@ ob_start();
         </div>
     <?php endif; ?>
 </main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+<script src="<?= e(url('/assets/js/ticket-qr.js')) ?>" defer></script>
 
 <?php
 $pageContent = ob_get_clean();

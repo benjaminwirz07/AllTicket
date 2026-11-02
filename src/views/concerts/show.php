@@ -19,81 +19,27 @@ if ($id === '') {
 
 $concert = null;
 $entradas = [];
+$errorDisponibilidad = false;
 
 
 // ============================================================
 // 2. FUNCIONES
 // ============================================================
 
-function esVip($tipo)
-{
-    return (stripos($tipo, 'vip') !== false);
-}
-
-function esNumerada($tipo)
-{
-    return (stripos($tipo, 'vip') !== false || stripos($tipo, 'platea') !== false);
-}
-
-function diasRestantes($fecha)
-{
-    $hoy = strtotime(date('Y-m-d'));
-    $dia = strtotime($fecha);
-    return round(($dia - $hoy) / 86400);
-}
-
-// CAMBIO G: vence reservas held (24 h) y ventas pendientes; devuelve el stock
-// (misma función que usa checkout.php)
-if (!function_exists('vencerReservas')) {
-    function vencerReservas(PDO $pdo)
-    {
-        $propia = !$pdo->inTransaction();
-        if ($propia) { $pdo->beginTransaction(); }
-        try {
-            $ids = $pdo->query(
-                "SELECT s.id FROM sales s
-                  WHERE s.status = 'pending'
-                    AND (s.sale_date <= NOW() - INTERVAL 24 HOUR
-                         OR EXISTS (SELECT 1 FROM seat_reservations r
-                                     WHERE r.sale_id = s.id AND r.status = 'held' AND r.expires_at <= NOW()))"
-            )->fetchAll(PDO::FETCH_COLUMN);
-
-            $cancelar = $pdo->prepare("UPDATE sales SET status = 'cancelled' WHERE id = ? AND status = 'pending'");
-            $devolver = $pdo->prepare(
-                "UPDATE tickets t JOIN sale_details d ON d.ticket_id = t.id
-                    SET t.available = LEAST(t.stock, t.available + d.quantity)
-                  WHERE d.sale_id = ?"
-            );
-            $liberar = $pdo->prepare("UPDATE seat_reservations SET status = 'expired' WHERE sale_id = ? AND status = 'held'");
-
-            foreach ($ids as $idVenta) {
-                $cancelar->execute([$idVenta]);
-                if ($cancelar->rowCount() === 1) {
-                    $devolver->execute([$idVenta]);
-                    $liberar->execute([$idVenta]);
-                }
-            }
-
-            $pdo->exec("UPDATE seat_reservations SET status = 'expired' WHERE status = 'held' AND expires_at <= NOW()");
-
-            if ($propia) { $pdo->commit(); }
-        } catch (PDOException $e) {
-            if ($propia && $pdo->inTransaction()) { $pdo->rollBack(); }
-            throw $e;
-        }
-    }
-}
+// esVip(), esNumerada(), diasRestantes(), vencerReservas() y textoButaca()
+// viven en src/config/reservations.php (se cargan desde bootstrap.php).
 
 
 // ============================================================
 // 3. RECITAL Y ENTRADAS
 // ============================================================
 
-// CAMBIO G: liberar reservas vencidas antes de mostrar la disponibilidad
+// Liberar reservas vencidas antes de mostrar la disponibilidad
 try {
     vencerReservas($pdo);
 } catch (PDOException $e) {
     error_log('Error al vencer reservas: ' . $e->getMessage());
+    $errorDisponibilidad = true;
 }
 
 try {
@@ -148,7 +94,8 @@ if ($concert) {
         $stmtSeats->execute([":id" => $id]);
         $butacasVendidas = $stmtSeats->fetchAll(PDO::FETCH_ASSOC);
     } catch (PDOException $e) {
-        $butacasVendidas = [];
+        error_log('Error al consultar las butacas ocupadas: ' . $e->getMessage());
+        $errorDisponibilidad = true;
     }
 
     foreach ($entradas as $numero => $entrada) {
@@ -194,7 +141,7 @@ if ($concert) {
 
     $dias = diasRestantes($concert['date']);
 
-    if ($concert['status'] == 'active' && $dias >= 0) {
+    if ($concert['status'] == 'active' && $dias >= 0 && !$errorDisponibilidad) {
         $sePuedeComprar = true;
     }
 
@@ -282,12 +229,9 @@ if ($concert) {
     $fechaCompleta = $concert['date'] . "T" . substr($concert['time'], 0, 5) . ":00-03:00";
 
     $marquesina = [
-        $concert['artist'],
         formatFecha($concert['date'], $concert['time']),
         $concert['venue'],
         "viví un show único",
-        "entradas oficiales, sin reventa",
-        "¡no te lo pierdas!",
     ];
 
     $inicio = strtotime($concert['date'] . ' ' . $concert['time']);
@@ -389,14 +333,13 @@ ob_start();
                             <a href="#entradas" class="btn btn-violet-glow btn-lg px-5 rounded-pill">
                                 Elegir entradas <i class="bi bi-arrow-down ms-2"></i>
                             </a>
-                           <!--<span class="ct-hero__from">
+                            <span class="ct-hero__from">
                                 <?php if ($precioDesde !== null) { ?>
                                     Desde <strong><?= e(formatPrecio($precioDesde)) ?></strong>
                                 <?php } else { ?>
                                     Entradas agotadas
                                 <?php } ?>
                             </span>
-                            -->
                             <?php if ($estadoVenta == 'pocas') { ?>
                                 <span class="ct-hero__state"><span class="ct-dot is-low"></span>Quedan pocas</span>
                             <?php } ?>
@@ -440,7 +383,7 @@ ob_start();
         <section id="artista" class="py-5 ct-artist">
             <div class="container-xl">
 
-                <h2 class="ct-artist__name"><?= e($concert['artist']) ?></h2>
+                <h2 class="ct-section-title">Sobre el artista</h2>
                 <?php if (!empty($concert['genre'])) { ?>
                     <p class="ct-artist__genre"><?= e($concert['genre']) ?></p>
                 <?php } ?>
@@ -497,13 +440,31 @@ ob_start();
         ================================================== -->
         <section id="entradas" class="py-5 ct-buy">
             <div class="container-xl">
+                <h2 class="ct-section-title">Entradas</h2>
 
                 <?php if (empty($entradas)) { ?>
 
-                    <h2 class="h4 fw-bold text-white mb-2">Entradas</h2>
                     <p class="text-secondary-custom">Todavía no hay entradas cargadas para este recital.</p>
 
                 <?php } else { ?>
+
+                    <?php if ($errorDisponibilidad) { ?>
+                        <div class="alert alert-warning" role="alert">
+                            No pudimos verificar la disponibilidad de las butacas. Probá de nuevo más tarde.
+                        </div>
+                    <?php } ?>
+
+                    <?php if (!$errorDisponibilidad && $estadoVenta === 'pocas') { ?>
+                        <div class="alert alert-warning" role="status">
+                            <i class="bi bi-exclamation-circle me-2" aria-hidden="true"></i>
+                            Quedan pocas entradas. ¡Elegí la tuya antes de que se agoten!
+                        </div>
+                    <?php } elseif (!$errorDisponibilidad && $estadoVenta === 'agotado') { ?>
+                        <div class="alert alert-secondary" role="status">
+                            <i class="bi bi-ticket-perforated me-2" aria-hidden="true"></i>
+                            Las entradas para este recital están agotadas.
+                        </div>
+                    <?php } ?>
 
                     <form action="<?= e(url('/src/controllers/concerts/checkout.php')) ?>" method="POST" id="form-compra" novalidate>
 
@@ -514,7 +475,7 @@ ob_start();
 
                         <div class="row g-4 align-items-start">
 
-                            <div class="col-12 col-lg-8">
+                            <div class="col-12 col-lg-8 order-1">
 
                                 <!-- PASO 1 -->
                                 <div class="ct-step">
@@ -560,7 +521,7 @@ ob_start();
                                                         <div class="ct-ticket__main">
                                                             <span class="ct-ticket__icon<?= $vip ? ' is-vip' : '' ?>" aria-hidden="true">
                                                                 <?php if ($vip) { ?>
-                                                                    <i class="bi bi-star-fill"></i>
+                                                                    <i class="bi bi-gem"></i>
                                                                 <?php } elseif ($numerada) { ?>
                                                                     <i class="bi bi-grid-3x3-gap-fill"></i>
                                                                 <?php } else { ?>
@@ -571,6 +532,7 @@ ob_start();
                                                             <div class="ct-ticket__body">
                                                                 <h3 class="ct-ticket__name">
                                                                     <?= e($entrada['type']) ?>
+                                                                    <span class="ct-ticket__selected">Seleccionada</span>
                                                                     <?php if ($agotada) { ?>
                                                                         <span class="badge text-bg-secondary ms-1">Agotada</span>
                                                                     <?php } elseif ((int)$entrada['available'] <= 20) { ?>
@@ -602,10 +564,11 @@ ob_start();
 
                                     </div>
                                 </div>
+                            </div>
 
-
+                            <div class="col-12 order-2 order-lg-3">
                                 <!-- PASO 2: butacas o cantidad, según lo que se eligió -->
-                                <div class="ct-step">
+                                <div class="ct-step ct-step--seats">
                                     <div class="ct-step__head">
                                         <span class="ct-step__n">2</span>
                                         <div>
@@ -641,9 +604,9 @@ ob_start();
                                         </div>
 
                                         <div class="ct-legend mb-3">
-                                            <span><i style="background:rgba(255,255,255,.45)"></i>Libre</span>
-                                            <span><i style="background:linear-gradient(135deg,#a855f7,#22d3ee)"></i>Tu selección</span>
-                                            <span><i style="background:rgba(255,255,255,.05);outline:1px solid rgba(255,255,255,.2)"></i>Ocupada</span>
+                                            <span><i class="ct-legend__seat is-available" aria-hidden="true"></i>Libre</span>
+                                            <span><i class="ct-legend__seat is-selected" aria-hidden="true"></i>Tu selección</span>
+                                            <span><i class="ct-legend__seat is-occupied" aria-hidden="true"></i>Ocupada</span>
                                         </div>
 
                                         <div class="ct-stage">ESCENARIO</div>
@@ -674,7 +637,7 @@ ob_start();
 
 
                             <!-- PASO 3: resumen (en el celular queda en la barra de abajo) -->
-                            <div class="col-12 col-lg-4">
+                            <div class="col-12 col-lg-4 order-3 order-lg-2">
                                 <div class="ct-summary">
 
                                     <div class="ct-step__head mb-3">
@@ -682,9 +645,9 @@ ob_start();
                                         <h2 class="ct-step__title">Revisá y pagá</h2>
                                     </div>
 
-                                    <div class="small text-secondary-custom" id="sum-text" aria-live="polite">Elegí un tipo de entrada para continuar.</div>
+                                    <div class="small text-secondary-custom ct-summary__selection" id="sum-text" aria-live="polite">Elegí un tipo de entrada para continuar.</div>
 
-                                    <div class="d-flex justify-content-between align-items-center border-top border-secondary-subtle pt-3 mt-3">
+                                    <div class="d-flex justify-content-between align-items-center border-top border-secondary-subtle pt-3 mt-3 ct-summary__total-row">
                                         <span class="text-secondary-custom">Total</span>
                                         <span class="ct-summary__total text-white js-total">$ 0</span>
                                     </div>
@@ -746,7 +709,7 @@ ob_start();
                 <div class="row g-5">
 
                     <div class="col-12 col-lg-7">
-                        <h2 class="ct-h">Sobre el show</h2>
+                        <h2 class="ct-section-title">Sobre el show</h2>
                         <?php if (!empty($concert['description'])) { ?>
                             <p class="ct-prose" style="white-space: pre-line;"><?= e($concert['description']) ?></p>
                         <?php } else { ?>
@@ -755,7 +718,7 @@ ob_start();
                     </div>
 
                     <div class="col-12 col-lg-5">
-                        <h2 class="ct-h">Antes de ir</h2>
+                        <h2 class="ct-section-title">Antes de ir</h2>
                         <dl class="ct-dl">
                             <div><dt>Inicio</dt><dd><?= e($horaShow) ?> hs en <?= e($concert['venue']) ?></dd></div>
                             <div><dt>Entrada</dt><dd>Código QR en tu celular, no hace falta imprimir.</dd></div>
@@ -775,7 +738,7 @@ ob_start();
         <section id="como-llegar" class="py-5 border-top border-dark-subtle">
             <div class="container-xl">
 
-                <h2 class="h4 fw-bold text-white mb-1">Cómo llegar</h2>
+                <h2 class="ct-section-title">Cómo llegar</h2>
                 <p class="text-secondary-custom mb-4">
                     <?= e($concert['venue']) ?> — <?= e($concert['address']) ?>, <?= e($concert['city']) ?>
                 </p>
@@ -810,13 +773,13 @@ ob_start();
         <section id="faq" class="py-5 border-top border-dark-subtle">
             <div class="container-xl">
 
-                <h2 class="h4 fw-bold text-white mb-4">Preguntas frecuentes</h2>
+                <h2 class="ct-section-title">Preguntas frecuentes</h2>
 
                 <div class="ct-faq">
 
                     <details>
                         <summary>¿Cómo recibo mi entrada?</summary>
-                        <p>Te llega con código QR a tu celular. Mostralo en el ingreso y listo.</p>
+                        <p>Cuando se confirma la compra de prueba, encontrá cada código QR en “Mis entradas”. No se envían por correo.</p>
                     </details>
 
                     <details>
@@ -826,7 +789,7 @@ ob_start();
 
                     <details>
                         <summary>¿Qué medios de pago puedo usar?</summary>
-                        <p>Mercado Pago, tarjeta de crédito o débito, transferencia bancaria y efectivo en Rapipago o Pago Fácil.</p>
+                        <p>Este proyecto funciona en modo de demostración: podés usar un pago de prueba o una transferencia simulada. No se realiza ningún cobro.</p>
                     </details>
 
                     <details>
@@ -859,6 +822,7 @@ ob_start();
     <div id="datos-show" hidden
         data-concierto="<?= e($concert['id']) ?>"
         data-fecha="<?= e($fechaCompleta) ?>"
+        data-columnas="<?= BUTACAS_POR_FILA ?>"
         data-puede-comprar="<?= $sePuedeComprar ? 'si' : 'no' ?>"
         data-logueado="<?= $logueado ? 'si' : 'no' ?>"
         data-login-url="<?= e($loginUrl) ?>"

@@ -23,8 +23,8 @@ ob_start();
   <?php endif; ?>
 
   <?php if (!empty($venues)): ?>
-    <div class="table-responsive">
-      <table class="table table-dark align-middle">
+    <div class="table-responsive admin-table-wrap">
+      <table class="table table-dark align-middle admin-table">
         <thead>
           <tr>
             <th>Nombre</th>
@@ -38,12 +38,12 @@ ob_start();
         <tbody>
           <?php foreach ($venues as $venue): ?>
             <tr>
-              <td><?= e($venue['name']) ?></td>
+              <td><span class="admin-table__primary"><?= e($venue['name']) ?></span></td>
               <td><?= e($venue['address']) ?></td>
               <td><?= e($venue['city']) ?></td>
               <td><?= e($venue['province']) ?></td>
               <td class="text-end"><?= e(number_format((int) $venue['capacity'], 0, ',', '.')) ?></td>
-              <td class="text-end text-nowrap">
+              <td class="admin-table__actions">
                 <a class="btn btn-sm btn-secondary me-1"
                    href="/src/controllers/admin/venues/form.php?id=<?= urlencode($venue['id']) ?>">Editar</a>
                 <form method="POST" action="/src/controllers/admin/venues/delete.php" class="d-inline"

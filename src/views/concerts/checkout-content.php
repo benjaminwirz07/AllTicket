@@ -38,6 +38,9 @@ ob_start();
             <div class="text-center mb-4">
                 <i class="bi <?= $pagada ? 'bi-check-circle' : 'bi-hourglass-split' ?> fs-1 <?= $pagada ? 'text-success' : 'text-warning' ?>"></i>
                 <h1 class="h3 text-white fw-bold mt-3"><?= $pagada ? '¡Compra confirmada!' : 'Compra registrada: pago pendiente' ?></h1>
+                <?php if ($pagada) { ?>
+                    <p class="small text-warning">Pago de prueba: no se realizó ningún cobro real.</p>
+                <?php } ?>
                 <p class="text-secondary-custom mb-0">Número de pedido: <strong class="text-white"><?= e(strtoupper(substr($venta['id'], 0, 8))) ?></strong></p>
             </div>
             <div class="step-card p-4 rounded-4 border border-secondary-subtle">
@@ -58,16 +61,59 @@ ob_start();
                     <p class="small text-secondary-custom mb-1">Tus butacas</p>
                     <div><?php foreach ($butacas as $b) { ?><span class="ct-chip"><?= e(textoButaca($b)) ?></span><?php } ?></div>
                 <?php } ?>
+                <?php if ($pagada && $qrEntries) { ?>
+                    <div class="mt-4">
+                        <h3 class="h6 text-white">Tus entradas digitales</h3>
+                        <p class="small text-secondary-custom">Mostrá cada código QR al ingresar al evento.</p>
+                        <div class="d-flex flex-wrap gap-3">
+                            <?php foreach ($qrEntries as $qrEntry) { ?>
+                                <section class="ticket-print-card border border-secondary-subtle rounded-3 p-3 text-center"
+                                         data-ticket-print>
+                                    <p class="small text-white mb-2">AllTicket · Entrada digital</p>
+                                    <h3 class="ticket-print-card__event"><?= e($venta['name']) ?></h3>
+                                    <p class="ticket-print-card__detail">
+                                        <?= e(formatFecha($venta['date'], $venta['time'])) ?>
+                                        ·
+                                        <?= e($venta['venue']) ?>, <?= e($venta['city']) ?>
+                                    </p>
+                                    <p class="ticket-print-card__detail">A nombre de <?= e($compradorNombre) ?></p>
+                                    <p class="small text-white mb-2">
+                                        Entrada <?= (int) $qrEntry['entry_number'] ?>
+                                        <?php if (!empty($qrEntry['seat_code'])) { ?>
+                                            · <?= e(textoButaca($qrEntry['seat_code'])) ?>
+                                        <?php } ?>
+                                    </p>
+                                    <?php if ($qrEntry['used_at'] !== null) { ?>
+                                        <p class="badge text-bg-secondary mb-0">Ya ingresó</p>
+                                    <?php } else { ?>
+                                        <div class="ticket-qr" role="img"
+                                             aria-label="Código QR de la entrada <?= (int) $qrEntry['entry_number'] ?>"
+                                             data-ticket-qr="<?= e(absoluteUrl('/src/controllers/tickets/validate.php?id=' . rawurlencode($qrEntry['id']))) ?>"></div>
+                                        <p class="small text-secondary-custom mt-2 mb-2">Presentá este código al ingresar.</p>
+                                        <button class="btn btn-outline-violet rounded-pill px-3"
+                                                type="button" data-ticket-print-button>
+                                            <i class="bi bi-printer me-1" aria-hidden="true"></i>Imprimir entrada
+                                        </button>
+                                    <?php } ?>
+                                </section>
+                            <?php } ?>
+                        </div>
+                    </div>
+                    <p class="small text-secondary-custom mt-3">
+                        También podés volver a verlas en <a href="<?= e(url('/src/controllers/tickets/index.php')) ?>">Mis entradas</a>.
+                    </p>
+                <?php } elseif (!$pagada) { ?>
+                    <p class="alert alert-warning small mt-3 mb-0" role="status">
+                        El QR estará disponible cuando se confirme el pago.
+                    </p>
+                <?php } ?>
             </div>
             <?php if (!$pagada) { ?>
                 <div class="ct-panel">
                     <?php if ($venta['payment_method'] === 'transferencia') { ?>
-                        <p class="mb-1 fw-semibold text-white">Transferí <?= e(formatPrecio($venta['total'])) ?> a:</p>
-                        <p class="small text-secondary-custom mb-0">Alias: <strong class="text-white"><?= e($transferAlias) ?></strong><br>Titular: <?= e($transferTitular) ?><br>Indicá el número de pedido en el concepto.</p>
-                    <?php } elseif ($venta['payment_method'] === 'efectivo') { ?>
-                        <p class="mb-0 small text-secondary-custom">Pagá en Rapipago o Pago Fácil indicando tu número de pedido.</p>
+                        <p class="mb-0 small text-secondary-custom">Esta transferencia es solo una simulación: no envíes dinero. El pedido queda pendiente hasta que un administrador lo marque como confirmado para la demo.</p>
                     <?php } else { ?>
-                        <p class="mb-0 small text-secondary-custom">Estamos esperando la confirmación de tu pago.</p>
+                        <p class="mb-0 small text-secondary-custom">El pedido queda pendiente hasta que un administrador simule la confirmación del pago.</p>
                     <?php } ?>
                 </div>
             <?php } ?>
@@ -77,7 +123,10 @@ ob_start();
         </div>
     <?php } else { ?>
         <h1 class="h3 fw-bold text-white mb-1">Finalizar compra</h1>
-        <p class="text-secondary-custom mb-4">Revisá tu pedido y elegí cómo querés pagar.</p>
+        <p class="alert alert-warning mb-4" role="status">
+            <strong>Modo de demostración:</strong> no se realiza ningún cobro. No ingreses datos reales de tarjetas ni transfieras dinero.
+        </p>
+        <p class="text-secondary-custom mb-4">Revisá tu pedido y elegí cómo simular el pago.</p>
         <form action="<?= e(url('/src/controllers/concerts/checkout.php')) ?>" method="POST" id="form-pago" novalidate>
             <input type="hidden" name="confirmar" value="1">
             <input type="hidden" name="csrf_token" value="<?= e($csrf) ?>">
@@ -102,54 +151,11 @@ ob_start();
                             </div>
                         <?php } ?>
                     </div>
-                    <div class="ct-panel" data-panel="mercadopago" hidden>
-                        <p class="small text-secondary-custom mb-0">Al confirmar, vas a continuar el pago en Mercado Pago y volvés a AllTicket cuando termines.</p>
-                    </div>
-                    <div class="ct-panel" data-panel="tarjeta" hidden>
-                        <div class="ct-card-preview" aria-hidden="true">
-                            <div class="small text-uppercase" id="cc-brand">Tarjeta</div>
-                            <div class="ct-card-preview__num" id="cc-prev-num">•••• •••• •••• ••••</div>
-                            <div class="d-flex justify-content-between small">
-                                <span id="cc-prev-name">NOMBRE APELLIDO</span>
-                                <span id="cc-prev-exp">MM/AA</span>
-                            </div>
-                        </div>
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <label for="cc-num" class="form-label small text-secondary-custom">Número de tarjeta</label>
-                                <input id="cc-num" type="text" class="form-control custom-input" inputmode="numeric" autocomplete="cc-number" maxlength="23" placeholder="0000 0000 0000 0000">
-                            </div>
-                            <div class="col-12">
-                                <label for="cc-name" class="form-label small text-secondary-custom">Nombre como figura en la tarjeta</label>
-                                <input id="cc-name" type="text" class="form-control custom-input" autocomplete="cc-name" maxlength="40">
-                            </div>
-                            <div class="col-6">
-                                <label for="cc-exp" class="form-label small text-secondary-custom">Vencimiento</label>
-                                <input id="cc-exp" type="text" class="form-control custom-input" inputmode="numeric" autocomplete="cc-exp" maxlength="5" placeholder="MM/AA">
-                            </div>
-                            <div class="col-6">
-                                <label for="cc-cvv" class="form-label small text-secondary-custom">Código de seguridad</label>
-                                <input id="cc-cvv" type="text" class="form-control custom-input" inputmode="numeric" autocomplete="cc-csc" maxlength="4" placeholder="CVV">
-                            </div>
-                            <div class="col-6">
-                                <label for="cc-dni" class="form-label small text-secondary-custom">DNI del titular</label>
-                                <input id="cc-dni" type="text" class="form-control custom-input" inputmode="numeric" maxlength="9">
-                            </div>
-                            <div class="col-6">
-                                <label for="cc-cuotas" class="form-label small text-secondary-custom">Cuotas</label>
-                                <select id="cc-cuotas" class="form-select custom-input">
-                                    <option>1 cuota</option><option>3 cuotas</option><option>6 cuotas</option><option>12 cuotas</option>
-                                </select>
-                            </div>
-                        </div>
-                        <p class="small text-secondary-custom mt-3 mb-0"><i class="bi bi-shield-lock me-1"></i>Por seguridad, los datos de tu tarjeta no se guardan en nuestra base.</p>
+                    <div class="ct-panel" data-panel="prueba" hidden>
+                        <p class="small text-secondary-custom mb-0">Al confirmar, la compra se marcará como pagada solo para probar las entradas y el código QR.</p>
                     </div>
                     <div class="ct-panel" data-panel="transferencia" hidden>
-                        <p class="small text-secondary-custom mb-2">Al confirmar te mostramos los datos para transferir:</p>
-                        <p class="small mb-0">Alias: <strong class="text-white"><?= e($transferAlias) ?></strong><br>Titular: <?= e($transferTitular) ?></p>
-                    </div>
-                    <div class="ct-panel" data-panel="efectivo" hidden>
-                        <p class="small text-secondary-custom mb-0">Al confirmar generamos tu número de pedido para que pagues en Rapipago o Pago Fácil.</p>
+                        <p class="small text-secondary-custom mb-0">No se envía dinero. El pedido queda pendiente para que un administrador pueda simular la confirmación.</p>
                     </div>
                     <p class="ct-field-error" id="pay-error" role="alert" <?= $errores ? '' : 'hidden' ?>><?= e(implode(' ', $errores)) ?></p>
                     <div class="form-check mt-4">
@@ -186,7 +192,7 @@ ob_start();
                             <span class="text-secondary-custom">Total</span>
                             <span class="ct-summary__total text-white"><?= e(formatPrecio($total)) ?></span>
                         </div>
-                        <button type="submit" class="btn btn-violet-glow btn-lg w-100 rounded-pill mt-3 ct-checkout-submit">Confirmar y pagar <i class="bi bi-lock ms-2"></i></button>
+                        <button type="submit" class="btn btn-violet-glow btn-lg w-100 rounded-pill mt-3 ct-checkout-submit">Confirmar compra <i class="bi bi-check-circle ms-2"></i></button>
                         <?php if ($modoDemo) { ?>
                             <p class="small text-warning mt-3 mb-0"><i class="bi bi-info-circle me-1"></i>Modo demo: no se realiza ningún cobro real.</p>
                         <?php } ?>
@@ -198,6 +204,10 @@ ob_start();
     <?php } ?>
     </div>
 </main>
+<?php if ($vista === 'listo' && $pagada && $qrEntries) { ?>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+    <script src="<?= e(url('/assets/js/ticket-qr.js')) ?>" defer></script>
+<?php } ?>
 <?php
 $pageContent = ob_get_clean();
 include __DIR__ . '/../_layouts/layout.php';

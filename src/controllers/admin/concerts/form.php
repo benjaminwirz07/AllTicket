@@ -41,8 +41,10 @@ if (isset($_GET['id'])) {
 // Si hubo errores al guardar, mostramos lo que la persona había escrito
 if (!empty($old)) {
     $imagenGuardada = $concert['image'] ?? null;
+    $estadoGuardado = $concert['status'] ?? 'active';
     $concert = $old;
     $concert['image'] = $imagenGuardada;
+    $concert['status'] = $estadoGuardado;
 }
 
 require_once __DIR__ . '/../../../views/admin/concerts/form.php';

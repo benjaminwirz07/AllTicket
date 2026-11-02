@@ -13,7 +13,7 @@ var urlLogin = datos.dataset.loginUrl;
 var claveGuardado = 'seleccion-' + datos.dataset.concierto;
 
 var MAXIMO = 6;       // maximo de entradas por compra
-var COLUMNAS = 20;    // butacas por fila
+var COLUMNAS = parseInt(datos.dataset.columnas, 10);
 var PASILLO = 10;     // el pasillo esta despues de esta columna
 
 
@@ -193,6 +193,10 @@ function dibujarButacas() {
 
             var codigo = fila + '-' + columna;
 
+            var asiento = document.createElement('label');
+            asiento.className = 'ct-seat-item';
+            asiento.style.gridColumn = String(columna <= PASILLO ? columna + 1 : columna + 2);
+
             var boton = document.createElement('input');
             boton.type = 'checkbox';
             boton.className = 'ct-seat';
@@ -204,15 +208,22 @@ function dibujarButacas() {
             boton.title = nombreButaca;
 
             if (columna == PASILLO) {
-                boton.className = 'ct-seat is-gap';
+                asiento.classList.add('is-gap');
             }
 
             if (entrada.ocupadas.indexOf(codigo) != -1) {
                 boton.disabled = true;
                 boton.title = nombreButaca + ' (ocupada)';
+                boton.setAttribute('aria-label', nombreButaca + ', ocupada');
             }
 
-            filaDiv.appendChild(boton);
+            var marca = document.createElement('span');
+            marca.className = 'ct-seat-mark';
+            marca.setAttribute('aria-hidden', 'true');
+
+            asiento.appendChild(boton);
+            asiento.appendChild(marca);
+            filaDiv.appendChild(asiento);
             contador = contador + 1;
         }
 
@@ -486,11 +497,6 @@ function prepararEntradas() {
     }
 
     var radios = document.querySelectorAll('input[name="ticket_id"]');
-
-    // DEPURACION: borrar esta linea cuando termines de probar
-    console.log('Tickets en la pagina:', Array.prototype.map.call(radios, function (r) {
-        return r.dataset.tipo + ' (disabled=' + r.disabled + ')';
-    }));
 
     for (var i = 0; i < radios.length; i++) {
         radios[i].addEventListener('change', alElegirEntrada);

@@ -54,13 +54,88 @@ a.admin-stat:hover { border-color: var(--border-glow); transform: translateY(-2p
   margin-bottom: 0.9rem;
 }
 
-/* Tablas del panel (se aplica con class="admin-table") */
-.admin-table thead th {
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #9ca3af;
-  border-bottom-color: rgba(255, 255, 255, 0.1);
+/* Tablas del panel */
+.admin-table-wrap {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, .09);
+  border-radius: 1rem;
+  background: linear-gradient(145deg, rgba(20, 19, 34, .94), rgba(11, 12, 22, .94));
+  box-shadow: 0 16px 40px rgba(0, 0, 0, .18);
 }
-.admin-table tbody tr { transition: background .15s; }
-.admin-table tbody tr:hover { background: var(--violet-soft); }
+.admin-table-wrap.table-responsive {
+  overflow-x: auto;
+}
+.admin-table {
+  --bs-table-color: #e8e8f0;
+  --bs-table-bg: transparent;
+  --bs-table-border-color: rgba(255, 255, 255, .07);
+  --bs-table-hover-color: #fff;
+  --bs-table-hover-bg: rgba(139, 92, 246, .09);
+  min-width: 680px;
+  margin-bottom: 0;
+  vertical-align: middle;
+}
+.admin-table--sales {
+  min-width: 1050px;
+}
+.admin-table thead th {
+  padding: .95rem 1rem;
+  background: rgba(255, 255, 255, .035);
+  color: #aaa7bb;
+  border-bottom: 1px solid rgba(192, 132, 252, .22);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .075em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.admin-table tbody td {
+  padding: .9rem 1rem;
+  border-color: rgba(255, 255, 255, .065);
+}
+.admin-table tbody tr {
+  transition: background-color .16s ease;
+}
+.admin-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+.admin-table tbody tr:hover > * {
+  --bs-table-bg-state: rgba(139, 92, 246, .09);
+}
+.admin-table .admin-table__primary {
+  color: #fff;
+  font-weight: 650;
+}
+.admin-table .admin-table__secondary {
+  display: block;
+  margin-top: .2rem;
+  color: #9996a9;
+  font-size: .78rem;
+}
+.admin-table .admin-table__actions {
+  min-width: 150px;
+  text-align: right;
+  white-space: nowrap;
+}
+.admin-table .btn-sm {
+  --bs-btn-padding-y: .38rem;
+  --bs-btn-padding-x: .8rem;
+  --bs-btn-font-weight: 600;
+  border-radius: .65rem;
+}
+.admin-table .badge {
+  padding: .45rem .7rem;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 999px;
+  font-size: .72rem;
+  font-weight: 650;
+}
+@media (max-width: 575.98px) {
+  .admin-table-wrap {
+    border-radius: .8rem;
+  }
+  .admin-table thead th,
+  .admin-table tbody td {
+    padding: .75rem .8rem;
+  }
+}

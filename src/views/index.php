@@ -61,8 +61,8 @@ $garantias = [
     ],
     [
         "icono" => "bi-shield-lock",
-        "titulo" => "Compra segura",
-        "texto" => "Tus pagos se procesan con medios de pago homologados."
+        "titulo" => "Pago de prueba",
+        "texto" => "La compra se simula; no se realiza ningún cobro ni se piden datos de tarjeta."
     ],
     [
         "icono" => "bi-qr-code",
@@ -76,16 +76,10 @@ $garantias = [
     ]
 ];
 
-// Medios de pago que se muestran debajo de las garantías.
-// OJO: dejá solo los que AllTicket realmente acepta.
+// Opciones disponibles en la demostración (no son medios de pago reales).
 $mediosPago = [
-    ["icono" => "bi-wallet2", "nombre" => "Mercado Pago", "marca" => "MP", "clave" => "mercado-pago"],
-    ["icono" => "bi-credit-card-2-front", "nombre" => "Visa", "marca" => "VISA", "clave" => "visa"],
-    ["icono" => "bi-credit-card-2-front", "nombre" => "Mastercard", "marca" => "mastercard", "clave" => "mastercard"],
-    ["icono" => "bi-credit-card-2-front", "nombre" => "American Express", "marca" => "AMEX", "clave" => "american-express"],
-    ["icono" => "bi-bank", "nombre" => "Transferencia bancaria", "marca" => "TRANSFERENCIA", "clave" => "transferencia"],
-    ["icono" => "bi-cash-coin", "nombre" => "Rapipago", "marca" => "RAPIPAGO", "clave" => "rapipago"],
-    ["icono" => "bi-cash-coin", "nombre" => "Pago Fácil", "marca" => "PAGO FÁCIL", "clave" => "pago-facil"]
+    ["icono" => "bi-check-circle", "nombre" => "Pago de prueba", "marca" => "DEMO", "clave" => "visa"],
+    ["icono" => "bi-bank", "nombre" => "Transferencia simulada", "marca" => "SIMULADA", "clave" => "transferencia"],
 ];
 
 // Preguntas frecuentes
@@ -94,7 +88,7 @@ $mediosPago = [
 $preguntas = [
     [
         "pregunta" => "¿Cómo recibo mi entrada?",
-        "respuesta" => "Cuando se confirma el pago, te enviamos tu ticket digital con código QR directo a tu celular o e-mail."
+        "respuesta" => "Cuando la compra de prueba queda confirmada, podés ver tu ticket digital con código QR en la sección Mis entradas."
     ],
     [
         "pregunta" => "¿Tengo que imprimir la entrada?",
@@ -106,11 +100,11 @@ $preguntas = [
     ],
     [
         "pregunta" => "¿Qué medios de pago puedo usar?",
-        "respuesta" => "Podés pagar con los medios de pago homologados que aparecen disponibles al momento de la compra."
+        "respuesta" => "AllTicket está en modo de demostración. Podés confirmar una compra de prueba o dejarla pendiente con la transferencia simulada. No se realiza ningún cobro."
     ],
     [
         "pregunta" => "¿Qué pasa si se cancela o se reprograma el evento?",
-        "respuesta" => "Te avisamos por e-mail y te explicamos cómo seguir: devolución de tu compra o validez de la entrada para la nueva fecha."
+        "respuesta" => "Esta demo no envía avisos por correo ni procesa reembolsos. Revisá el estado del recital y de tu pedido en la web; si el pedido figura pagado, contactá al organizador para consultar cómo seguir."
     ],
     [
         "pregunta" => "¿Cómo me comunico con soporte?",
@@ -367,22 +361,6 @@ try {
     $lugares = $stmtLugares->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     error_log('Error al consultar los lugares populares: ' . $e->getMessage());
-}
-
-
-// ---------- 4.5 Noticias ----------
-
-$noticias = [];
-try {
-    $stmtNoticias = $pdo->query(
-        'SELECT p.id, p.title, p.content, p.created_at
-           FROM posts p
-          ORDER BY p.created_at DESC
-          LIMIT 3'
-    );
-    $noticias = $stmtNoticias->fetchAll(PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-    error_log('Error al consultar las noticias del inicio: ' . $e->getMessage());
 }
 
 
@@ -1018,53 +996,6 @@ ob_start();
     <?php endif; ?>
 
 
-    <!-- =====================================================
-         NOTICIAS
-    ====================================================== -->
-
-    <section id="noticias" class="py-5 home-section-divider">
-        <div class="container-xl">
-            <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
-                <div>
-                    <h2 class="h3 fw-bold text-white mb-1">Noticias</h2>
-                    <p class="text-secondary-custom mb-0">Novedades de AllTicket y del mundo de la música.</p>
-                </div>
-                <?php if (isAdmin()): ?>
-                    <a href="<?= e(url('/src/controllers/posts/form.php')) ?>"
-                        class="btn btn-outline-violet rounded-pill px-4">Publicar noticia</a>
-                <?php endif; ?>
-            </div>
-
-            <?php if (!empty($noticias)): ?>
-                <div class="row g-4">
-                    <?php foreach ($noticias as $noticia): ?>
-                        <?php $resumenNoticia = trim(strip_tags((string) $noticia['content'])); ?>
-                        <div class="col-12 col-md-6 col-lg-4">
-                            <article class="card h-100 bg-card-dark text-light border border-secondary-subtle rounded-4 shadow">
-                                <div class="card-body d-flex flex-column p-4">
-                                    <p class="small text-secondary-custom mb-2">
-                                        <i class="bi bi-calendar-event me-1"></i>
-                                        <?= e(date('d/m/Y', strtotime($noticia['created_at']))) ?>
-                                    </p>
-                                    <h3 class="h5 fw-bold text-white"><?= e($noticia['title']) ?></h3>
-                                    <p class="text-secondary-custom mb-4">
-                                        <?= e(mb_strimwidth($resumenNoticia, 0, 180, '…', 'UTF-8')) ?>
-                                    </p>
-                                    <a href="<?= e(url('/src/controllers/posts/show.php?id=' . urlencode($noticia['id']))) ?>"
-                                        class="btn btn-sm btn-outline-violet rounded-pill px-3 mt-auto align-self-start">
-                                        Leer noticia
-                                    </a>
-                                </div>
-                            </article>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            <?php else: ?>
-                <p class="text-secondary-custom mb-0">Todavía no hay noticias publicadas.</p>
-            <?php endif; ?>
-        </div>
-    </section>
-
 <!-- =====================================================
          CÓMO FUNCIONA
     ====================================================== -->
@@ -1129,8 +1060,8 @@ ob_start();
                         </div>
                         <h3 class="h5 text-white fw-semibold mb-2">Comprá seguro</h3>
                         <p class="small text-secondary-custom mb-0">
-                            Pagá de forma rápida con múltiples medios de pago
-                            homologados.
+                            Probá el flujo de compra con opciones simuladas:
+                            no se realizan cobros reales.
                         </p>
                     </div>
                 </div>
@@ -1145,8 +1076,8 @@ ob_start();
                         </div>
                         <h3 class="h5 text-white fw-semibold mb-2">Disfrutá el show</h3>
                         <p class="small text-secondary-custom mb-0">
-                            Recibí tu ticket digital con código QR directo
-                            en tu celular o e-mail.
+                            Cuando se confirma la compra de prueba, encontrá
+                            tu ticket digital en “Mis entradas”.
                         </p>
                     </div>
                 </div>
@@ -1211,11 +1142,11 @@ ob_start();
             <?php if (!empty($mediosPago)): ?>
                 <div class="payment-methods mt-5" aria-labelledby="payment-methods-title">
                     <div class="text-center mb-4">
-                        <h3 id="payment-methods-title" class="h5 fw-semibold text-white mb-1">Medios de pago</h3>
-                        <p class="small text-secondary-custom mb-0">Elegí la opción que te resulte más cómoda</p>
+                        <h3 id="payment-methods-title" class="h5 fw-semibold text-white mb-1">Opciones de pago de la demo</h3>
+                        <p class="small text-secondary-custom mb-0">Estas opciones solo simulan el pago: no se cobra dinero</p>
                     </div>
 
-                    <div class="payment-slider" role="region" aria-label="Medios de pago aceptados">
+                    <div class="payment-slider" role="region" aria-label="Opciones de pago simuladas">
                         <div class="payment-slider__track">
                             <?php for ($copiaMedios = 0; $copiaMedios < 2; $copiaMedios++): ?>
                                 <ul class="payment-slider__group list-unstyled mb-0"
@@ -1262,14 +1193,14 @@ ob_start();
                     <i class="bi bi-bell" aria-hidden="true"></i>
                 </div>
 
-                <h2 class="h3 fw-bold text-white mb-2">No te pierdas ningún show</h2>
+                <h2 class="h3 fw-bold text-white mb-2">Anotate a las novedades</h2>
                 <p class="text-secondary-custom mb-4">
-                    Dejanos tu e-mail y te avisamos cuando salgan nuevas fechas y entradas.
+                    Guardamos tu correo en la lista de la demo, pero todavía no enviamos avisos por e-mail.
                 </p>
 
                 <?php if ($estadoNewsletter === 'ok'): ?>
                     <div class="alert alert-success py-2" role="status">
-                        ¡Listo! Ya estás en la lista.
+                        Tu correo quedó guardado en la lista de la demo. Todavía no enviamos e-mails.
                     </div>
                 <?php elseif ($estadoNewsletter === 'invalid'): ?>
                     <div class="alert alert-warning py-2" role="alert">
@@ -1297,7 +1228,7 @@ ob_start();
                     </div>
 
                     <div class="col-12 col-md-auto">
-                        <button type="submit" class="btn btn-violet-glow btn-home-gradient rounded-pill px-4">Avisame</button>
+                        <button type="submit" class="btn btn-violet-glow btn-home-gradient rounded-pill px-4">Anotarme</button>
                     </div>
 
                 </form>

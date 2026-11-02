@@ -16,23 +16,14 @@ if ($userId !== null) {
 }
 
 $modoDemo = true;
-$transferAlias = 'ALLTICKET.PAGOS';
-$transferTitular = 'AllTicket S.A.';
 
 $metodos = [
-    'mercadopago'   => ['nombre' => 'Mercado Pago', 'icono' => 'bi-wallet2', 'desc' => 'Pagá con tu dinero en cuenta, tarjetas guardadas o cuotas.', 'instant' => true],
-    'tarjeta'       => ['nombre' => 'Tarjeta de crédito o débito', 'icono' => 'bi-credit-card-2-front', 'desc' => 'Visa, Mastercard y American Express.', 'instant' => true],
-    'transferencia' => ['nombre' => 'Transferencia bancaria', 'icono' => 'bi-bank', 'desc' => 'Transferí desde tu home banking. Se acredita al confirmar el pago.', 'instant' => false],
-    'efectivo'      => ['nombre' => 'Efectivo (Rapipago / Pago Fácil)', 'icono' => 'bi-cash-coin', 'desc' => 'Pagá en sucursal con tu número de pedido.', 'instant' => false],
+    'prueba' => ['nombre' => 'Pago de prueba', 'icono' => 'bi-check-circle', 'desc' => 'Confirma la compra automáticamente. No se realiza ningún cobro.', 'instant' => true],
+    'transferencia' => ['nombre' => 'Transferencia simulada', 'icono' => 'bi-bank', 'desc' => 'Deja el pedido pendiente para que el administrador simule la confirmación.', 'instant' => false],
 ];
 
 $maxEntradas = 6;
 
-if (!function_exists('esNumerada')) {
-    function esNumerada($tipo) {
-        return stripos($tipo, 'vip') !== false || stripos($tipo, 'platea') !== false;
-    }
-}
 if (!function_exists('uuidv4')) {
     function uuidv4() {
         $d = random_bytes(16);
@@ -41,51 +32,8 @@ if (!function_exists('uuidv4')) {
         return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($d), 4));
     }
 }
-if (!function_exists('textoButaca')) {
-    function textoButaca($codigo) {
-        $p = explode('-', $codigo);
-        return 'Fila ' . $p[0] . ' · Butaca ' . $p[1];
-    }
-}
-// CAMBIO D: vence reservas held (24 h) y ventas pendientes; devuelve el stock
-if (!function_exists('vencerReservas')) {
-    function vencerReservas(PDO $pdo) {
-        $propia = !$pdo->inTransaction();
-        if ($propia) { $pdo->beginTransaction(); }
-        try {
-            $ids = $pdo->query(
-                "SELECT s.id FROM sales s
-                  WHERE s.status = 'pending'
-                    AND (s.sale_date <= NOW() - INTERVAL 24 HOUR
-                         OR EXISTS (SELECT 1 FROM seat_reservations r
-                                     WHERE r.sale_id = s.id AND r.status = 'held' AND r.expires_at <= NOW()))"
-            )->fetchAll(PDO::FETCH_COLUMN);
-
-            $cancelar = $pdo->prepare("UPDATE sales SET status = 'cancelled' WHERE id = ? AND status = 'pending'");
-            $devolver = $pdo->prepare(
-                "UPDATE tickets t JOIN sale_details d ON d.ticket_id = t.id
-                    SET t.available = LEAST(t.stock, t.available + d.quantity)
-                  WHERE d.sale_id = ?"
-            );
-            $liberar = $pdo->prepare("UPDATE seat_reservations SET status = 'expired' WHERE sale_id = ? AND status = 'held'");
-
-            foreach ($ids as $id) {
-                $cancelar->execute([$id]);
-                if ($cancelar->rowCount() === 1) {
-                    $devolver->execute([$id]);
-                    $liberar->execute([$id]);
-                }
-            }
-
-            $pdo->exec("UPDATE seat_reservations SET status = 'expired' WHERE status = 'held' AND expires_at <= NOW()");
-
-            if ($propia) { $pdo->commit(); }
-        } catch (PDOException $e) {
-            if ($propia && $pdo->inTransaction()) { $pdo->rollBack(); }
-            throw $e;
-        }
-    }
-}
+// esNumerada(), vencerReservas() y textoButaca() viven en
+// src/config/reservations.php (se cargan desde bootstrap.php).
 
 $csrf = csrfToken();
 
@@ -96,6 +44,7 @@ $butacas = [];
 $cantidad = 0;
 $total = 0;
 $venta = null;
+$qrEntries = [];
 $metodo = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 if ($metodo === 'POST') {
     requireMethod('POST');
@@ -138,6 +87,17 @@ if ($metodo === 'GET' && isset($_GET['ok'])) {
             $stmt = $pdo->prepare("SELECT seat_code FROM seat_reservations WHERE sale_id = :id ORDER BY created_at, seat_code");
             $stmt->execute([':id' => $venta['id']]);
             $butacas = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+            if ($venta['status'] === 'paid') {
+                $stmt = $pdo->prepare(
+                    'SELECT id, entry_number, seat_code, used_at
+                       FROM ticket_entries
+                      WHERE sale_id = :id
+                      ORDER BY entry_number'
+                );
+                $stmt->execute([':id' => $venta['id']]);
+                $qrEntries = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            }
         }
     }
 } elseif ($metodo === 'POST') {
@@ -171,7 +131,7 @@ if ($metodo === 'GET' && isset($_GET['ok'])) {
     if (!$userId) {
         $vista = 'login';
     } else {
-        // CAMBIO D: liberar reservas vencidas antes de consultar disponibilidad
+        // Liberar reservas vencidas antes de consultar disponibilidad
         try {
             vencerReservas($pdo);
         } catch (PDOException $e) {
@@ -201,6 +161,9 @@ if ($metodo === 'GET' && isset($_GET['ok'])) {
             $numerada = esNumerada($datos['type']);
             if ($numerada) {
                 $cantidad = count($butacas);
+                if (!butacasDentroDelStock($butacas, (int) $datos['stock'])) {
+                    $errores[] = 'La selección de butacas no es válida. Volvé al recital y elegilas nuevamente.';
+                }
             } else {
                 $butacas = [];
             }
@@ -244,7 +207,7 @@ if ($metodo === 'GET' && isset($_GET['ok'])) {
             } else {
                 try {
                     $pdo->beginTransaction();
-                    vencerReservas($pdo); // CAMBIO D: también dentro de la transacción
+                    vencerReservas($pdo); // se suma a la transacción abierta
                     $lock = $pdo->prepare(
                         "SELECT t.available, c.status, c.date
                            FROM tickets t
@@ -272,12 +235,27 @@ if ($metodo === 'GET' && isset($_GET['ok'])) {
 
                     $pdo->prepare("INSERT INTO sales (id, user_id, total, status, payment_method) VALUES (?, ?, ?, ?, ?)")
                         ->execute([$ventaId, $userId, $total, $estado, $metodoSel]);
+                    $detalleId = uuidv4();
                     $pdo->prepare("INSERT INTO sale_details (id, sale_id, ticket_id, quantity, price) VALUES (?, ?, ?, ?, ?)")
-                        ->execute([uuidv4(), $ventaId, $ticketId, $cantidad, $datos['price']]);
+                        ->execute([$detalleId, $ventaId, $ticketId, $cantidad, $datos['price']]);
 
-                    // CAMBIO F: pagada = confirmed; pendiente = held con vencimiento a 24 h
+                    $insEntry = $pdo->prepare(
+                        'INSERT INTO ticket_entries (sale_detail_id, sale_id, ticket_id, entry_number, seat_code)
+                         VALUES (?, ?, ?, ?, ?)'
+                    );
+                    for ($i = 0; $i < $cantidad; $i++) {
+                        $insEntry->execute([
+                            $detalleId,
+                            $ventaId,
+                            $ticketId,
+                            $i + 1,
+                            $butacas[$i] ?? null,
+                        ]);
+                    }
+
+                    // pagada = confirmed; pendiente = held con el vencimiento de RESERVA_HORAS_EXPIRACION
                     $estadoReserva = $pagadoYa ? 'confirmed' : 'held';
-                    $expiraSql = $pagadoYa ? 'NULL' : 'NOW() + INTERVAL 24 HOUR';
+                    $expiraSql = $pagadoYa ? 'NULL' : 'NOW() + INTERVAL ' . RESERVA_HORAS_EXPIRACION . ' HOUR';
                     $insSeat = $pdo->prepare("INSERT INTO seat_reservations (id, concert_id, ticket_id, sale_id, seat_code, status, expires_at) VALUES (?, ?, ?, ?, ?, ?, $expiraSql)");
                     foreach ($butacas as $codigo) {
                         $insSeat->execute([uuidv4(), $concertId, $ticketId, $ventaId, $codigo, $estadoReserva]);

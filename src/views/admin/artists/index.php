@@ -23,8 +23,8 @@ ob_start();
   <?php endif; ?>
 
   <?php if (!empty($artists)): ?>
-    <div class="table-responsive">
-      <table class="table table-dark align-middle">
+    <div class="table-responsive admin-table-wrap">
+      <table class="table table-dark align-middle admin-table">
         <thead>
           <tr>
             <th>Nombre</th>
@@ -36,10 +36,10 @@ ob_start();
         <tbody>
           <?php foreach ($artists as $artist): ?>
             <tr>
-              <td><?= e($artist['name']) ?></td>
+              <td><span class="admin-table__primary"><?= e($artist['name']) ?></span></td>
               <td><?= e(mb_strimwidth((string) $artist['description'], 0, 80, '…')) ?></td>
               <td><?= e($artist['image']) ?></td>
-              <td class="text-end text-nowrap">
+              <td class="admin-table__actions">
                 <a class="btn btn-sm btn-secondary me-1"
                    href="/src/controllers/admin/artists/form.php?id=<?= urlencode($artist['id']) ?>">Editar</a>
                 <form method="POST" action="/src/controllers/admin/artists/delete.php" class="d-inline"

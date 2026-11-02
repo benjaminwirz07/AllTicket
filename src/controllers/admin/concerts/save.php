@@ -121,12 +121,25 @@ if (empty($aGuardar)) {
     $errors['general'] = 'Cargá al menos un tipo de entrada.';
 }
 
-// Imagen actual (si estamos editando)
+// Estado e imagen actuales (si estamos editando)
 $imagenActual = null;
+$estadoActual = null;
 if ($id !== '') {
-    $stmt = $pdo->prepare('SELECT image FROM concerts WHERE id = :id');
+    $stmt = $pdo->prepare('SELECT image, status FROM concerts WHERE id = :id');
     $stmt->execute(['id' => $id]);
-    $imagenActual = $stmt->fetchColumn() ?: null;
+    $concertActual = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$concertActual) {
+        http_response_code(404);
+        exit('Recital no encontrado');
+    }
+    $imagenActual = $concertActual['image'] ?: null;
+    $estadoActual = $concertActual['status'];
+}
+
+if ($data['status'] === 'cancelled' && $estadoActual !== 'cancelled') {
+    $errors['status'] = 'Usá la acción “Cancelar” de la lista para cancelar el recital y liberar sus pedidos pendientes.';
+} elseif ($estadoActual === 'cancelled' && $data['status'] !== 'cancelled') {
+    $errors['status'] = 'Un recital cancelado no se puede reactivar desde este formulario.';
 }
 
 // Imagen nueva: solo se guarda si todo lo demás es válido,

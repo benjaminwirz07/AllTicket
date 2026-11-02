@@ -6,6 +6,7 @@ requireAdmin($pdo);
 $secciones = [
     ['/src/controllers/admin/concerts/index.php', 'bi-ticket-perforated', 'Recitales', 'Crear, editar y cancelar recitales y sus entradas.'],
     ['/src/controllers/admin/sales/index.php',    'bi-receipt',           'Ventas',    'Compras, estados de pago y entradas vendidas.'],
+    ['/src/controllers/tickets/validate.php',     'bi-qr-code-scan',      'Validar entradas', 'Escanear y marcar cada QR al ingresar.'],
     ['/src/controllers/admin/venues/index.php',   'bi-geo-alt',           'Lugares',   'Estadios, teatros y salas.'],
     ['/src/controllers/admin/artists/index.php',  'bi-mic',               'Artistas',  'Bandas y solistas que dan los recitales.'],
     ['/src/controllers/posts/index.php',          'bi-newspaper',         'Posts',     'Publicaciones y noticias.'],
@@ -17,6 +18,9 @@ ob_start();
     <header class="mb-4">
         <h1 class="h3 fw-bold text-white mb-1">Panel de administración</h1>
         <p class="text-secondary-custom mb-0">Hola, admin. Este es el estado de AllTicket.</p>
+        <p class="small text-secondary-custom mt-2 mb-0">
+            Para validar una entrada, abrí esta opción desde el celular del personal y escaneá el QR con la cámara.
+        </p>
     </header>
 
     <!-- Números -->
@@ -41,7 +45,7 @@ ob_start();
         </div>
         <div class="col-6 col-lg-3">
             <div class="admin-stat">
-                <div class="admin-stat__label">Recaudado</div>
+                <div class="admin-stat__label">Total marcado como pagado (demo)</div>
                 <div class="admin-stat__value admin-stat__value--accent"><?= e(formatPrecio($stats['recaudado'])) ?></div>
             </div>
         </div>

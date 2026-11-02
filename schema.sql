@@ -57,14 +57,23 @@ CREATE TABLE users (
 CREATE TABLE posts (
     id         CHAR(36) NOT NULL DEFAULT (UUID()),
     title      VARCHAR(255) NOT NULL,
+    slug       VARCHAR(255) NOT NULL,
     content    TEXT NOT NULL,
+    summary    TEXT NULL,
+    category   VARCHAR(50) NOT NULL DEFAULT 'AllTicket',
+    image      VARCHAR(255) NULL,
+    reading_minutes SMALLINT UNSIGNED NOT NULL DEFAULT 1,
+    featured   TINYINT(1) NOT NULL DEFAULT 0,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
                ON UPDATE CURRENT_TIMESTAMP,
     user_id    CHAR(36) NOT NULL,
 
     PRIMARY KEY (id),
+    UNIQUE KEY uq_posts_slug (slug),
     KEY idx_posts_user_id (user_id),
+    KEY idx_posts_category_created (category, created_at),
+    KEY idx_posts_featured_created (featured, created_at),
 
     CONSTRAINT fk_posts_user
         FOREIGN KEY (user_id)
@@ -321,7 +330,48 @@ CREATE TABLE seat_reservations (
 ) ENGINE=InnoDB;
 
 -- =====================================================
--- 10. CHATBOT MESSAGES
+-- 10. ENTRADAS DIGITALES Y VALIDACION DE QR
+-- =====================================================
+-- Cada unidad comprada tiene un identificador aleatorio propio.
+-- El QR abre una página protegida para que un administrador
+-- marque la entrada como usada una sola vez.
+-- =====================================================
+
+CREATE TABLE ticket_entries (
+    id              CHAR(36) NOT NULL DEFAULT (UUID()),
+    sale_detail_id  CHAR(36) NOT NULL,
+    sale_id         CHAR(36) NOT NULL,
+    ticket_id       CHAR(36) NOT NULL,
+    entry_number    SMALLINT UNSIGNED NOT NULL,
+    seat_code       VARCHAR(20) NULL,
+    used_at         DATETIME NULL,
+    created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_ticket_entry_number (sale_detail_id, entry_number),
+    KEY idx_ticket_entries_sale (sale_id),
+
+    CONSTRAINT fk_ticket_entries_sale_detail
+        FOREIGN KEY (sale_detail_id)
+        REFERENCES sale_details(id)
+        ON DELETE RESTRICT
+        ON UPDATE RESTRICT,
+
+    CONSTRAINT fk_ticket_entries_sale
+        FOREIGN KEY (sale_id)
+        REFERENCES sales(id)
+        ON DELETE RESTRICT
+        ON UPDATE RESTRICT,
+
+    CONSTRAINT fk_ticket_entries_ticket
+        FOREIGN KEY (ticket_id)
+        REFERENCES tickets(id)
+        ON DELETE RESTRICT
+        ON UPDATE RESTRICT
+) ENGINE=InnoDB;
+
+-- =====================================================
+-- 11. CHATBOT MESSAGES
 -- =====================================================
 CREATE TABLE IF NOT EXISTS chatbot_messages (
     id         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -337,7 +387,7 @@ CREATE TABLE IF NOT EXISTS chatbot_messages (
   COLLATE=utf8mb4_unicode_ci;
 
 -- =====================================================
--- 11. NEWSLETTER SUBSCRIBERS
+-- 12. NEWSLETTER SUBSCRIBERS
 -- =====================================================
 CREATE TABLE IF NOT EXISTS newsletter_subscribers (
     id         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,

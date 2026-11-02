@@ -7,7 +7,7 @@ const IMG_MAX_BYTES = 2 * 1024 * 1024; // 2 MB
  */
 function guardarImagen(array $archivo, string $subcarpeta): ?string
 {
-    if (!in_array($subcarpeta, ['artists', 'concerts'], true)) {
+    if (!in_array($subcarpeta, ['artists', 'concerts', 'news'], true)) {
         throw new InvalidArgumentException('Carpeta de destino no válida.');
     }
     if (!isset($archivo['error']) || $archivo['error'] === UPLOAD_ERR_NO_FILE) {

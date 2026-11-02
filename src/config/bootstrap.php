@@ -27,6 +27,9 @@ if (session_status() === PHP_SESSION_NONE) {
 // Conexión a la base de datos, disponible en todo el proyecto como $pdo
 require_once __DIR__ . '/database.php';
 
+// Reglas de reservas de butacas (vencerReservas, textoButaca)
+require_once __DIR__ . '/reservations.php';
+
 // ============================================================
 // CONTROL DE ACCESO CENTRALIZADO
 // ============================================================
@@ -86,6 +89,17 @@ function url(string $path): string
     }
 
     return $basePath . $normalized;
+}
+
+function absoluteUrl(string $path): string
+{
+    $host = $_SERVER['HTTP_HOST'] ?? '';
+    if (!is_string($host) || preg_match('/\A[a-z0-9.-]+(?::\d{1,5})?\z/i', $host) !== 1) {
+        throw new RuntimeException('No se pudo determinar la dirección del sitio para crear el código QR.');
+    }
+
+    $https = !empty($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS']) !== 'off';
+    return ($https ? 'https://' : 'http://') . $host . url($path);
 }
 
 function redirectTo(string $target): void

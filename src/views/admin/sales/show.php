@@ -9,10 +9,11 @@ $estados = [
     'cancelled' => ['Cancelada', 'secondary'],
 ];
 $metodos = [
-    'mercadopago' => 'Mercado Pago',
-    'tarjeta' => 'Tarjeta de crédito o débito',
-    'transferencia' => 'Transferencia bancaria',
-    'efectivo' => 'Efectivo (Rapipago / Pago Fácil)',
+    'prueba' => 'Pago de prueba',
+    'transferencia' => 'Transferencia simulada',
+    'mercadopago' => 'Mercado Pago (registro anterior de demo)',
+    'tarjeta' => 'Tarjeta (registro anterior de demo)',
+    'efectivo' => 'Efectivo (registro anterior de demo)',
 ];
 [$txtEstado, $colorEstado] = $estados[$sale['status']] ?? [$sale['status'], 'secondary'];
 $nombreCompleto = trim($sale['first_name'] . ' ' . $sale['last_name']);
@@ -33,26 +34,26 @@ ob_start();
         <div class="alert alert-<?= e($flash['type']) ?>" role="alert"><?= e($flash['msg']) ?></div>
     <?php endif; ?>
 
-    <?php if (in_array($sale['status'], ['pending', 'paid'], true)): ?>
+    <?php if ($sale['status'] === 'pending'): ?>
         <div class="d-flex flex-wrap gap-2 mb-4">
-            <?php if ($sale['status'] === 'pending'): ?>
-                <form method="POST" action="/src/controllers/admin/sales/update_status.php"
-                    onsubmit="return confirm('¿Confirmar que se recibió el pago de este pedido?');">
-                    <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
-                    <input type="hidden" name="id" value="<?= e($sale['id']) ?>">
-                    <input type="hidden" name="action" value="confirm">
-                    <button class="btn btn-success rounded-pill px-4" type="submit">Confirmar pago</button>
-                </form>
-            <?php endif; ?>
+            <form method="POST" action="/src/controllers/admin/sales/update_status.php"
+                onsubmit="return confirm('¿Marcar como pagada para simular la confirmación? No se recibió ni se procesó dinero.');">
+                <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
+                <input type="hidden" name="id" value="<?= e($sale['id']) ?>">
+                <input type="hidden" name="action" value="confirm">
+                <button class="btn btn-success rounded-pill px-4" type="submit">Simular confirmación de pago</button>
+            </form>
 
             <form method="POST" action="/src/controllers/admin/sales/update_status.php"
-                onsubmit="return confirm('¿Cancelar esta venta? Se liberan las butacas y se devuelve el stock.');">
+                onsubmit="return confirm('¿Cancelar este pedido pendiente? Se liberan las butacas y se devuelve el stock.');">
                 <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
                 <input type="hidden" name="id" value="<?= e($sale['id']) ?>">
                 <input type="hidden" name="action" value="cancel">
-                <button class="btn btn-danger rounded-pill px-4" type="submit">Cancelar venta</button>
+                <button class="btn btn-danger rounded-pill px-4" type="submit">Cancelar pedido pendiente</button>
             </form>
         </div>
+    <?php elseif ($sale['status'] === 'paid'): ?>
+        <p class="alert alert-info" role="status">Esta compra se confirmó en modo demo. No se procesó ningún cobro y no se puede cancelar desde el panel.</p>
     <?php endif; ?>
 
     <div class="row g-4">

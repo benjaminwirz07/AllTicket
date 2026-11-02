@@ -1,6 +1,17 @@
 DirectoryIndex index.php
 
-<Files .env>
-    Order allow,deny
-    Deny from all
-</Files>
+# Sin listado de carpetas (assets/img, uploads, etc.)
+Options -Indexes
+
+# Bloquea la exposición de archivos de configuración y SQL
+<FilesMatch "^\.env$|\.env\.|\.sql$|\.md$|\.ini$|\.log$">
+    Require all denied
+</FilesMatch>
+
+# Compatibilidad con Apache 2.2 (si el servidor no entiende Require)
+<IfModule !mod_authz_core.c>
+    <FilesMatch "^\.env$|\.env\.|\.sql$|\.md$|\.ini$|\.log$">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>
+</IfModule>
