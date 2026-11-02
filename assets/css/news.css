@@ -9,7 +9,7 @@
     --news-gradient: linear-gradient(110deg, #c026d3, #22d3ee);
     min-height: 72vh;
     padding: clamp(2.5rem, 6vw, 5rem) 0;
-    background: var(--news-bg);
+    background: transparent;
     color: var(--news-text);
     font-family: var(--font-body);
 }
@@ -655,6 +655,10 @@
 .news-page :is(a, button, input):focus-visible {
     outline: 3px solid var(--news-accent);
     outline-offset: 3px;
+}
+
+.news-search input:focus-visible {
+    outline: none;
 }
 
 @media (max-width: 767.98px) {

@@ -221,14 +221,17 @@ if (isAuthenticated()) {
                             autocomplete="off">
 
                             <input type="search" name="q" id="navSearchInput" class="nav-search-input"
-                                placeholder="Buscar artista o evento..." aria-label="Buscar artista o evento">
+                                placeholder="Buscar artista o evento..." aria-label="Buscar artista o evento"
+                                role="combobox" aria-autocomplete="list" aria-haspopup="listbox"
+                                aria-controls="navSearchSuggest" aria-expanded="false">
 
                             <button type="button" class="nav-search-toggle" id="navSearchToggle"
                                 aria-label="Buscar eventos">
                                 <i class="bi bi-search"></i>
                             </button>
 
-                            <div class="nav-search-suggest" id="navSearchSuggest" hidden></div>
+                            <div class="nav-search-suggest" id="navSearchSuggest" role="listbox"
+                                aria-label="Sugerencias de búsqueda" hidden></div>
 
                         </form>
 
@@ -460,36 +463,36 @@ if (isAuthenticated()) {
     </section>
 
     <?php
-    // Nombres de eventos y artistas con recitales próximos para las sugerencias.
-    $nombresEventos = [];
+    // Eventos y artistas con recitales próximos para las sugerencias.
+    $sugerenciasBusqueda = [];
 
     if (isset($pdo)) {
         try {
-            $stmtNombres = $pdo->query(
-                "SELECT nombre
+            $stmtSugerencias = $pdo->query(
+                "SELECT tipo, nombre
                    FROM (
-                       SELECT c.name AS nombre
+                       SELECT 'Evento' AS tipo, c.name AS nombre
                          FROM concerts c
                         WHERE c.status = 'active'
                           AND c.date >= CURDATE()
                        UNION
-                       SELECT a.name AS nombre
+                       SELECT 'Artista' AS tipo, a.name AS nombre
                          FROM artists a
                          JOIN concerts c ON c.artist_id = a.id
                         WHERE c.status = 'active'
                           AND c.date >= CURDATE()
                    ) AS sugerencias
-                  ORDER BY nombre ASC"
+                  ORDER BY nombre ASC, tipo ASC"
             );
-            $nombresEventos = $stmtNombres->fetchAll(PDO::FETCH_COLUMN);
+            $sugerenciasBusqueda = $stmtSugerencias->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            $nombresEventos = [];
+            $sugerenciasBusqueda = [];
         }
     }
     ?>
     <script>
         // Lista que usa nav-search.js
-        var eventosAllticket = <?= json_encode($nombresEventos, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>;
+        var sugerenciasAllticket = <?= json_encode($sugerenciasBusqueda, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>;
     </script>
 
     <script>
