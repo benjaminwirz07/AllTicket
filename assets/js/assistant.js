@@ -44,7 +44,7 @@
             return;
         }
 
-        var response = await fetch('/src/controllers/chatbot/message.php', {
+        var response = await fetch('/src/controllers/assistant/message.php', {
             headers: { Accept: 'application/json' },
             credentials: 'same-origin'
         });
@@ -115,7 +115,7 @@
                 mensaje: message,
                 csrf_token: csrfToken
             });
-            var response = await fetch('/src/controllers/chatbot/message.php', {
+            var response = await fetch('/src/controllers/assistant/message.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',

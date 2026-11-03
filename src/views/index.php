@@ -44,7 +44,8 @@ $categorias = [
     "rock" => "Rock",
     "reggaeton" => "Reggaetón / Trap",
     "pop" => "Pop",
-    "electronica" => "Electrónica"
+    "electronica" => "Electrónica",
+    "cumbia" => "Cumbia"
 ];
 
 // Si escribieron una categoría que no existe, la borramos

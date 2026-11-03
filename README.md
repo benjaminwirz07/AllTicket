@@ -48,6 +48,8 @@ El objetivo es comprender cómo se organiza un proyecto PHP con separación de v
 
 El asistente guarda los mensajes en la tabla `chatbot_messages` (creada por `schema.sql`) y responde preguntas frecuentes sobre eventos, entradas, compras y noticias. Es automático: no es un servicio de inteligencia artificial.
 
+Los archivos y el endpoint públicos del asistente usan rutas con `assistant` en el nombre porque InfinityFree puede bloquear URLs que contienen `chat`. La tabla de la base de datos conserva su nombre y no requiere migración.
+
 ### Newsletter
 
 El formulario guarda las direcciones en `newsletter_subscribers`, pero el proyecto no envía correos ni avisos automáticos.

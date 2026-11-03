@@ -61,7 +61,7 @@ if (isAuthenticated()) {
     ========================================================== -->
     <link rel="stylesheet" href="<?= e(url('/assets/css/global.css')) ?>">
     <link rel="stylesheet" href="<?= e(url('/assets/css/admin.css')) ?>">
-    <link rel="stylesheet" href="<?= e(url('/assets/css/chatbot.css')) ?>">
+    <link rel="stylesheet" href="<?= e(url('/assets/css/assistant.css')) ?>">
     <?php
     // Estilos específicos de la página actual (ej: index.css),
     // definidos por la vista antes de incluir este layout.
@@ -181,6 +181,8 @@ if (isAuthenticated()) {
                                 </li>
                                 <li><a class="dropdown-item"
                                         href="<?= e(url('/src/views/index.php?categoria=electronica#eventos')) ?>">Electrónica</a></li>
+                                <li><a class="dropdown-item"
+                                        href="<?= e(url('/src/views/index.php?categoria=cumbia#eventos')) ?>">Cumbia</a></li>
                             </ul>
 
                         </li>
@@ -439,13 +441,13 @@ if (isAuthenticated()) {
 
     <button id="chatbotLauncher" class="chatbot-launcher" type="button"
         aria-label="Abrir asistente virtual" aria-controls="chatbotPanel" aria-expanded="false">
-        <img src="<?= e(url('/assets/img/chatbot/chat.png')) ?>" alt="">
+        <img src="<?= e(url('/assets/img/assistant/icon.png')) ?>" alt="">
     </button>
 
     <section id="chatbotPanel" class="chatbot-panel" aria-label="Asistente virtual" hidden>
         <header class="chatbot-header">
             <div class="chatbot-header__identity">
-                <img src="<?= e(url('/assets/img/chatbot/chat.png')) ?>" alt="">
+                <img src="<?= e(url('/assets/img/assistant/icon.png')) ?>" alt="">
                 <span>Asistente AllTicket</span>
             </div>
             <button id="chatbotClose" class="chatbot-close" type="button" aria-label="Cerrar asistente">&times;</button>
@@ -522,7 +524,7 @@ if (isAuthenticated()) {
 
     <!-- Buscador del header (lupa + sugerencias) -->
     <script src="<?= e(url('/assets/js/nav-search.js')) ?>" defer></script>
-    <script src="<?= e(url('/assets/js/chatbot.js')) ?>" defer></script>
+    <script src="<?= e(url('/assets/js/assistant.js')) ?>" defer></script>
     <script src="<?= e(url('/assets/js/scroll-reveal.js')) ?>" defer></script>
 
 </body>
