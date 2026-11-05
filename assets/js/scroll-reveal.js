@@ -22,6 +22,7 @@
         return;
     }
 
+    const isMobile = window.matchMedia("(max-width: 767.98px)").matches;
     const observer = new IntersectionObserver((entries, currentObserver) => {
         entries.forEach((entry) => {
             if (entry.isIntersecting) {
@@ -30,13 +31,14 @@
             }
         });
     }, {
-        threshold: 0.12,
-        rootMargin: "0px 0px -40px 0px"
+        threshold: isMobile ? 0.01 : 0.12,
+        rootMargin: isMobile ? "0px 0px 80px 0px" : "0px 0px -40px 0px"
     });
 
     elements.forEach((element, index) => {
         element.classList.add("scroll-reveal");
-        element.style.setProperty("--scroll-reveal-delay", `${(index % 4) * 70}ms`);
+        const delay = (index % 4) * (isMobile ? 25 : 70);
+        element.style.setProperty("--scroll-reveal-delay", `${delay}ms`);
         observer.observe(element);
     });
 })();

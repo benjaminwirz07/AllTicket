@@ -986,6 +986,13 @@ footer::before,
     transform: translateY(0);
 }
 
+@media (max-width: 767.98px) {
+    .scroll-reveal {
+        transform: translateY(20px);
+        transition-duration: .45s;
+    }
+}
+
 
 /* =============================================================
    11. ACCESIBILIDAD
