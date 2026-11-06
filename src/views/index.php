@@ -391,13 +391,13 @@ ob_start();
         <div class="hero-layout container-xl">
             <div class="hero-fullbleed-content hero-fullbleed-content--center">
 
-            <h1 class="hero-title-v2 mb-4">
+            <h1 class="hero-title-v2">
                 <span class="hero-line-1">Momentos inolvidables</span>
                 <br>
                 <span class="hero-line-2"><em>a solo un click.</em></span>
             </h1>
 
-            <p class="lead hero-description mb-4 fs-5">
+            <p class="lead hero-description">
                 Sin reventa, sin filas, sin sorpresas.
                 Comprá tus entradas oficiales para los shows
                 que no te querés perder.
