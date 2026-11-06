@@ -150,10 +150,16 @@ if (isAuthenticated()) {
                         <?php endif; ?>
 
 
-                        <li class="nav-item">
-                            <a class="nav-link" href="<?= e(url('/src/views/index.php#eventos')) ?>">
-                                Eventos & Recitales
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                                aria-expanded="false">
+                                Explorar
                             </a>
+                            <ul class="dropdown-menu dropdown-menu-dark">
+                                <li><a class="dropdown-item" href="<?= e(url('/src/views/index.php#eventos')) ?>">Eventos &amp; Recitales</a></li>
+                                <li><a class="dropdown-item" href="<?= e(url('/src/views/index.php#artistas')) ?>">Artistas destacados</a></li>
+                                <li><a class="dropdown-item" href="<?= e(url('/src/views/index.php#lugares')) ?>">Lugares populares</a></li>
+                            </ul>
                         </li>
 
                         <li class="nav-item">

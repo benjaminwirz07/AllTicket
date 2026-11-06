@@ -1188,7 +1188,7 @@ footer::before,
     }
 }
 
-@media (min-width: 992px) and (max-width: 1099.98px) {
+@media (min-width: 992px) and (max-width: 1199.98px) {
     .navbar-expand-lg .navbar-nav .nav-link {
         padding-right: .22rem;
         padding-left: .22rem;

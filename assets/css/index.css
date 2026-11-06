@@ -120,13 +120,48 @@
   position: relative;
   isolation: isolate;
 
-  min-height: 88vh;
+  min-height: 74vh;
 
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
+  justify-content: flex-start;
 
   overflow: hidden;
+}
+
+.hero-layout {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  padding-block: clamp(6rem, 12vh, 7rem) 2rem;
+}
+
+.hero-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+.hero-trust-prompt {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding-right: 1.5rem;
+  border-right: 1px solid rgba(255, 255, 255, .28);
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 600;
+  line-height: 1.15;
+  text-align: left;
+}
+
+.hero-trust-prompt__icon {
+  flex: 0 0 auto;
+  color: #fff;
+  font-size: 2.8rem;
+  line-height: 1;
 }
 
 .hero-fullbleed-bg {
@@ -207,11 +242,9 @@
   position: relative;
 
   z-index: 10;
-
-  padding-top: 9rem;
-  padding-bottom: 4.5rem;
-
+  width: 100%;
   max-width: 720px;
+  padding: 0;
 }
 
 .hero-fullbleed-content--center {
@@ -272,21 +305,28 @@
 @media (max-width: 991.98px) {
   .hero-fullbleed { min-height: 82vh; }
 
-  .hero-fullbleed-content { padding-top: 7rem; }
+  .hero-layout { padding-top: 7rem; }
 }
 
 @media (max-width: 767.98px) {
   .hero-fullbleed { min-height: 75vh; }
+
+  .hero-layout {
+    padding-top: 6rem;
+    padding-bottom: 2rem;
+  }
+
+  .hero-benefits {
+    margin-bottom: 1.25rem;
+    padding-left: 0;
+    border-left: 0;
+  }
 
   .hero-fullbleed-bg {
     object-position: center 30%;
     animation: none;
   }
 
-  .hero-fullbleed-content {
-    padding-top: 6.5rem;
-    padding-bottom: 3.5rem;
-  }
 }
 
 @media (max-width: 575.98px) {
@@ -296,6 +336,21 @@
 
   .hero-fullbleed-content .d-flex.gap-3 .btn {
     width: 100%;
+  }
+
+  .hero-action-row {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .hero-trust-prompt {
+    padding-right: 0;
+    border-right: 0;
+    font-size: 1rem;
+  }
+
+  .hero-trust-prompt__icon {
+    font-size: 2.2rem;
   }
 }
 

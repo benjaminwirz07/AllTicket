@@ -53,30 +53,6 @@ if ($categoria !== '' && !array_key_exists($categoria, $categorias)) {
     $categoria = '';
 }
 
-// Garantías (sección de confianza)
-$garantias = [
-    [
-        "icono" => "bi-patch-check",
-        "titulo" => "Entradas oficiales",
-        "texto" => "Sin reventa ni sorpresas: comprás tu entrada oficial."
-    ],
-    [
-        "icono" => "bi-shield-lock",
-        "titulo" => "Pago de prueba",
-        "texto" => "La compra se simula; no se realiza ningún cobro ni se piden datos de tarjeta."
-    ],
-    [
-        "icono" => "bi-qr-code",
-        "titulo" => "Entrada en tu celular",
-        "texto" => "Recibís tu ticket con código QR, sin imprimir nada."
-    ],
-    [
-        "icono" => "bi-headset",
-        "titulo" => "Soporte",
-        "texto" => "Escribinos a " . $emailSoporte . " y te ayudamos."
-    ]
-];
-
 // Opciones disponibles en la demostración (no son medios de pago reales).
 $mediosPago = [
     ["icono" => "bi-check-circle", "nombre" => "Pago de prueba", "marca" => "DEMO", "clave" => "visa"],
@@ -332,7 +308,14 @@ try {
 $artistas = [];
 try {
     $stmtArtistas = $pdo->query(
-        "SELECT a.id, a.name, a.image, COUNT(c.id) AS shows
+                "SELECT a.id, a.name, a.image, COUNT(c.id) AS shows,
+                                (SELECT upcoming.id
+                                     FROM concerts upcoming
+                                    WHERE upcoming.artist_id = a.id
+                                        AND upcoming.status = 'active'
+                                        AND upcoming.date >= CURDATE()
+                                    ORDER BY upcoming.date ASC, upcoming.id ASC
+                                    LIMIT 1) AS next_show_id
            FROM artists a
            JOIN concerts c ON c.artist_id = a.id
           WHERE c.status = 'active' AND c.date >= CURDATE()
@@ -403,9 +386,10 @@ ob_start();
         <div class="hero-fullbleed-overlay-bottom" aria-hidden="true"></div>
 
 
-        <!-- CONTENIDO DEL HERO -->
+        <!-- BENEFICIOS Y CONTENIDO DEL HERO -->
 
-        <div class="hero-fullbleed-content hero-fullbleed-content--center container-xl">
+        <div class="hero-layout container-xl">
+            <div class="hero-fullbleed-content hero-fullbleed-content--center">
 
             <h1 class="hero-title-v2 mb-4">
                 <span class="hero-line-1">Momentos inolvidables</span>
@@ -419,49 +403,18 @@ ob_start();
                 que no te querés perder.
             </p>
 
-            <div class="d-flex flex-wrap justify-content-center gap-3 mb-2">
-
+            <div class="hero-action-row">
+                <div id="garantias" class="hero-trust-prompt" role="note">
+                    <i class="bi bi-shield-check hero-trust-prompt__icon" aria-hidden="true"></i>
+                    <span>Comprá con<br>tranquilidad</span>
+                </div>
                 <a href="#eventos"
                     class="btn btn-violet-glow btn-home-gradient btn-lg px-5 rounded-pill d-inline-flex align-items-center">
                     Buscar eventos
                     <i class="bi bi-arrow-right ms-2"></i>
                 </a>
-
             </div>
-
-            <div class="mb-5">
-                <a href="#como-funciona" class="hero-secondary-link">
-                    Cómo funciona
-                </a>
             </div>
-
-            <!-- Estadísticas reales: si todavía no hay datos, no se muestran -->
-            <?php if ($entradasVendidas > 0 || $eventosRealizados > 0): ?>
-                <div class="d-flex flex-wrap justify-content-center gap-4 gap-lg-5">
-
-                    <?php if ($entradasVendidas > 0): ?>
-                        <div>
-                            <div class="hero-stat-value" data-contador="<?= $entradasVendidas ?>" data-sufijo="+">
-                                <?= $entradasVendidas ?>+</div>
-                            <div class="hero-stat-label">
-                                entradas vendidas
-                            </div>
-                        </div>
-                    <?php endif; ?>
-
-                    <?php if ($eventosRealizados > 0): ?>
-                        <div>
-                            <div class="hero-stat-value" data-contador="<?= $eventosRealizados ?>" data-sufijo="+">
-                                <?= $eventosRealizados ?>+</div>
-                            <div class="hero-stat-label">
-                                eventos realizados
-                            </div>
-                        </div>
-                    <?php endif; ?>
-
-                </div>
-            <?php endif; ?>
-
         </div>
 
     </section>
@@ -533,8 +486,14 @@ ob_start();
                             <i class="bi bi-calendar-event me-2" aria-hidden="true"></i>
                             <span data-show-detail-date><?= e(formatFecha($firstShow['date'])) ?></span>
                         </p>
-                        <h3 class="h4 fw-bold text-white mb-1" data-show-detail-artist><?= e($firstShow['artist']) ?></h3>
-                        <p class="text-secondary-custom mb-0" data-show-detail-title><?= e($firstShow['name']) ?></p>
+                        <h3 class="h4 fw-bold text-white mb-1">
+                            <a class="text-white text-decoration-none" href="<?= e(url('/src/views/concerts/show.php?id=' . urlencode($firstShow['id']))) ?>"
+                                data-show-detail-artist><?= e($firstShow['artist']) ?></a>
+                        </h3>
+                        <p class="text-secondary-custom mb-0">
+                            <a class="text-secondary-custom text-decoration-none" href="<?= e(url('/src/views/concerts/show.php?id=' . urlencode($firstShow['id']))) ?>"
+                                data-show-detail-title><?= e($firstShow['name']) ?></a>
+                        </p>
                     </div>
                     <a class="btn btn-violet-glow rounded-pill px-4 upcoming-show-details-link"
                         href="<?= e(url('/src/views/concerts/show.php?id=' . urlencode($firstShow['id']))) ?>"
@@ -569,6 +528,8 @@ ob_start();
                         detailArtist.textContent = activePanel.dataset.showArtist;
                         detailTitle.textContent = activePanel.dataset.showTitle;
                         detailDate.textContent = activePanel.dataset.showDate;
+                        detailArtist.href = activePanel.dataset.showHref;
+                        detailTitle.href = activePanel.dataset.showHref;
                         detailLink.href = activePanel.dataset.showHref;
                     };
 
@@ -809,8 +770,20 @@ ob_start();
                                 <div class="card-body d-flex flex-column p-4 position-relative z-1">
 
                                     <h3 class="h5 card-title fw-bold text-white mb-2">
-                                        <?= e($concert['name']) ?>
+                                        <a href="<?= e(url('/src/views/concerts/show.php?id=' . urlencode($concert['id']))) ?>"
+                                            class="text-white text-decoration-none">
+                                            <?= e($concert['name']) ?>
+                                        </a>
                                     </h3>
+
+                                    <?php if (strcasecmp(trim($concert['artist']), trim($concert['name'])) !== 0): ?>
+                                        <p class="small fw-semibold text-white mb-2">
+                                            <a href="<?= e(url('/src/views/concerts/show.php?id=' . urlencode($concert['id']))) ?>"
+                                                class="text-white text-decoration-none">
+                                                <?= e($concert['artist']) ?>
+                                            </a>
+                                        </p>
+                                    <?php endif; ?>
 
                                     <p class="text-secondary-custom small mb-2">
                                         <i class="bi bi-geo-alt me-1 text-primary-neon"></i>
@@ -840,7 +813,7 @@ ob_start();
                                         </span>
 
                                         <a href="<?= e(url('/src/views/concerts/show.php?id=' . urlencode($concert['id']))) ?>"
-                                            class="btn btn-sm btn-outline-violet rounded-pill px-3 stretched-link">
+                                            class="btn btn-sm btn-outline-violet rounded-pill px-3">
                                             <?= $agotado || $concert['min_price'] === null ? 'Ver detalle' : 'Ver entradas' ?>
                                         </a>
 
@@ -924,9 +897,9 @@ ob_start();
                 <div class="row g-4 justify-content-center">
                     <?php foreach ($artistas as $artista): ?>
                         <div class="col-6 col-md-3 text-center">
-                            <a href="<?= e(armarLink($artista['name'], '', '')) ?>"
-                                class="text-decoration-none d-block">
-
+                            <div>
+                                <a href="<?= e(armarLink($artista['name'], '', '')) ?>"
+                                    class="text-decoration-none d-block">
                                 <div class="ratio ratio-1x1 rounded-circle overflow-hidden mx-auto mb-3 border border-secondary-subtle featured-artist-image">
                                     <?php if (!empty($artista['image'])): ?>
                                         <img src="/<?= e($artista['image']) ?>" alt="<?= e($artista['name']) ?>"
@@ -937,13 +910,18 @@ ob_start();
                                         </span>
                                     <?php endif; ?>
                                 </div>
+                                </a>
 
-                                <h3 class="h6 fw-bold text-white mb-1"><?= e($artista['name']) ?></h3>
+                                <h3 class="h6 fw-bold text-white mb-1">
+                                    <a class="text-white text-decoration-none"
+                                        href="<?= e(url('/src/views/concerts/show.php?id=' . urlencode($artista['next_show_id']))) ?>">
+                                        <?= e($artista['name']) ?>
+                                    </a>
+                                </h3>
                                 <p class="small text-secondary-custom mb-0">
                                     <?= (int) $artista['shows'] === 1 ? '1 show' : (int) $artista['shows'] . ' shows' ?>
                                 </p>
-
-                            </a>
+                            </div>
                         </div>
                     <?php endforeach; ?>
                 </div>
@@ -1091,57 +1069,13 @@ ob_start();
 
 
     <!-- =====================================================
-         GARANTÍAS + MEDIOS DE PAGO
+         MEDIOS DE PAGO
     ====================================================== -->
 
-    <section id="garantias" class="py-5 home-section-divider">
-
+    <section id="medios-de-pago" class="py-5 home-section-divider">
         <div class="container-xl">
-
-            <div class="text-center max-w-2xl mx-auto mb-5">
-
-                <h2 class="h3 fw-bold text-white mb-2">
-                    Comprá con tranquilidad
-                </h2>
-
-                <p class="text-secondary-custom">
-                    Todo lo que necesitás para ir al show sin preocupaciones
-                </p>
-
-            </div>
-
-            <div class="row g-4">
-
-                <?php foreach ($garantias as $garantia): ?>
-
-                    <div class="col-12 col-sm-6 col-lg-3">
-
-                        <div
-                            class="step-card p-4 rounded-4 text-center h-100 border border-secondary-subtle position-relative">
-
-                            <div class="step-icon mb-3 fs-2 text-violet-neon">
-                                <i class="bi <?= e($garantia['icono']) ?>"></i>
-                            </div>
-
-                            <h3 class="h5 text-white fw-semibold mb-2">
-                                <?= e($garantia['titulo']) ?>
-                            </h3>
-
-                            <p class="small text-secondary-custom mb-0">
-                                <?= e($garantia['texto']) ?>
-                            </p>
-
-                        </div>
-
-                    </div>
-
-                <?php endforeach; ?>
-
-            </div>
-
-            <!-- Medios de pago -->
             <?php if (!empty($mediosPago)): ?>
-                <div class="payment-methods mt-5" aria-labelledby="payment-methods-title">
+                <div class="payment-methods" aria-labelledby="payment-methods-title">
                     <div class="text-center mb-4">
                         <h3 id="payment-methods-title" class="h5 fw-semibold text-white mb-1">Opciones de pago de la demo</h3>
                         <p class="small text-secondary-custom mb-0">Estas opciones solo simulan el pago: no se cobra dinero</p>
@@ -1177,9 +1111,7 @@ ob_start();
                     </div>
                 </div>
             <?php endif; ?>
-
         </div>
-
     </section>
 
     <!-- =====================================================
