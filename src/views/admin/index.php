@@ -15,13 +15,16 @@ ob_start();
 ?>
 
 <main class="container-xl py-5 text-light">
-    <header class="mb-4">
-        <h1 class="h3 fw-bold text-white mb-1">Panel de administración</h1>
-        <p class="text-secondary-custom mb-0">Hola, admin. Este es el estado de AllTicket.</p>
-        <p class="small text-secondary-custom mt-2 mb-0">
-            Para validar una entrada, abrí esta opción desde el celular del personal y escaneá el QR con la cámara.
-        </p>
+    <header class="admin-page-header mb-4">
+        <div>
+            <p class="admin-page-kicker mb-1">ALLTICKET</p>
+            <h1 class="h3 fw-bold text-white mb-1">Panel de administración</h1>
+            <p class="admin-page-description mb-0">Hola, admin. Este es el estado de AllTicket.</p>
+        </div>
     </header>
+    <p class="small text-secondary-custom mt-2 mb-4">
+            Para validar una entrada, abrí esta opción desde el celular del personal y escaneá el QR con la cámara.
+    </p>
 
     <!-- Números -->
     <div class="row g-3 mb-5">

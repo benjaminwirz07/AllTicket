@@ -397,16 +397,38 @@ ob_start();
                 <span class="hero-line-2"><em>a solo un click.</em></span>
             </h1>
 
-            <p class="lead hero-description">
-                Sin reventa, sin filas, sin sorpresas.
-                Comprá tus entradas oficiales para los shows
-                que no te querés perder.
-            </p>
-
             <div class="hero-action-row">
                 <div id="garantias" class="hero-trust-prompt" role="note">
-                    <i class="bi bi-shield-check hero-trust-prompt__icon" aria-hidden="true"></i>
-                    <span>Comprá con<br>tranquilidad</span>
+                    <div class="hero-trust-rotator trust-benefits-rotator" data-benefit-rotator aria-label="Beneficios de AllTicket">
+                        <article class="trust-benefit-slide is-active" aria-hidden="false">
+                            <i class="bi bi-patch-check-fill trust-benefit-icon" aria-hidden="true"></i>
+                            <div class="trust-benefit-copy">
+                                <h2 class="trust-benefit-title">Entradas oficiales</h2>
+                                <p class="trust-benefit-description">Sin reventa ni sorpresas: comprás tu entrada oficial.</p>
+                            </div>
+                        </article>
+                        <article class="trust-benefit-slide" aria-hidden="true">
+                            <i class="bi bi-shield-lock-fill trust-benefit-icon" aria-hidden="true"></i>
+                            <div class="trust-benefit-copy">
+                                <h2 class="trust-benefit-title">Pago de prueba</h2>
+                                <p class="trust-benefit-description">La compra se simula; no se realiza ningún cobro ni se piden datos de tarjeta.</p>
+                            </div>
+                        </article>
+                        <article class="trust-benefit-slide" aria-hidden="true">
+                            <i class="bi bi-qr-code trust-benefit-icon" aria-hidden="true"></i>
+                            <div class="trust-benefit-copy">
+                                <h2 class="trust-benefit-title">Entrada en tu celular</h2>
+                                <p class="trust-benefit-description">Recibís tu ticket con código QR, sin imprimir nada.</p>
+                            </div>
+                        </article>
+                        <article class="trust-benefit-slide" aria-hidden="true">
+                            <i class="bi bi-headset trust-benefit-icon" aria-hidden="true"></i>
+                            <div class="trust-benefit-copy">
+                                <h2 class="trust-benefit-title">Soporte</h2>
+                                <p class="trust-benefit-description">Escribinos a soporte@allticket.com y te ayudamos.</p>
+                            </div>
+                        </article>
+                    </div>
                 </div>
                 <a href="#eventos"
                     class="btn btn-violet-glow btn-home-gradient btn-lg px-5 rounded-pill d-inline-flex align-items-center">
@@ -414,11 +436,16 @@ ob_start();
                     <i class="bi bi-arrow-right ms-2"></i>
                 </a>
             </div>
+            <div class="hero-stat mt-4" aria-label="Entradas vendidas">
+                <div class="hero-stat-value" data-contador="<?= $entradasVendidas ?>" data-sufijo="+">
+                    <?= $entradasVendidas ?>+
+                </div>
+                <div class="hero-stat-label">entradas vendidas</div>
+            </div>
             </div>
         </div>
 
     </section>
-
 
     <!-- =====================================================
          PRÓXIMOS SHOWS (carrusel)

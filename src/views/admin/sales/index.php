@@ -19,57 +19,23 @@ ob_start();
 ?>
 
 <main class="container-xl py-5 text-light">
-    <header class="mb-4">
-        <h1 class="h3 fw-bold text-white">Ventas</h1>
-        <p class="text-secondary-custom mb-0">
-            <a href="/src/controllers/admin/index.php">&larr; Volver al panel</a>
-        </p>
+    <header class="admin-page-header mb-4">
+        <div>
+            <p class="admin-page-kicker mb-1">ADMINISTRACIÓN</p>
+            <h1 class="h3 fw-bold text-white mb-1">Ventas</h1>
+            <p class="admin-page-description mb-0">Resumen y compras organizados por recital.</p>
+        </div>
+        <a class="btn btn-sm btn-outline-secondary rounded-pill" href="/src/controllers/admin/index.php">
+            <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Panel
+        </a>
     </header>
 
     <?php if (!empty($flash)): ?>
         <div class="alert alert-<?= e($flash['type']) ?>" role="alert"><?= e($flash['msg']) ?></div>
     <?php endif; ?>
-    <!-- Resumen por recital -->
-    <h2 class="h5 text-white mb-3">Resumen por recital</h2>
-    <?php if (!empty($resumen)): ?>
-        <div class="table-responsive admin-table-wrap mb-5">
-            <table class="table table-dark align-middle admin-table">
-                <thead>
-                    <tr>
-                        <th>Recital</th>
-                        <th>Fecha</th>
-                        <th class="text-end">Vendidas</th>
-                        <th class="text-end">Pendientes</th>
-                        <th class="text-end">Stock total</th>
-                        <th class="text-end">Total marcado como pagado (demo)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($resumen as $r): ?>
-                        <tr>
-                            <td><?= e($r['name']) ?></td>
-                            <td><?= e(formatFecha($r['date'], $r['time'])) ?></td>
-                            <td class="text-end"><?= (int) $r['vendidas'] ?></td>
-                            <td class="text-end"><?= (int) $r['pendientes'] ?></td>
-                            <td class="text-end"><?= (int) $r['stock'] ?></td>
-                            <td class="text-end"><?= e(formatPrecio($r['recaudado'])) ?></td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-        <p class="small text-secondary-custom mb-5">
-            "Vendidas" y el total marcado como pagado son datos de demostración, no cobros reales.
-            "Pendientes" son compras que esperan la confirmación simulada y se liberan solas a las 24 hs.
-        </p>
-    <?php else: ?>
-        <p class="text-secondary-custom mb-5">No hay recitales cargados.</p>
-    <?php endif; ?>
-
-    <!-- Listado de ventas -->
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-        <h2 class="h5 text-white mb-0">Compras</h2>
-        <nav class="d-flex gap-2">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+        <h2 class="h5 text-white mb-0">Resumen por recital</h2>
+        <nav class="d-flex flex-wrap gap-2" aria-label="Filtrar compras por estado">
             <a class="btn btn-sm <?= $filtro === '' ? 'btn-violet-glow' : 'btn-outline-secondary' ?> rounded-pill"
                 href="/src/controllers/admin/sales/index.php">Todas</a>
             <?php foreach ($estados as $clave => [$nombre]): ?>
@@ -79,49 +45,82 @@ ob_start();
         </nav>
     </div>
 
-    <?php if (!empty($sales)): ?>
-        <div class="table-responsive admin-table-wrap">
-            <table class="table table-dark align-middle admin-table admin-table--sales">
-                <thead>
-                    <tr>
-                        <th>Pedido</th>
-                        <th>Fecha</th>
-                        <th>Usuario</th>
-                        <th>Recital</th>
-                        <th class="text-end">Entradas</th>
-                        <th class="text-end">Total</th>
-                        <th>Pago</th>
-                        <th>Estado</th>
-                        <th class="text-end"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($sales as $s): ?>
-                        <?php [$txtEstado, $colorEstado] = $estados[$s['status']] ?? [$s['status'], 'secondary']; ?>
-                        <tr>
-                            <td><strong class="admin-table__primary"><?= e(strtoupper(substr($s['id'], 0, 8))) ?></strong></td>
-                            <td class="text-nowrap"><?= e($s['sale_date']) ?></td>
-                            <td>
-                                <?= e($s['usuario']) ?><br>
-                                <small class="text-secondary-custom"><?= e($s['email']) ?></small>
-                            </td>
-                            <td><?= e($s['recitales']) ?></td>
-                            <td class="text-end"><?= (int) $s['cantidad'] ?></td>
-                            <td class="text-end"><?= e(formatPrecio($s['total'])) ?></td>
-                            <td><?= e($metodos[$s['payment_method']] ?? ($s['payment_method'] ?? '-')) ?></td>
-                            <td><span class="badge text-bg-<?= e($colorEstado) ?>"><?= e($txtEstado) ?></span></td>
-                            <td class="admin-table__actions">
-                                <a class="btn btn-sm btn-secondary"
-                                    href="/src/controllers/admin/sales/show.php?id=<?= urlencode($s['id']) ?>">Ver</a>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+    <?php if (!empty($resumen)): ?>
+        <div class="sales-concert-list mb-4">
+            <?php foreach ($resumen as $r): ?>
+                <?php
+                $collapseId = 'compras-recital-' . str_replace('-', '', $r['id']);
+                $compras = $comprasPorRecital[$r['id']] ?? [];
+                ?>
+                <article class="sales-concert">
+                    <button class="sales-concert-toggle collapsed" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#<?= e($collapseId) ?>" aria-expanded="false"
+                        aria-controls="<?= e($collapseId) ?>">
+                        <span class="sales-concert-heading">
+                            <strong><?= e($r['name']) ?></strong>
+                            <span class="sales-concert-meta">
+                                <small><?= e(formatFecha($r['date'], $r['time'])) ?></small>
+                                <span class="sales-concert-count">
+                                    <i class="bi bi-receipt" aria-hidden="true"></i>
+                                    <?= count($compras) ?> <?= count($compras) === 1 ? 'compra' : 'compras' ?>
+                                </span>
+                            </span>
+                        </span>
+                        <span class="sales-concert-metrics">
+                            <span class="sales-concert-metric">
+                                <strong><?= (int) $r['vendidas'] ?></strong><small>Vendidas</small>
+                            </span>
+                            <span class="sales-concert-metric">
+                                <strong><?= (int) $r['pendientes'] ?></strong><small>Pendientes</small>
+                            </span>
+                            <span class="sales-concert-metric">
+                                <strong><?= number_format((int) $r['stock'], 0, ',', '.') ?></strong><small>Stock total</small>
+                            </span>
+                            <span class="sales-concert-metric sales-concert-metric--amount">
+                                <strong><?= e(formatPrecio($r['recaudado'])) ?></strong><small>Pagado (demo)</small>
+                            </span>
+                        </span>
+                        <i class="bi bi-chevron-down sales-concert-chevron" aria-hidden="true"></i>
+                    </button>
+
+                    <div class="collapse" id="<?= e($collapseId) ?>">
+                        <div class="sales-concert-purchases">
+                            <?php if (!empty($compras)): ?>
+                                <?php foreach ($compras as $compra): ?>
+                                    <?php [$txtEstado, $colorEstado] = $estados[$compra['status']] ?? [$compra['status'], 'secondary']; ?>
+                                    <article class="sales-purchase">
+                                        <div class="sales-purchase-order">
+                                            <strong>Pedido <?= e(strtoupper(substr($compra['id'], 0, 8))) ?></strong>
+                                            <small><?= e($compra['sale_date']) ?></small>
+                                        </div>
+                                        <div class="sales-purchase-customer">
+                                            <strong><?= e($compra['usuario']) ?></strong>
+                                            <small><?= e($compra['email']) ?></small>
+                                        </div>
+                                        <div class="sales-purchase-facts">
+                                            <span><small>Entradas</small><strong><?= (int) $compra['cantidad'] ?></strong></span>
+                                            <span><small>Importe recital</small><strong><?= e(formatPrecio($compra['subtotal'])) ?></strong></span>
+                                            <span><small>Pago</small><strong><?= e($metodos[$compra['payment_method']] ?? ($compra['payment_method'] ?? '-')) ?></strong></span>
+                                            <span><small>Estado</small><span class="badge text-bg-<?= e($colorEstado) ?>"><?= e($txtEstado) ?></span></span>
+                                        </div>
+                                        <a class="btn btn-sm btn-secondary sales-purchase-action"
+                                            href="/src/controllers/admin/sales/show.php?id=<?= urlencode($compra['id']) ?>">Ver compra</a>
+                                    </article>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <p class="small text-secondary-custom mb-0">No hay compras para este recital con el filtro seleccionado.</p>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </article>
+            <?php endforeach; ?>
         </div>
-        <p class="small text-secondary-custom">Se muestran las 200 compras más recientes.</p>
+        <p class="small text-secondary-custom mb-5">
+            "Vendidas" y el total marcado como pagado son datos de demostración, no cobros reales.
+            "Pendientes" son compras que esperan la confirmación simulada y se liberan solas a las 24 hs.
+        </p>
     <?php else: ?>
-        <p class="text-secondary-custom">No hay compras para mostrar.</p>
+        <p class="text-secondary-custom mb-5">No hay recitales cargados.</p>
     <?php endif; ?>
 </main>
 

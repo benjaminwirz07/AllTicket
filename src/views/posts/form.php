@@ -14,12 +14,18 @@ ob_start();
       <?= e($flash['msg']) ?>
     </div>
   <?php endif; ?>
-  <header class="mb-4">
-    <h1 class="h3 fw-bold text-white"><?= $post ? 'Editar Post' : 'Crear Post' ?></h1>
-    <p class="text-secondary-custom">Completá el formulario</p>
+  <header class="admin-page-header mb-4">
+    <div>
+      <p class="admin-page-kicker mb-1">CONTENIDO</p>
+      <h1 class="h3 fw-bold text-white mb-1"><?= $post ? 'Editar post' : 'Crear post' ?></h1>
+      <p class="admin-page-description mb-0">Completá los datos de la publicación.</p>
+    </div>
+    <a class="btn btn-sm btn-outline-secondary rounded-pill" href="/src/controllers/posts/index.php">
+      <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Posts
+    </a>
   </header>
 
-  <form method="POST" enctype="multipart/form-data"
+  <form class="admin-form-panel" method="POST" enctype="multipart/form-data"
         action="<?= e(url($post ? '/src/controllers/posts/update.php' : '/src/controllers/posts/store.php')) ?>">
     <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
     <?php if ($post): ?>

@@ -159,11 +159,131 @@
   text-align: left;
 }
 
-.hero-trust-prompt__icon {
+.trust-benefits-rotator {
+  display: grid;
+  width: 13rem;
+  text-align: left;
+}
+
+.trust-benefit-slide {
+  grid-area: 1 / 1;
+  display: flex;
+  align-self: center;
+  align-items: center;
+  gap: .75rem;
+  visibility: hidden;
+  transition: visibility 0s linear .55s;
+}
+
+.trust-benefit-slide.is-active {
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+.trust-benefit-icon,
+.trust-benefit-title,
+.trust-benefit-description {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity .55s var(--ease-premium), transform .55s var(--ease-premium);
+}
+
+.trust-benefit-icon {
   flex: 0 0 auto;
-  color: #fff;
-  font-size: 2.8rem;
+  color: #c8a9ff;
+  font-size: 2rem;
   line-height: 1;
+}
+
+.trust-benefit-copy {
+  min-width: 0;
+}
+
+.trust-benefit-title {
+  margin-bottom: .35rem;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: inherit;
+  font-weight: 600;
+  line-height: 1.15;
+  transform: translateY(18px);
+}
+
+.trust-benefit-description {
+  margin-bottom: 0;
+  color: rgba(255, 255, 255, .76);
+  font-size: .75rem;
+  line-height: 1.3;
+}
+
+.trust-benefit-slide.is-active .trust-benefit-icon,
+.trust-benefit-slide.is-active .trust-benefit-title,
+.trust-benefit-slide.is-active .trust-benefit-description {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.trust-benefit-slide.is-active .trust-benefit-description {
+  transition-delay: 100ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trust-benefit-icon,
+  .trust-benefit-title,
+  .trust-benefit-description {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .hero-trust-prompt {
+    width: 100%;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    backdrop-filter: none;
+  }
+
+  .hero-trust-rotator {
+    width: 100%;
+    min-height: 8rem;
+    text-align: center;
+  }
+
+  .trust-benefit-slide {
+    flex-direction: column;
+    gap: .5rem;
+  }
+
+  .trust-benefit-icon {
+    font-size: 1.65rem;
+  }
+
+  .trust-benefit-copy {
+    width: 100%;
+    max-width: 19rem;
+  }
+
+  .trust-benefit-title {
+    margin-bottom: .35rem;
+    font-size: 1rem;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, .8);
+  }
+
+  .trust-benefit-description {
+    color: rgba(255, 255, 255, .88);
+    font-size: .8rem;
+    line-height: 1.45;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, .9);
+  }
+
+  .hero-trust-rotator .trust-benefit-description {
+    font-size: .8rem;
+  }
 }
 
 .hero-fullbleed-bg {
@@ -343,6 +463,10 @@
 }
 
 @media (max-width: 575.98px) {
+  .hero-fullbleed {
+    min-height: 38rem;
+  }
+
   .hero-layout {
     padding-top: 7rem;
   }
@@ -361,13 +485,18 @@
   }
 
   .hero-trust-prompt {
+    order: 2;
     padding-right: 0;
     border-right: 0;
     font-size: 1rem;
   }
 
-  .hero-trust-prompt__icon {
-    font-size: 2.2rem;
+  .hero-action-row > .btn {
+    order: 1;
+  }
+
+  .trust-benefit-icon {
+    font-size: 1.8rem;
   }
 }
 

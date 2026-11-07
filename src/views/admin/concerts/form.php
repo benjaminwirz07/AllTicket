@@ -16,8 +16,15 @@ ob_start();
 ?>
 
 <main class="container-xl py-5 text-light">
-    <header class="mb-4">
-        <h1 class="h3 fw-bold text-white"><?= $editando ? 'Editar recital' : 'Nuevo recital' ?></h1>
+    <header class="admin-page-header mb-4">
+        <div>
+            <p class="admin-page-kicker mb-1">PROGRAMACIÓN</p>
+            <h1 class="h3 fw-bold text-white mb-1"><?= $editando ? 'Editar recital' : 'Nuevo recital' ?></h1>
+            <p class="admin-page-description mb-0">Configurá el evento y sus opciones de entrada.</p>
+        </div>
+        <a class="btn btn-sm btn-outline-secondary rounded-pill" href="/src/controllers/admin/concerts/index.php">
+            <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Recitales
+        </a>
     </header>
 
     <?php if (empty($artists) || empty($venues)): ?>
@@ -28,7 +35,7 @@ ob_start();
         </div>
     <?php endif; ?>
 
-    <form method="POST" action="/src/controllers/admin/concerts/save.php" enctype="multipart/form-data" style="max-width: 720px;">
+    <form class="admin-form-panel" method="POST" action="/src/controllers/admin/concerts/save.php" enctype="multipart/form-data">
         <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
         <?php if ($editando): ?>
             <input type="hidden" name="id" value="<?= e($concert['id']) ?>">

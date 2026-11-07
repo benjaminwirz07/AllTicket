@@ -10,12 +10,19 @@ ob_start();
 ?>
 
 <main class="container-xl py-5 text-light">
-    <header class="mb-4">
-        <h1 class="h3 fw-bold text-white"><?= $editando ? 'Editar artista' : 'Nuevo artista' ?></h1>
+    <header class="admin-page-header mb-4">
+        <div>
+            <p class="admin-page-kicker mb-1">ARTISTAS</p>
+            <h1 class="h3 fw-bold text-white mb-1"><?= $editando ? 'Editar artista' : 'Nuevo artista' ?></h1>
+            <p class="admin-page-description mb-0">Completá la información del artista.</p>
+        </div>
+        <a class="btn btn-sm btn-outline-secondary rounded-pill" href="/src/controllers/admin/artists/index.php">
+            <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Artistas
+        </a>
     </header>
 
-    <form method="POST" action="/src/controllers/admin/artists/save.php" enctype="multipart/form-data"
-        style="max-width: 640px;">
+    <form class="admin-form-panel admin-form-panel--narrow" method="POST"
+        action="/src/controllers/admin/artists/save.php" enctype="multipart/form-data">
         <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
         <?php if ($editando): ?>
             <input type="hidden" name="id" value="<?= e($artist['id']) ?>">

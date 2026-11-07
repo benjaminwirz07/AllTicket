@@ -13,12 +13,17 @@ ob_start();
 
 <main class="container-xl py-5 text-light">
     <div class="mx-auto" style="max-width: 640px;">
-        <header class="mb-4">
-            <p class="small text-uppercase text-violet-neon mb-2">Control de acceso</p>
-            <h1 class="h3 fw-bold text-white">Validar entrada</h1>
-            <p class="text-secondary-custom mb-0">
+        <header class="admin-page-header mb-4">
+            <div>
+                <p class="admin-page-kicker mb-1">CONTROL DE ACCESO</p>
+                <h1 class="h3 fw-bold text-white mb-1">Validar entrada</h1>
+                <p class="admin-page-description mb-0">
                 Escaneá el QR con la cámara del celular. Antes de permitir el ingreso, comprobá los datos y tocá “Marcar como ingresada”.
-            </p>
+                </p>
+            </div>
+            <a class="btn btn-sm btn-outline-secondary rounded-pill" href="/src/controllers/admin/index.php">
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Panel
+            </a>
         </header>
 
         <?php if ($entryId === ''): ?>

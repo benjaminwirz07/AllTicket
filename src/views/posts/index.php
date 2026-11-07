@@ -6,15 +6,23 @@ ob_start();
 ?>
 
 <main class="container-xl py-5 text-light">
-  <header class="row mb-4">
-    <div class="col">
-      <h1 class="h3 fw-bold text-white">Listado de posts</h1>
-      <p class="text-secondary-custom">Aquí puedes ver todos los posts publicados</p>
+  <header class="admin-page-header mb-4">
+    <div>
+      <p class="admin-page-kicker mb-1">CONTENIDO</p>
+      <h1 class="h3 fw-bold text-white mb-1">Posts</h1>
+      <p class="admin-page-description mb-0">Gestioná las publicaciones del sitio.</p>
     </div>
     <?php if (isAdmin()): ?>
-      <div class="col d-flex justify-content-end align-items-center">
+      <div class="d-flex flex-wrap align-items-center gap-2">
+        <a class="btn btn-sm btn-outline-secondary rounded-pill" href="/src/controllers/admin/index.php">
+          <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Panel
+        </a>
         <a class="btn btn-violet-glow rounded-pill px-4" href="/src/controllers/posts/form.php">Crear Post</a>
       </div>
+    <?php else: ?>
+      <a class="btn btn-sm btn-outline-secondary rounded-pill" href="/src/controllers/admin/index.php">
+        <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Panel
+      </a>
     <?php endif; ?>
   </header>
 

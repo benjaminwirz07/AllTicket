@@ -21,14 +21,18 @@ ob_start();
 ?>
 
 <main class="container-xl py-5 text-light">
-    <header class="mb-4">
-        <h1 class="h3 fw-bold text-white">
-            Pedido <?= e(strtoupper(substr($sale['id'], 0, 8))) ?>
-            <span class="badge text-bg-<?= e($colorEstado) ?> fs-6 align-middle ms-2"><?= e($txtEstado) ?></span>
-        </h1>
-        <p class="text-secondary-custom mb-0">
-            <a href="/src/controllers/admin/sales/index.php">&larr; Volver a ventas</a>
-        </p>
+    <header class="admin-page-header mb-4">
+        <div>
+            <p class="admin-page-kicker mb-1">VENTAS / DETALLE</p>
+            <h1 class="h3 fw-bold text-white mb-1">
+                Pedido <?= e(strtoupper(substr($sale['id'], 0, 8))) ?>
+                <span class="badge text-bg-<?= e($colorEstado) ?> fs-6 align-middle ms-2"><?= e($txtEstado) ?></span>
+            </h1>
+            <p class="admin-page-description mb-0">Datos de la compra y del comprador.</p>
+        </div>
+        <a class="btn btn-sm btn-outline-secondary rounded-pill" href="/src/controllers/admin/sales/index.php">
+            <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Ventas
+        </a>
     </header>
     <?php if (!empty($flash)): ?>
         <div class="alert alert-<?= e($flash['type']) ?>" role="alert"><?= e($flash['msg']) ?></div>

@@ -10,27 +10,29 @@ if (!in_array($filtro, $estadosValidos, true)) {
 }
 
 try {
-    // Ventas (las 200 más recientes)
-    $sql = "SELECT s.id, s.sale_date, s.total, s.status, s.payment_method,
+    // Compras agrupadas por recital para desplegarlas dentro de su resumen.
+    $sql = "SELECT c.id AS recital_id, s.id, s.sale_date, s.status, s.payment_method,
                    u.usuario, u.email,
-                   GROUP_CONCAT(DISTINCT c.name SEPARATOR ', ') AS recitales,
-                   COALESCE(SUM(d.quantity), 0) AS cantidad
+                   SUM(d.quantity) AS cantidad,
+                   SUM(d.quantity * d.price) AS subtotal
               FROM sales s
               JOIN users u ON u.id = s.user_id
-              LEFT JOIN sale_details d ON d.sale_id = s.id
-              LEFT JOIN tickets t ON t.id = d.ticket_id
-              LEFT JOIN concerts c ON c.id = t.concert_id";
+              JOIN sale_details d ON d.sale_id = s.id
+              JOIN tickets t ON t.id = d.ticket_id
+              JOIN concerts c ON c.id = t.concert_id";
     $params = [];
     if ($filtro !== '') {
         $sql .= " WHERE s.status = :status";
         $params['status'] = $filtro;
     }
-    $sql .= " GROUP BY s.id, s.sale_date, s.total, s.status, s.payment_method, u.usuario, u.email
-              ORDER BY s.sale_date DESC
-              LIMIT 200";
+    $sql .= " GROUP BY c.id, s.id, s.sale_date, s.status, s.payment_method, u.usuario, u.email
+              ORDER BY s.sale_date DESC";
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
-    $sales = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $comprasPorRecital = [];
+    foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $compra) {
+        $comprasPorRecital[$compra['recital_id']][] = $compra;
+    }
 
     // Resumen por recital
     $resumen = $pdo->query(
