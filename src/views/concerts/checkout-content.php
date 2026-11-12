@@ -32,14 +32,16 @@ ob_start();
     <?php } elseif ($vista === 'listo') { ?>
         <?php
         $pagada = ($venta['status'] === 'paid');
-        $nombreMetodo = $metodos[$venta['payment_method']]['nombre'] ?? $venta['payment_method'];
+        $nombreMetodo = $metodos[$venta['payment_method']]['nombre'] ?? ($venta['payment_method'] ?? '—');
         ?>
         <div class="mx-auto" style="max-width: 640px;">
             <div class="text-center mb-4">
-                <i class="bi <?= $pagada ? 'bi-check-circle' : 'bi-hourglass-split' ?> fs-1 <?= $pagada ? 'text-success' : 'text-warning' ?>"></i>
-                <h1 class="h3 text-white fw-bold mt-3"><?= $pagada ? '¡Compra confirmada!' : 'Compra registrada: pago pendiente' ?></h1>
+                <i class="bi <?= $pagada ? 'bi-check-circle' : 'bi-x-circle' ?> fs-1 <?= $pagada ? 'text-success' : 'text-secondary' ?>"></i>
+                <h1 class="h3 text-white fw-bold mt-3"><?= $pagada ? '¡Compra confirmada!' : 'Compra cancelada' ?></h1>
                 <?php if ($pagada) { ?>
                     <p class="small text-warning">Pago de prueba: no se realizó ningún cobro real.</p>
+                <?php } else { ?>
+                    <p class="small text-secondary-custom">Esta compra fue cancelada y sus entradas no son válidas.</p>
                 <?php } ?>
                 <p class="text-secondary-custom mb-0">Número de pedido: <strong class="text-white"><?= e(strtoupper(substr($venta['id'], 0, 8))) ?></strong></p>
             </div>
@@ -102,21 +104,8 @@ ob_start();
                     <p class="small text-secondary-custom mt-3">
                         También podés volver a verlas en <a href="<?= e(url('/src/controllers/tickets/index.php')) ?>">Mis entradas</a>.
                     </p>
-                <?php } elseif (!$pagada) { ?>
-                    <p class="alert alert-warning small mt-3 mb-0" role="status">
-                        El QR estará disponible cuando se confirme el pago.
-                    </p>
                 <?php } ?>
             </div>
-            <?php if (!$pagada) { ?>
-                <div class="ct-panel">
-                    <?php if ($venta['payment_method'] === 'transferencia') { ?>
-                        <p class="mb-0 small text-secondary-custom">Esta transferencia es solo una simulación: no envíes dinero. El pedido queda pendiente hasta que un administrador lo marque como confirmado para la demo.</p>
-                    <?php } else { ?>
-                        <p class="mb-0 small text-secondary-custom">El pedido queda pendiente hasta que un administrador simule la confirmación del pago.</p>
-                    <?php } ?>
-                </div>
-            <?php } ?>
             <div class="text-center mt-4">
                 <a href="<?= e(url('/src/views/index.php#eventos')) ?>" class="btn btn-outline-violet rounded-pill px-4">Seguir viendo recitales</a>
             </div>
@@ -126,7 +115,7 @@ ob_start();
         <p class="alert alert-warning mb-4" role="status">
             <strong>Modo de demostración:</strong> no se realiza ningún cobro. No ingreses datos reales de tarjetas ni transfieras dinero.
         </p>
-        <p class="text-secondary-custom mb-4">Revisá tu pedido y elegí cómo simular el pago.</p>
+        <p class="text-secondary-custom mb-4">Revisá tu pedido y confirmá la compra de prueba.</p>
         <form action="<?= e(url('/src/controllers/concerts/checkout.php')) ?>" method="POST" id="form-pago" novalidate>
             <input type="hidden" name="confirmar" value="1">
             <input type="hidden" name="csrf_token" value="<?= e($csrf) ?>">
@@ -136,26 +125,9 @@ ob_start();
             <input type="hidden" name="seats" value="<?= e(implode(',', $butacas)) ?>">
             <div class="row g-4">
                 <div class="col-12 col-lg-7">
-                    <h2 class="h5 fw-bold text-white mb-3">Medio de pago</h2>
-                    <div class="d-grid gap-3" role="radiogroup" aria-label="Medio de pago">
-                        <?php foreach ($metodos as $clave => $m) { ?>
-                            <div>
-                                <input type="radio" class="btn-check" name="payment_method" id="pay-<?= e($clave) ?>" value="<?= e($clave) ?>" required>
-                                <label for="pay-<?= e($clave) ?>" class="ct-pay d-flex align-items-center gap-3">
-                                    <span class="ct-pay__icon"><i class="bi <?= e($m['icono']) ?>"></i></span>
-                                    <span>
-                                        <span class="d-block fw-semibold text-white"><?= e($m['nombre']) ?></span>
-                                        <span class="d-block small text-secondary-custom"><?= e($m['desc']) ?></span>
-                                    </span>
-                                </label>
-                            </div>
-                        <?php } ?>
-                    </div>
-                    <div class="ct-panel" data-panel="prueba" hidden>
-                        <p class="small text-secondary-custom mb-0">Al confirmar, la compra se marcará como pagada solo para probar las entradas y el código QR.</p>
-                    </div>
-                    <div class="ct-panel" data-panel="transferencia" hidden>
-                        <p class="small text-secondary-custom mb-0">No se envía dinero. El pedido queda pendiente para que un administrador pueda simular la confirmación.</p>
+                    <h2 class="h5 fw-bold text-white mb-3">Compra de prueba</h2>
+                    <div class="ct-panel">
+                        <p class="small text-secondary-custom mb-0">Al confirmar, la compra quedará registrada y tus entradas con código QR estarán disponibles en “Mis entradas”. No se realiza ningún cobro real.</p>
                     </div>
                     <p class="ct-field-error" id="pay-error" role="alert" <?= $errores ? '' : 'hidden' ?>><?= e(implode(' ', $errores)) ?></p>
                     <div class="form-check mt-4">

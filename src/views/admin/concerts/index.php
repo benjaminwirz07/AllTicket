@@ -41,22 +41,14 @@ $estados = ['active' => 'Activo', 'cancelled' => 'Cancelado', 'finished' => 'Fin
         <tbody>
           <?php foreach ($concerts as $c): ?>
             <tr>
-              <td><span class="admin-table__primary"><?= e($c['name']) ?></span></td>
-              <td><?= e($c['artist']) ?></td>
-              <td><?= e($c['venue']) ?></td>
-              <td><?= e(formatFecha($c['date'], $c['time'])) ?></td>
-              <td><span class="badge text-bg-<?= $c['status'] === 'active' ? 'success' : ($c['status'] === 'cancelled' ? 'secondary' : 'info') ?>"><?= e($estados[$c['status']] ?? $c['status']) ?></span></td>
-              <td class="admin-table__actions">
+              <td data-label="Recital"><span class="admin-table__primary"><?= e($c['name']) ?></span></td>
+              <td data-label="Artista"><?= e($c['artist']) ?></td>
+              <td data-label="Lugar"><?= e($c['venue']) ?></td>
+              <td data-label="Fecha"><?= e(formatFecha($c['date'], $c['time'])) ?></td>
+              <td data-label="Estado"><span class="badge text-bg-<?= $c['status'] === 'active' ? 'success' : ($c['status'] === 'cancelled' ? 'secondary' : 'info') ?>"><?= e($estados[$c['status']] ?? $c['status']) ?></span></td>
+              <td class="admin-table__actions" data-label="Acciones">
                 <a class="btn btn-sm btn-secondary me-1"
                    href="/src/controllers/admin/concerts/form.php?id=<?= urlencode($c['id']) ?>">Editar</a>
-                <?php if ($c['status'] === 'active'): ?>
-                  <form method="POST" action="/src/controllers/admin/concerts/cancel.php" class="d-inline"
-                        onsubmit="return confirm('¿Cancelar este recital? Se cancelarán las compras pendientes, se liberarán sus butacas y se devolverá el stock. Las compras pagadas permanecerán registradas y no se procesarán reembolsos.');">
-                    <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
-                    <input type="hidden" name="id" value="<?= e($c['id']) ?>">
-                    <button class="btn btn-sm btn-danger" type="submit">Cancelar</button>
-                  </form>
-                <?php endif; ?>
               </td>
             </tr>
           <?php endforeach; ?>

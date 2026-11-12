@@ -38,10 +38,17 @@ ob_start();
         <tbody>
           <?php foreach ($artists as $artist): ?>
             <tr>
-              <td><span class="admin-table__primary"><?= e($artist['name']) ?></span></td>
-              <td><?= e(mb_strimwidth((string) $artist['description'], 0, 80, '…')) ?></td>
-              <td><?= e($artist['image']) ?></td>
-              <td class="admin-table__actions">
+              <td data-label="Nombre"><span class="admin-table__primary"><?= e($artist['name']) ?></span></td>
+              <td data-label="Descripción"><?= e(mb_strimwidth((string) $artist['description'], 0, 80, '…')) ?></td>
+              <td data-label="Imagen">
+                <?php if (!empty($artist['image'])): ?>
+                  <img class="admin-table__image" src="/<?= e($artist['image']) ?>"
+                       alt="Imagen de <?= e($artist['name']) ?>" loading="lazy">
+                <?php else: ?>
+                  <span class="text-secondary-custom">Sin imagen</span>
+                <?php endif; ?>
+              </td>
+              <td class="admin-table__actions" data-label="Acciones">
                 <a class="btn btn-sm btn-secondary me-1"
                    href="/src/controllers/admin/artists/form.php?id=<?= urlencode($artist['id']) ?>">Editar</a>
                 <form method="POST" action="/src/controllers/admin/artists/delete.php" class="d-inline"

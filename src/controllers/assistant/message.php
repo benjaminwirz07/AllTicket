@@ -32,7 +32,7 @@ function generarRespuestaChatbot(PDO $pdo, string $mensaje): string
         return '¡Hola! Soy el asistente de AllTicket. Puedo ayudarte con recitales, entradas, compras y noticias.';
     }
 
-    if (preg_match('/\b(comprar|compra|pagar|pago|checkout|tarjeta|transferencia)\b/', $normalizado)) {
+    if (preg_match('/\b(comprar|compra|pagar|pago|checkout|tarjeta)\b/', $normalizado)) {
         return 'Para comprar, elegí un recital, seleccioná el tipo y la cantidad de entradas y continuá al pago. '
             . 'AllTicket está en modo demo: no se realiza ningún cobro real.';
     }

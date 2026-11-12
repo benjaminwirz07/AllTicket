@@ -137,7 +137,7 @@ if ($id !== '') {
 }
 
 if ($data['status'] === 'cancelled' && $estadoActual !== 'cancelled') {
-    $errors['status'] = 'Usá la acción “Cancelar” de la lista para cancelar el recital y liberar sus pedidos pendientes.';
+    $errors['status'] = 'Usá la acción “Cancelar show” para cancelar el recital.';
 } elseif ($estadoActual === 'cancelled' && $data['status'] !== 'cancelled') {
     $errors['status'] = 'Un recital cancelado no se puede reactivar desde este formulario.';
 }

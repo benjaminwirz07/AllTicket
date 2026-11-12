@@ -1,73 +1,9 @@
 <?php
 /**
- * Reglas de negocio de las reservas de butacas (seat holds).
- *
- * Vive acá para que la lógica de vencimiento sea una sola y no se repita
- * en cada archivo que necesita disponibilidad (checkout, detalle del recital,
- * panel de admin, etc.).
+ * Reglas de negocio para la selección de butacas.
  */
 
-// Cuánto dura un hold temporal antes de vencer.
-const RESERVA_HORAS_EXPIRACION = 24;
 const BUTACAS_POR_FILA = 20;
-
-/**
- * Vence los holds vencidos y las ventas pendientes que ya superaron el plazo.
- *
- * Para cada venta afectada: la marca como 'cancelled', devuelve el stock a
- * tickets.available y pasa sus reservas 'held' a 'expired'. Después barre
- * cualquier hold vencido que haya quedado suelto.
- *
- * Transaccional: si la llama dentro de una transacción abierta se suma a ella
- * y NO hace commit (la decide el llamador). Si la llama sola, abre y cierra
- * su propia transacción.
- */
-function vencerReservas(PDO $pdo): void
-{
-    $propia = !$pdo->inTransaction();
-    if ($propia) {
-        $pdo->beginTransaction();
-    }
-
-    try {
-        $limite = RESERVA_HORAS_EXPIRACION . ' HOUR';
-
-        $ids = $pdo->query(
-            "SELECT s.id FROM sales s
-              WHERE s.status = 'pending'
-                AND (s.sale_date <= NOW() - INTERVAL $limite
-                     OR EXISTS (SELECT 1 FROM seat_reservations r
-                                 WHERE r.sale_id = s.id AND r.status = 'held' AND r.expires_at <= NOW()))"
-        )->fetchAll(PDO::FETCH_COLUMN);
-
-        $cancelar = $pdo->prepare("UPDATE sales SET status = 'cancelled' WHERE id = ? AND status = 'pending'");
-        $devolver = $pdo->prepare(
-            "UPDATE tickets t JOIN sale_details d ON d.ticket_id = t.id
-                SET t.available = LEAST(t.stock, t.available + d.quantity)
-              WHERE d.sale_id = ?"
-        );
-        $liberar = $pdo->prepare("UPDATE seat_reservations SET status = 'expired' WHERE sale_id = ? AND status = 'held'");
-
-        foreach ($ids as $id) {
-            $cancelar->execute([$id]);
-            if ($cancelar->rowCount() === 1) {
-                $devolver->execute([$id]);
-                $liberar->execute([$id]);
-            }
-        }
-
-        $pdo->exec("UPDATE seat_reservations SET status = 'expired' WHERE status = 'held' AND expires_at <= NOW()");
-
-        if ($propia) {
-            $pdo->commit();
-        }
-    } catch (PDOException $e) {
-        if ($propia && $pdo->inTransaction()) {
-            $pdo->rollBack();
-        }
-        throw $e;
-    }
-}
 
 /** Formatea 'FILA-BUTACA' como 'Fila X · Butaca Y' para mostrar al usuario. */
 function textoButaca(string $codigo): string

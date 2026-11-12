@@ -1,4 +1,4 @@
-/* Checkout de demostración: alterna opciones y evita envíos duplicados. */
+/* Checkout de demostración: valida los términos y evita envíos duplicados. */
 (function () {
     'use strict';
 
@@ -13,24 +13,8 @@
         errBox.hidden = !msg;
     }
 
-    // ---- mostrar el panel del medio elegido ----
-    form.addEventListener('change', function (ev) {
-        if (ev.target.name !== 'payment_method') { return; }
-        form.querySelectorAll('[data-panel]').forEach(function (p) {
-            p.hidden = p.getAttribute('data-panel') !== ev.target.value;
-        });
-        showError('');
-    });
-
     // ---- enviar (validación) ----
     form.addEventListener('submit', function (ev) {
-        var elegido = form.querySelector('input[name="payment_method"]:checked');
-
-        if (!elegido) {
-            ev.preventDefault();
-            showError('Elegí un medio de pago.');
-            return;
-        }
         var terminos = document.getElementById('terminos');
         if (terminos && !terminos.checked) {
             ev.preventDefault();

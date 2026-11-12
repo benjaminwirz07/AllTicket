@@ -31,11 +31,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             throw new RuntimeException('No encontramos esta entrada.');
         }
         if ($estado['sale_status'] !== 'paid') {
-            throw new RuntimeException(
-                $estado['sale_status'] === 'pending'
-                    ? 'El pago todavía está pendiente. Esta entrada no es válida para ingresar.'
-                    : 'La compra fue cancelada. Esta entrada no es válida.'
-            );
+            throw new RuntimeException('La compra fue cancelada. Esta entrada no es válida.');
         }
         if ($estado['used_at'] !== null) {
             throw new RuntimeException('Esta entrada ya fue utilizada.');

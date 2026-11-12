@@ -14,7 +14,7 @@ $secciones = [
 ob_start();
 ?>
 
-<main class="container-xl py-5 text-light">
+<main class="container-xl py-5 text-light admin-dashboard">
     <header class="admin-page-header mb-4">
         <div>
             <p class="admin-page-kicker mb-1">ALLTICKET</p>
@@ -28,25 +28,19 @@ ob_start();
 
     <!-- Números -->
     <div class="row g-3 mb-5">
-        <div class="col-6 col-lg-3">
+        <div class="col-6 col-lg-4">
             <a class="admin-stat" href="/src/controllers/admin/concerts/index.php">
                 <div class="admin-stat__label">Recitales activos</div>
                 <div class="admin-stat__value"><?= (int) $stats['recitales_activos'] ?></div>
             </a>
         </div>
-        <div class="col-6 col-lg-3">
+        <div class="col-6 col-lg-4">
             <a class="admin-stat" href="/src/controllers/admin/sales/index.php?status=paid">
                 <div class="admin-stat__label">Ventas pagadas</div>
                 <div class="admin-stat__value"><?= (int) $stats['ventas_pagadas'] ?></div>
             </a>
         </div>
-        <div class="col-6 col-lg-3">
-            <a class="admin-stat" href="/src/controllers/admin/sales/index.php?status=pending">
-                <div class="admin-stat__label">Pagos pendientes</div>
-                <div class="admin-stat__value"><?= (int) $stats['ventas_pendientes'] ?></div>
-            </a>
-        </div>
-        <div class="col-6 col-lg-3">
+        <div class="col-12 col-lg-4">
             <div class="admin-stat">
                 <div class="admin-stat__label">Total marcado como pagado (demo)</div>
                 <div class="admin-stat__value admin-stat__value--accent"><?= e(formatPrecio($stats['recaudado'])) ?></div>

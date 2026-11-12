@@ -26,21 +26,13 @@ $errorDisponibilidad = false;
 // 2. FUNCIONES
 // ============================================================
 
-// esVip(), esNumerada(), diasRestantes(), vencerReservas() y textoButaca()
+// esVip(), esNumerada(), diasRestantes() y textoButaca()
 // viven en src/config/reservations.php (se cargan desde bootstrap.php).
 
 
 // ============================================================
 // 3. RECITAL Y ENTRADAS
 // ============================================================
-
-// Liberar reservas vencidas antes de mostrar la disponibilidad
-try {
-    vencerReservas($pdo);
-} catch (PDOException $e) {
-    error_log('Error al vencer reservas: ' . $e->getMessage());
-    $errorDisponibilidad = true;
-}
 
 try {
 
@@ -89,8 +81,7 @@ if ($concert) {
     $butacasVendidas = [];
 
     try {
-        // CAMBIO H: solo cuentan las butacas held o confirmed
-        $stmtSeats = $pdo->prepare("SELECT ticket_id, seat_code FROM seat_reservations WHERE concert_id = :id AND status IN ('held', 'confirmed')");
+        $stmtSeats = $pdo->prepare("SELECT ticket_id, seat_code FROM seat_reservations WHERE concert_id = :id AND status = 'confirmed'");
         $stmtSeats->execute([":id" => $id]);
         $butacasVendidas = $stmtSeats->fetchAll(PDO::FETCH_ASSOC);
     } catch (PDOException $e) {
@@ -789,7 +780,7 @@ ob_start();
 
                     <details>
                         <summary>¿Qué medios de pago puedo usar?</summary>
-                        <p>Este proyecto funciona en modo de demostración: podés usar un pago de prueba o una transferencia simulada. No se realiza ningún cobro.</p>
+                        <p>Este proyecto funciona en modo de demostración. La compra de prueba genera tus entradas con código QR, pero no se realiza ningún cobro.</p>
                     </details>
 
                     <details>

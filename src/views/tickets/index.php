@@ -1,21 +1,14 @@
 <?php
 $estados = [
-    'pending' => ['Pendiente de pago', 'warning'],
     'paid' => ['Pagada', 'success'],
     'cancelled' => ['Cancelada', 'secondary'],
 ];
 $metodos = [
     'prueba' => 'Pago de prueba',
-    'transferencia' => 'Transferencia simulada',
-    'mercadopago' => 'Mercado Pago (registro anterior de demo)',
-    'tarjeta' => 'Tarjeta (registro anterior de demo)',
-    'efectivo' => 'Efectivo (registro anterior de demo)',
 ];
 $estadosButaca = [
-    'held' => 'Reservada',
     'confirmed' => 'Confirmada',
     'released' => 'Liberada',
-    'expired' => 'Vencida',
 ];
 ob_start();
 ?>
@@ -182,11 +175,7 @@ ob_start();
                             </div>
                         </div>
 
-                        <?php if ($compra['status'] === 'pending'): ?>
-                            <p class="alert alert-warning small mt-4 mb-0" role="status">
-                                La compra queda pendiente hasta que se confirme el pago. La entrada todavía no es válida para ingresar.
-                            </p>
-                        <?php elseif ($compra['status'] === 'cancelled'): ?>
+                        <?php if ($compra['status'] === 'cancelled'): ?>
                             <p class="alert alert-secondary small mt-4 mb-0" role="status">
                                 Este pedido fue cancelado y sus entradas no son válidas.
                             </p>

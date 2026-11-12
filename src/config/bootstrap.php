@@ -27,7 +27,7 @@ if (session_status() === PHP_SESSION_NONE) {
 // Conexión a la base de datos, disponible en todo el proyecto como $pdo
 require_once __DIR__ . '/database.php';
 
-// Reglas de reservas de butacas (vencerReservas, textoButaca)
+// Reglas para la selección de butacas
 require_once __DIR__ . '/reservations.php';
 
 // ============================================================

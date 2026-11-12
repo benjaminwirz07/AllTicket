@@ -1,6 +1,5 @@
 <?php
 $listaEstados = [
-    'pending' => ['Pago pendiente', 'warning'],
     'cancelled' => ['Compra cancelada', 'danger'],
     'paid' => ['Pagada', 'success'],
 ];

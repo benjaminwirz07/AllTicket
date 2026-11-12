@@ -4,16 +4,11 @@ requireAuth();
 requireAdmin($pdo);
 
 $estados = [
-    'pending' => ['Pendiente', 'warning'],
     'paid' => ['Pagada', 'success'],
     'cancelled' => ['Cancelada', 'secondary'],
 ];
 $metodos = [
     'prueba' => 'Pago de prueba',
-    'transferencia' => 'Transferencia simulada',
-    'mercadopago' => 'Mercado Pago (registro anterior de demo)',
-    'tarjeta' => 'Tarjeta (registro anterior de demo)',
-    'efectivo' => 'Efectivo (registro anterior de demo)',
 ];
 [$txtEstado, $colorEstado] = $estados[$sale['status']] ?? [$sale['status'], 'secondary'];
 $nombreCompleto = trim($sale['first_name'] . ' ' . $sale['last_name']);
@@ -38,26 +33,10 @@ ob_start();
         <div class="alert alert-<?= e($flash['type']) ?>" role="alert"><?= e($flash['msg']) ?></div>
     <?php endif; ?>
 
-    <?php if ($sale['status'] === 'pending'): ?>
-        <div class="d-flex flex-wrap gap-2 mb-4">
-            <form method="POST" action="/src/controllers/admin/sales/update_status.php"
-                onsubmit="return confirm('¿Marcar como pagada para simular la confirmación? No se recibió ni se procesó dinero.');">
-                <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
-                <input type="hidden" name="id" value="<?= e($sale['id']) ?>">
-                <input type="hidden" name="action" value="confirm">
-                <button class="btn btn-success rounded-pill px-4" type="submit">Simular confirmación de pago</button>
-            </form>
-
-            <form method="POST" action="/src/controllers/admin/sales/update_status.php"
-                onsubmit="return confirm('¿Cancelar este pedido pendiente? Se liberan las butacas y se devuelve el stock.');">
-                <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
-                <input type="hidden" name="id" value="<?= e($sale['id']) ?>">
-                <input type="hidden" name="action" value="cancel">
-                <button class="btn btn-danger rounded-pill px-4" type="submit">Cancelar pedido pendiente</button>
-            </form>
-        </div>
-    <?php elseif ($sale['status'] === 'paid'): ?>
+    <?php if ($sale['status'] === 'paid'): ?>
         <p class="alert alert-info" role="status">Esta compra se confirmó en modo demo. No se procesó ningún cobro y no se puede cancelar desde el panel.</p>
+    <?php else: ?>
+        <p class="alert alert-secondary" role="status">Esta compra fue cancelada. Sus entradas no son válidas.</p>
     <?php endif; ?>
 
     <div class="row g-4">

@@ -211,7 +211,7 @@ if (isAuthenticated()) {
                         <?php if (isAdmin()): ?>
                             <li class="nav-item">
                                 <a class="nav-link" href="<?= e(url('/src/controllers/admin/index.php')) ?>">
-                                    <i class="bi bi-gear me-1"></i>Panel admin
+                                    <i class="bi bi-gear me-1"></i>Admin
                                 </a>
                             </li>
                         <?php endif; ?>

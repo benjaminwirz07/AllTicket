@@ -4,16 +4,11 @@ requireAuth();
 requireAdmin($pdo);
 
 $estados = [
-    'pending' => ['Pendiente', 'warning'],
     'paid' => ['Pagada', 'success'],
     'cancelled' => ['Cancelada', 'secondary'],
 ];
 $metodos = [
     'prueba' => 'Pago de prueba',
-    'transferencia' => 'Transferencia simulada',
-    'mercadopago' => 'Mercado Pago (demo anterior)',
-    'tarjeta' => 'Tarjeta (demo anterior)',
-    'efectivo' => 'Efectivo (demo anterior)',
 ];
 ob_start();
 ?>
@@ -71,9 +66,6 @@ ob_start();
                                 <strong><?= (int) $r['vendidas'] ?></strong><small>Vendidas</small>
                             </span>
                             <span class="sales-concert-metric">
-                                <strong><?= (int) $r['pendientes'] ?></strong><small>Pendientes</small>
-                            </span>
-                            <span class="sales-concert-metric">
                                 <strong><?= number_format((int) $r['stock'], 0, ',', '.') ?></strong><small>Stock total</small>
                             </span>
                             <span class="sales-concert-metric sales-concert-metric--amount">
@@ -116,8 +108,7 @@ ob_start();
             <?php endforeach; ?>
         </div>
         <p class="small text-secondary-custom mb-5">
-            "Vendidas" y el total marcado como pagado son datos de demostración, no cobros reales.
-            "Pendientes" son compras que esperan la confirmación simulada y se liberan solas a las 24 hs.
+            "Vendidas" y el total recaudado son datos de demostración, no cobros reales.
         </p>
     <?php else: ?>
         <p class="text-secondary-custom mb-5">No hay recitales cargados.</p>

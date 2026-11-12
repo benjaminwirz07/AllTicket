@@ -40,12 +40,12 @@ ob_start();
         <tbody>
           <?php foreach ($venues as $venue): ?>
             <tr>
-              <td><span class="admin-table__primary"><?= e($venue['name']) ?></span></td>
-              <td><?= e($venue['address']) ?></td>
-              <td><?= e($venue['city']) ?></td>
-              <td><?= e($venue['province']) ?></td>
-              <td class="text-end"><?= e(number_format((int) $venue['capacity'], 0, ',', '.')) ?></td>
-              <td class="admin-table__actions">
+              <td data-label="Nombre"><span class="admin-table__primary"><?= e($venue['name']) ?></span></td>
+              <td data-label="Dirección"><?= e($venue['address']) ?></td>
+              <td data-label="Ciudad"><?= e($venue['city']) ?></td>
+              <td data-label="Provincia"><?= e($venue['province']) ?></td>
+              <td class="text-end" data-label="Capacidad"><?= e(number_format((int) $venue['capacity'], 0, ',', '.')) ?></td>
+              <td class="admin-table__actions" data-label="Acciones">
                 <a class="btn btn-sm btn-secondary me-1"
                    href="/src/controllers/admin/venues/form.php?id=<?= urlencode($venue['id']) ?>">Editar</a>
                 <form method="POST" action="/src/controllers/admin/venues/delete.php" class="d-inline"

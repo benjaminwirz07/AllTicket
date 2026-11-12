@@ -56,7 +56,9 @@ El formulario guarda las direcciones en `newsletter_subscribers`, pero el proyec
 
 ### Pagos de demostración
 
-Los pagos no son reales y no se conecta ninguna pasarela. “Pago de prueba” marca una compra como pagada para poder probar el QR; “Transferencia simulada” la deja pendiente para que un administrador pueda simular su confirmación. No ingreses datos reales de tarjeta ni transfieras dinero. En el panel, solo se pueden cancelar pedidos pendientes; una compra marcada como pagada no se puede cancelar ni reembolsar desde esta demo.
+Los pagos no son reales y no se conecta ninguna pasarela. Al confirmar una compra de prueba, se registra como pagada para poder probar el QR. No ingreses datos reales de tarjeta. Las compras confirmadas no se pueden cancelar ni reembolsar desde esta demo.
+
+Si actualizás una base de datos existente, hacé una copia de seguridad y ejecutá `migrations/remove_deferred_checkout.sql` antes de usar la nueva versión. La migración cancela pedidos que usaban el flujo anterior, devuelve su stock, libera sus butacas y elimina los estados de reserva temporales.
 
 ## Estructura del repositorio
 
@@ -134,7 +136,7 @@ Cada unidad comprada recibe un QR propio en “Mis entradas”. El QR solo permi
 - Las imágenes subidas aceptan únicamente JPEG, PNG y WebP, con límite de 2 MB y validación del MIME/contenido.
 - Newsletter limita a cinco intentos por dirección IP cada quince minutos (tabla `newsletter_rate_limits`).
 - Las rutas internas se deben construir con `url()` y las redirecciones con `redirectTo()` / `redirectWithFlash()`.
-- Para cancelar un recital, usá la acción “Cancelar” desde la lista de recitales; el formulario de edición no permite cancelarlo ni reactivar un recital ya cancelado, para evitar dejar pedidos pendientes sin liberar.
+- Para cancelar un recital, usá la acción “Cancelar show” desde su formulario de edición. Un recital cancelado no se puede reactivar desde ese formulario.
 
 ## Notas para los alumnos
 

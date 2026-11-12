@@ -53,10 +53,9 @@ if ($categoria !== '' && !array_key_exists($categoria, $categorias)) {
     $categoria = '';
 }
 
-// Opciones disponibles en la demostración (no son medios de pago reales).
+// La compra de prueba no procesa cobros reales.
 $mediosPago = [
     ["icono" => "bi-check-circle", "nombre" => "Pago de prueba", "marca" => "DEMO", "clave" => "visa"],
-    ["icono" => "bi-bank", "nombre" => "Transferencia simulada", "marca" => "SIMULADA", "clave" => "transferencia"],
 ];
 
 // Preguntas frecuentes
@@ -77,7 +76,7 @@ $preguntas = [
     ],
     [
         "pregunta" => "¿Qué medios de pago puedo usar?",
-        "respuesta" => "AllTicket está en modo de demostración. Podés confirmar una compra de prueba o dejarla pendiente con la transferencia simulada. No se realiza ningún cobro."
+        "respuesta" => "AllTicket está en modo de demostración. Al confirmar la compra de prueba se generan tus entradas digitales con código QR. No se realiza ningún cobro."
     ],
     [
         "pregunta" => "¿Qué pasa si se cancela o se reprograma el evento?",

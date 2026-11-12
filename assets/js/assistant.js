@@ -18,6 +18,62 @@
         message.className = 'chatbot-message chatbot-message--' + sender;
         message.textContent = text;
         log.appendChild(message);
+        var quickAccess = log.querySelector('.chatbot-quick-access');
+        if (quickAccess) {
+            log.appendChild(quickAccess);
+        }
+        log.scrollTop = log.scrollHeight;
+    }
+
+    function addQuickAccess() {
+        var existingQuickAccess = log.querySelector('.chatbot-quick-access');
+        if (existingQuickAccess) {
+            log.appendChild(existingQuickAccess);
+            log.scrollTop = log.scrollHeight;
+            return;
+        }
+
+        var quickAccess = document.createElement('section');
+        quickAccess.className = 'chatbot-quick-access';
+        quickAccess.setAttribute('aria-label', 'Accesos rápidos');
+
+        var heading = document.createElement('h2');
+        heading.className = 'chatbot-quick-access__heading';
+        heading.textContent = 'Accesos rápidos';
+        quickAccess.appendChild(heading);
+
+        var actions = [
+            { label: 'Próximos recitales', message: '¿Qué recitales próximos hay?', icon: 'bi-calendar-event' },
+            { label: 'Cómo comprar entradas', message: '¿Cómo puedo comprar entradas?', icon: 'bi-ticket-perforated' },
+            { label: 'Últimas noticias', message: 'Quiero ver las últimas noticias', icon: 'bi-newspaper' },
+            { label: 'Ayuda y contacto', message: 'Necesito ayuda y contacto', icon: 'bi-question-circle' }
+        ];
+        var buttons = document.createElement('div');
+        buttons.className = 'chatbot-quick-access__buttons';
+
+        actions.forEach(function (action) {
+            var button = document.createElement('button');
+            button.className = 'chatbot-quick-access__button';
+            button.type = 'button';
+            button.dataset.message = action.message;
+
+            var icon = document.createElement('i');
+            icon.className = 'bi ' + action.icon;
+            icon.setAttribute('aria-hidden', 'true');
+
+            var label = document.createElement('span');
+            label.textContent = action.label;
+
+            var arrow = document.createElement('i');
+            arrow.className = 'bi bi-chevron-right';
+            arrow.setAttribute('aria-hidden', 'true');
+
+            button.append(icon, label, arrow);
+            buttons.appendChild(button);
+        });
+
+        quickAccess.appendChild(buttons);
+        log.appendChild(quickAccess);
         log.scrollTop = log.scrollHeight;
     }
 
@@ -58,6 +114,7 @@
             });
         }
 
+        addQuickAccess();
         historyLoaded = true;
         input.disabled = false;
         sendButton.disabled = false;
@@ -95,6 +152,15 @@
         }
     });
     closeButton.addEventListener('click', closeChat);
+
+    log.addEventListener('click', function (event) {
+        var button = event.target.closest('.chatbot-quick-access__button');
+        if (!button || sending) {
+            return;
+        }
+        input.value = button.dataset.message;
+        form.requestSubmit();
+    });
 
     form.addEventListener('submit', async function (event) {
         event.preventDefault();

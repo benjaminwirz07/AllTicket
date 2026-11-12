@@ -18,8 +18,7 @@ if ($userId !== null) {
 $modoDemo = true;
 
 $metodos = [
-    'prueba' => ['nombre' => 'Pago de prueba', 'icono' => 'bi-check-circle', 'desc' => 'Confirma la compra automáticamente. No se realiza ningún cobro.', 'instant' => true],
-    'transferencia' => ['nombre' => 'Transferencia simulada', 'icono' => 'bi-bank', 'desc' => 'Deja el pedido pendiente para que el administrador simule la confirmación.', 'instant' => false],
+    'prueba' => ['nombre' => 'Pago de prueba', 'icono' => 'bi-check-circle', 'desc' => 'Confirma la compra automáticamente. No se realiza ningún cobro.'],
 ];
 
 $maxEntradas = 6;
@@ -32,7 +31,7 @@ if (!function_exists('uuidv4')) {
         return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($d), 4));
     }
 }
-// esNumerada(), vencerReservas() y textoButaca() viven en
+// esNumerada() y textoButaca() viven en
 // src/config/reservations.php (se cargan desde bootstrap.php).
 
 $csrf = csrfToken();
@@ -105,7 +104,7 @@ if ($metodo === 'GET' && isset($_GET['ok'])) {
     $concertId = inputUuid($_POST, 'concert_id');
     $ticketId = inputUuid($_POST, 'ticket_id');
     $cantidad = inputInt($_POST, 'quantity');
-    $metodoSel = inputString($_POST, 'payment_method');
+    $metodoSel = 'prueba';
 
     $butacas = [];
     $asientosEnviados = inputString($_POST, 'seats');
@@ -131,14 +130,6 @@ if ($metodo === 'GET' && isset($_GET['ok'])) {
     if (!$userId) {
         $vista = 'login';
     } else {
-        // Liberar reservas vencidas antes de consultar disponibilidad
-        try {
-            vencerReservas($pdo);
-        } catch (PDOException $e) {
-            error_log('Error al vencer reservas: ' . $e->getMessage());
-            $errores[] = 'No pudimos verificar la disponibilidad. Probá nuevamente en unos minutos.';
-        }
-
         if ($concertId === '' || $ticketId === '') {
             $errores[] = 'La solicitud de compra no es válida.';
             $vista = 'error';
@@ -183,8 +174,7 @@ if ($metodo === 'GET' && isset($_GET['ok'])) {
 
             if ($numerada && $butacas && !$errores) {
                 $marcas = implode(',', array_fill(0, count($butacas), '?'));
-                // CAMBIO E: solo cuentan las butacas held o confirmed
-                $q = $pdo->prepare("SELECT seat_code FROM seat_reservations WHERE concert_id = ? AND status IN ('held', 'confirmed') AND seat_code IN ($marcas)");
+                $q = $pdo->prepare("SELECT seat_code FROM seat_reservations WHERE concert_id = ? AND status = 'confirmed' AND seat_code IN ($marcas)");
                 $q->execute(array_merge([$concertId], $butacas));
                 $tomadas = $q->fetchAll(PDO::FETCH_COLUMN);
                 if ($tomadas) {
@@ -201,13 +191,9 @@ if ($metodo === 'GET' && isset($_GET['ok'])) {
             if (!isset($_POST['accept_terms']) || $_POST['accept_terms'] !== '1') {
                 $errores[] = 'Tenés que aceptar los términos y condiciones.';
                 $vista = 'resumen';
-            } elseif (!isset($metodos[$metodoSel])) {
-                $errores[] = 'Elegí un medio de pago.';
-                $vista = 'resumen';
             } else {
                 try {
                     $pdo->beginTransaction();
-                    vencerReservas($pdo); // se suma a la transacción abierta
                     $lock = $pdo->prepare(
                         "SELECT t.available, c.status, c.date
                            FROM tickets t
@@ -229,12 +215,10 @@ if ($metodo === 'GET' && isset($_GET['ok'])) {
                         throw new RuntimeException('No quedan tantas entradas disponibles.');
                     }
 
-                    $pagadoYa = $metodos[$metodoSel]['instant'] && $modoDemo;
-                    $estado = $pagadoYa ? 'paid' : 'pending';
                     $ventaId = uuidv4();
 
-                    $pdo->prepare("INSERT INTO sales (id, user_id, total, status, payment_method) VALUES (?, ?, ?, ?, ?)")
-                        ->execute([$ventaId, $userId, $total, $estado, $metodoSel]);
+                    $pdo->prepare("INSERT INTO sales (id, user_id, total, status, payment_method) VALUES (?, ?, ?, 'paid', ?)")
+                        ->execute([$ventaId, $userId, $total, $metodoSel]);
                     $detalleId = uuidv4();
                     $pdo->prepare("INSERT INTO sale_details (id, sale_id, ticket_id, quantity, price) VALUES (?, ?, ?, ?, ?)")
                         ->execute([$detalleId, $ventaId, $ticketId, $cantidad, $datos['price']]);
@@ -253,12 +237,12 @@ if ($metodo === 'GET' && isset($_GET['ok'])) {
                         ]);
                     }
 
-                    // pagada = confirmed; pendiente = held con el vencimiento de RESERVA_HORAS_EXPIRACION
-                    $estadoReserva = $pagadoYa ? 'confirmed' : 'held';
-                    $expiraSql = $pagadoYa ? 'NULL' : 'NOW() + INTERVAL ' . RESERVA_HORAS_EXPIRACION . ' HOUR';
-                    $insSeat = $pdo->prepare("INSERT INTO seat_reservations (id, concert_id, ticket_id, sale_id, seat_code, status, expires_at) VALUES (?, ?, ?, ?, ?, ?, $expiraSql)");
+                    $insSeat = $pdo->prepare(
+                        "INSERT INTO seat_reservations (id, concert_id, ticket_id, sale_id, seat_code, status)
+                         VALUES (?, ?, ?, ?, ?, 'confirmed')"
+                    );
                     foreach ($butacas as $codigo) {
-                        $insSeat->execute([uuidv4(), $concertId, $ticketId, $ventaId, $codigo, $estadoReserva]);
+                        $insSeat->execute([uuidv4(), $concertId, $ticketId, $ventaId, $codigo]);
                     }
 
                     // CAMBIO C: el descuento verifica el stock por sí mismo

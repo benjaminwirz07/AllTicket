@@ -6,7 +6,6 @@ requireAdmin($pdo);
 $stats = [
     'recitales_activos' => 0,
     'ventas_pagadas'    => 0,
-    'ventas_pendientes' => 0,
     'recaudado'         => 0,
 ];
 
@@ -15,7 +14,6 @@ try {
         "SELECT
             (SELECT COUNT(*) FROM concerts WHERE status = 'active' AND date >= CURDATE()) AS recitales_activos,
             (SELECT COUNT(*) FROM sales WHERE status = 'paid')    AS ventas_pagadas,
-            (SELECT COUNT(*) FROM sales WHERE status = 'pending') AS ventas_pendientes,
             (SELECT COALESCE(SUM(total), 0) FROM sales WHERE status = 'paid') AS recaudado"
     )->fetch(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {

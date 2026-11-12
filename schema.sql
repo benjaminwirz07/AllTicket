@@ -198,8 +198,8 @@ CREATE TABLE sales (
     user_id        CHAR(36) NOT NULL,
     sale_date      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     total          DECIMAL(10,2) NOT NULL,
-    status         ENUM('pending', 'paid', 'cancelled')
-                   NOT NULL DEFAULT 'pending',
+    status         ENUM('paid', 'cancelled')
+                   NOT NULL DEFAULT 'paid',
     payment_method VARCHAR(30) NULL,
 
     PRIMARY KEY (id),
@@ -256,18 +256,13 @@ CREATE TABLE sale_details (
 -- 9. RESERVAS DE ASIENTOS
 -- =====================================================
 --
--- held      = reserva temporal
 -- confirmed = compra confirmada
 -- released  = reserva cancelada/liberada
--- expired   = reserva vencida
---
--- Las reservas held deben tener expires_at.
--- La aplicacion PHP debe vencerlas cuando corresponda.
 --
 -- active_seat_flag evita que un asiento tenga mas de una
--- reserva held/confirmed para el mismo recital.
+-- reserva confirmada para el mismo recital.
 --
--- Las reservas released/expired conservan su historial.
+-- Las reservas released conservan su historial.
 -- =====================================================
 
 CREATE TABLE seat_reservations (
@@ -277,16 +272,15 @@ CREATE TABLE seat_reservations (
     sale_id    CHAR(36) NOT NULL,
     seat_code  VARCHAR(20) NOT NULL,
 
-    status ENUM('held', 'confirmed', 'released', 'expired')
-           NOT NULL DEFAULT 'held',
+    status ENUM('confirmed', 'released')
+           NOT NULL DEFAULT 'confirmed',
 
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    expires_at DATETIME NULL,
 
     active_seat_flag TINYINT
         GENERATED ALWAYS AS (
             CASE
-                WHEN status IN ('held', 'confirmed') THEN 1
+                WHEN status = 'confirmed' THEN 1
                 ELSE NULL
             END
         ) STORED,
@@ -294,19 +288,12 @@ CREATE TABLE seat_reservations (
     PRIMARY KEY (id),
 
     -- MySQL permite varias claves NULL en un indice UNIQUE.
-    -- Por eso los asientos liberados/vencidos pueden repetirse.
+    -- Por eso los asientos liberados pueden repetirse.
     UNIQUE KEY uq_active_concert_seat (concert_id, seat_code, active_seat_flag),
 
     KEY idx_reservations_concert (concert_id),
     KEY idx_reservations_ticket (ticket_id),
     KEY idx_reservations_sale (sale_id),
-    KEY idx_reservations_expiration (status, expires_at),
-
-    CONSTRAINT chk_reservation_expiration
-        CHECK (
-            status <> 'held'
-            OR expires_at IS NOT NULL
-        ),
 
     -- Garantiza que el ticket corresponde al mismo recital.
     CONSTRAINT fk_reservation_ticket_concert

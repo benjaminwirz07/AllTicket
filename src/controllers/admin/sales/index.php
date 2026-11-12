@@ -3,7 +3,7 @@ require_once __DIR__ . '/../../../config/bootstrap.php';
 requireAuth();
 requireAdmin($pdo);
 $flash = consumeFlash();
-$estadosValidos = ['pending', 'paid', 'cancelled'];
+$estadosValidos = ['paid', 'cancelled'];
 $filtro = $_GET['status'] ?? '';
 if (!in_array($filtro, $estadosValidos, true)) {
     $filtro = '';
@@ -44,11 +44,6 @@ try {
                    JOIN sales s ON s.id = d.sale_id
                    JOIN tickets t ON t.id = d.ticket_id
                   WHERE t.concert_id = c.id AND s.status = 'paid') AS vendidas,
-                (SELECT COALESCE(SUM(d.quantity), 0)
-                   FROM sale_details d
-                   JOIN sales s ON s.id = d.sale_id
-                   JOIN tickets t ON t.id = d.ticket_id
-                  WHERE t.concert_id = c.id AND s.status = 'pending') AS pendientes,
                 (SELECT COALESCE(SUM(d.quantity * d.price), 0)
                    FROM sale_details d
                    JOIN sales s ON s.id = d.sale_id

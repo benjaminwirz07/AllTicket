@@ -1201,6 +1201,14 @@ footer::before,
 }
 
 @media (max-width: 575.98px) {
+    body:has(.admin-page-header) header.sticky-top {
+        position: static;
+    }
+
+    #main-content:has(.admin-page-header) {
+        flex: 0 0 auto;
+    }
+
     .btn-violet,
     .btn-outline-custom {
         width: 100%;

@@ -976,12 +976,6 @@
   font-size: 1.05rem;
 }
 
-.payment-method__mark--transferencia {
-  color: #a7e5c4;
-  font-size: 0.8rem;
-  letter-spacing: 0.08em;
-}
-
 .payment-method__mark--rapipago {
   color: #ffc879;
   font-size: 0.95rem;

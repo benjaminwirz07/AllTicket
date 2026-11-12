@@ -115,7 +115,7 @@ ob_start();
                     <?php endif; ?>
                 </select>
                 <?= $errorDe('status') ?>
-                <div class="form-text">Para cancelar un recital, usá la acción “Cancelar” de la lista. Así también se procesan sus pedidos pendientes.</div>
+                <div class="form-text">Para cancelar un recital, usá el botón “Cancelar show”.</div>
             </div>
         </div>
 
@@ -179,9 +179,15 @@ ob_start();
             <?php endforeach; ?>
         </div>
         <button class="btn btn-violet-glow rounded-pill px-4" type="submit">Guardar</button>
-        <a class="btn btn-outline-secondary rounded-pill px-4 ms-2"
-            href="/src/controllers/admin/concerts/index.php">Cancelar</a>
     </form>
+    <?php if ($editando && ($concert['status'] ?? '') === 'active'): ?>
+        <form class="mt-3" method="POST" action="/src/controllers/admin/concerts/cancel.php"
+            onsubmit="return confirm('¿Cancelar este show? Las compras confirmadas permanecerán registradas; no se procesarán reembolsos.');">
+            <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
+            <input type="hidden" name="id" value="<?= e($concert['id']) ?>">
+            <button class="btn btn-danger rounded-pill px-4" type="submit">Cancelar show</button>
+        </form>
+    <?php endif; ?>
 </main>
 
 <?php
