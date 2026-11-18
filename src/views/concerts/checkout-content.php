@@ -1,4 +1,5 @@
 <?php
+// Impide renderizar esta plantilla si no fue invocada por el flujo de checkout.
 if (!defined('ALLTICKET_CHECKOUT_RENDER')) {
     http_response_code(404);
     exit;
@@ -9,8 +10,10 @@ ob_start();
 <link rel="stylesheet" href="<?= e(url('/assets/css/concert.css')) ?>">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
+<!-- La vista cambia entre acceso requerido, error, compra confirmada y resumen de pago. -->
 <main class="bg-main-dark text-light min-vh-100 position-relative z-1 overflow-hidden">
     <div class="container-xl py-5">
+    <!-- Solicita autenticación antes de mostrar información de compra personal. -->
     <?php if ($vista === 'login') { ?>
         <div class="text-center py-5">
             <i class="bi bi-person-lock fs-1 text-violet-neon"></i>
@@ -19,6 +22,7 @@ ob_start();
             <a href="<?= e($loginUrl) ?>" class="btn btn-violet-glow rounded-pill px-4">Iniciar sesión</a>
             <p class="small text-secondary-custom mt-3">Después de ingresar, volvé al recital y elegí tus entradas de nuevo.</p>
         </div>
+    <!-- Resume errores de validación y ofrece volver a la selección de entradas. -->
     <?php } elseif ($vista === 'error') { ?>
         <div class="text-center py-5">
             <i class="bi bi-exclamation-octagon fs-1 text-danger"></i>
@@ -29,6 +33,7 @@ ob_start();
             <a href="<?= e(!empty($datos['concert_id']) ? url('/src/views/concerts/show.php?id=' . urlencode($datos['concert_id']) . '#entradas') : url('/src/views/index.php#eventos')) ?>"
                 class="btn btn-outline-violet rounded-pill px-4 mt-3">Volver al recital</a>
         </div>
+    <!-- Confirma la operación y muestra datos de compra, asientos y entradas digitales. -->
     <?php } elseif ($vista === 'listo') { ?>
         <?php
         $pagada = ($venta['status'] === 'paid');
@@ -40,6 +45,7 @@ ob_start();
                 <h1 class="h3 text-white fw-bold mt-3"><?= $pagada ? '¡Compra confirmada!' : 'Compra cancelada' ?></h1>
                 <?php if ($pagada) { ?>
                     <p class="small text-warning">Pago de prueba: no se realizó ningún cobro real.</p>
+                <!-- Formulario de confirmación demo con resumen del evento y total antes de comprar. -->
                 <?php } else { ?>
                     <p class="small text-secondary-custom">Esta compra fue cancelada y sus entradas no son válidas.</p>
                 <?php } ?>
@@ -176,10 +182,12 @@ ob_start();
     <?php } ?>
     </div>
 </main>
+<!-- Carga el generador QR solo en la confirmación de una compra con entradas válidas. -->
 <?php if ($vista === 'listo' && $pagada && $qrEntries) { ?>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
     <script src="<?= e(url('/assets/js/ticket-qr.js')) ?>" defer></script>
 <?php } ?>
 <?php
+// Pasa el contenido capturado al layout principal del sitio.
 $pageContent = ob_get_clean();
 include __DIR__ . '/../_layouts/layout.php';

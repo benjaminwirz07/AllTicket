@@ -1,4 +1,5 @@
 <?php
+// Define etiquetas legibles para estados de compra, pago y reserva de butacas.
 $estados = [
     'paid' => ['Pagada', 'success'],
     'cancelled' => ['Cancelada', 'secondary'],
@@ -13,12 +14,14 @@ $estadosButaca = [
 ob_start();
 ?>
 
+<!-- Historial de compras del usuario, con entradas digitales y datos de cada evento. -->
 <main class="container-xl py-5 text-light">
     <header class="mb-4">
         <h1 class="h2 fw-bold text-white mb-1">Mis <span class="text-gradient">entradas</span></h1>
         <p class="text-secondary-custom mb-0">Consultá tus compras, entradas y datos de cada evento.</p>
     </header>
 
+    <!-- Si no hay compras, invita a explorar eventos; en otro caso recorre cada pedido. -->
     <?php if ($compras === []): ?>
         <div class="card bg-card-dark text-light border-0 rounded-4 shadow">
             <div class="card-body text-center p-5">
@@ -49,6 +52,7 @@ ob_start();
                     </div>
 
                     <div class="card-body p-4">
+                        <!-- Detalle de eventos, precios, asientos y códigos QR por entrada. -->
                         <?php if (!empty($entradasPorCompra[$compra['id']])): ?>
                             <div class="d-grid gap-4">
                                 <?php foreach ($entradasPorCompra[$compra['id']] as $entrada): ?>
@@ -160,6 +164,7 @@ ob_start();
                             <p class="text-secondary-custom mb-0">Este pedido no tiene entradas disponibles para mostrar.</p>
                         <?php endif; ?>
 
+                        <!-- Resumen de pago y aviso de validez para pedidos cancelados. -->
                         <div class="row g-3 pt-3">
                             <div class="col-12 col-md-6">
                                 <p class="small text-secondary-custom mb-1">Fecha de compra</p>
@@ -187,9 +192,11 @@ ob_start();
     <?php endif; ?>
 </main>
 
+<!-- Carga los recursos del QR después del contenido de entradas del usuario. -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
 <script src="<?= e(url('/assets/js/ticket-qr.js')) ?>" defer></script>
 
 <?php
+// Renderiza el historial dentro del layout general y agrega navegación compartida.
 $pageContent = ob_get_clean();
 include __DIR__ . '/../_layouts/layout.php';

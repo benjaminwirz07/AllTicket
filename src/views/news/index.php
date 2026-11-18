@@ -1,4 +1,5 @@
 <?php
+// Prepara categorías y mensajes del newsletter para el navegador público de noticias.
 $pageStyles = '<link rel="stylesheet" href="' . e(url('/assets/css/news.css')) . '">';
 $categoriasNoticias = NEWS_CATEGORIES;
 $mensajesNewsletter = [
@@ -11,6 +12,7 @@ $mensajeNewsletter = $mensajesNewsletter[$estadoNewsletter] ?? null;
 ob_start();
 ?>
 
+<!-- Cabecera, filtros, resultados y suscripción del área editorial. -->
 <main class="news-page text-light">
   <div class="container-xl news-page__inner">
     <header class="news-heading">
@@ -20,10 +22,12 @@ ob_start();
       <span class="news-heading__line" aria-hidden="true"></span>
     </header>
 
+    <!-- El navegador dinámico aparece si hay contenido; si no, se ofrece un estado vacío. -->
     <?php if ($totalNoticias > 0): ?>
       <section class="news-browser" data-news-browser
                data-list-url="<?= e(url('/src/controllers/news/list.php')) ?>"
                aria-label="Noticias AllTicket">
+        <!-- Filtros de categoría y formulario de búsqueda controlados por JavaScript. -->
         <div class="news-toolbar">
           <div class="news-filters" role="group" aria-label="Filtrar noticias por categoría">
             <button type="button" class="news-chip is-active" data-news-category="" aria-pressed="true">Todas</button>
@@ -42,6 +46,7 @@ ob_start();
           </form>
         </div>
 
+        <!-- Contenedor de noticia destacada y lista paginada con estados de carga. -->
         <section class="news-featured-section" aria-label="Nota destacada">
           <div class="news-featured" data-news-featured aria-live="polite">
             <div class="news-featured__skeleton news-skeleton"></div>
@@ -82,6 +87,7 @@ ob_start();
       </section>
     <?php endif; ?>
 
+    <!-- Formulario del boletín y resultado informado por el controlador. -->
     <section class="news-subscription" id="subscription" aria-labelledby="news-subscription-title">
       <div class="news-subscription__copy">
         <p class="news-section-kicker">Lista de novedades</p>
@@ -107,5 +113,6 @@ ob_start();
 <script src="<?= e(url('/assets/js/news-page.js')) ?>" defer></script>
 
 <?php
+// Incluye los estilos específicos y el contenido de noticias en el layout global.
 $pageContent = ob_get_clean();
 include __DIR__ . '/../_layouts/layout.php';

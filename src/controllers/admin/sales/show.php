@@ -1,14 +1,17 @@
 <?php
+// Recupera el detalle de una venta y sus asientos reservados para la vista administrativa.
 require_once __DIR__ . '/../../../config/bootstrap.php';
 requireAuth();
 requireAdmin($pdo);
 $flash = consumeFlash();
 $id = inputUuid($_GET, 'id');
+// Si falta el identificador, se vuelve al listado en vez de lanzar consultas incompletas.
 if ($id === '') {
     redirectTo('/src/controllers/admin/sales/index.php');
 }
 
 try {
+    // Carga primero los datos del comprador y el estado general de la venta.
     $stmt = $pdo->prepare(
         "SELECT s.id, s.sale_date, s.total, s.status, s.payment_method,
                 u.usuario, u.first_name, u.last_name, u.email, u.dni, u.phone
@@ -24,6 +27,7 @@ try {
         exit('Venta no encontrada');
     }
 
+    // Obtiene las entradas compradas con sus recitales y lugares asociados.
     $stmt = $pdo->prepare(
         "SELECT d.ticket_id, d.quantity, d.price,
                 t.type, c.id AS concert_id, c.name AS concert, c.date, c.time,
@@ -37,6 +41,7 @@ try {
     $stmt->execute(['id' => $id]);
     $details = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    // Agrupa los asientos por entrada para facilitar su presentación en la plantilla.
     $stmt = $pdo->prepare(
         "SELECT ticket_id, seat_code, status
            FROM seat_reservations

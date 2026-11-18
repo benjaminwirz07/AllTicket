@@ -1,5 +1,6 @@
 <?php
 
+// Valores y transformaciones compartidas por la publicación y consulta de noticias.
 const NEWS_CATEGORIES = [
     'AllTicket',
     'Música',
@@ -9,6 +10,7 @@ const NEWS_CATEGORIES = [
 
 function newsSlug(string $title, string $id): string
 {
+    // Normaliza el título para producir una URL legible y añade el ID para hacerla única.
     $title = strtr(mb_strtolower(trim($title), 'UTF-8'), [
         'á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u',
         'ü' => 'u', 'ñ' => 'n',
@@ -22,6 +24,7 @@ function newsSlug(string $title, string $id): string
 
 function newsReadingMinutes(string $content): int
 {
+    // Estima la lectura a partir de palabras visibles, sin contar etiquetas HTML.
     $text = trim(strip_tags($content));
     if ($text === '') {
         return 1;
@@ -33,6 +36,7 @@ function newsReadingMinutes(string $content): int
 
 function newsSummary(string $summary, string $content, int $limit = 500): string
 {
+    // Prioriza el resumen escrito y usa el contenido como alternativa recortada.
     $text = trim($summary);
     if ($text === '') {
         $text = trim(strip_tags($content));

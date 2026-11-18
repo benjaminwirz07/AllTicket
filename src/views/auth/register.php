@@ -1,4 +1,5 @@
 <?php
+// Prepara errores, datos anteriores y helpers de escapado para el registro.
 require_once __DIR__ . '/../../config/bootstrap.php';
 
 requireGuest();
@@ -44,6 +45,7 @@ $provinces = [
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <!-- Metadatos y recursos visuales de la página de creación de cuenta. -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AllTicket - Crear Cuenta</title>
@@ -55,6 +57,7 @@ $provinces = [
     <link rel="stylesheet" href="<?= e(url('/assets/css/loginRegistro.css')) ?>">
 </head>
 <body>
+    <!-- Encabezado del registro y aviso general si el servidor rechazó los datos. -->
     <main class="login-page">
         <div class="brand-logo-container text-center mb-4">
             <img src="<?= e(url('/assets/img/logo-Allticket2.png')) ?>" alt="Logo de AllTicket" class="brand-logo img-fluid">
@@ -78,6 +81,7 @@ $provinces = [
                     </div>
                 <?php endif; ?>
 
+                <!-- Formulario dividido en datos personales, ubicación y credenciales. -->
                 <form action="<?= e(url('/src/controllers/auth/register.php')) ?>" method="POST" novalidate>
                     <input type="hidden" name="csrf_token" value="<?= $e($_SESSION['csrf_token']) ?>">
 
@@ -290,6 +294,7 @@ $provinces = [
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Aplica formato auxiliar y muestra el estado de requisitos de contraseña. -->
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             const dniInput = document.getElementById("dni_input");

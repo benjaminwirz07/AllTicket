@@ -1,4 +1,5 @@
 <?php
+// Elimina un artista únicamente desde una sesión administrativa y una petición protegida.
 require_once __DIR__ . '/../../../config/bootstrap.php';
 requireAuth();
 requireAdmin($pdo);
@@ -6,6 +7,7 @@ requireAdmin($pdo);
 requireMethod('POST');
 requireCsrfToken();
 
+// Rechaza identificadores incompletos antes de ejecutar la eliminación.
  $id = inputUuid($_POST, 'id');
 if ($id === '') {
     http_response_code(400);
@@ -13,6 +15,7 @@ if ($id === '') {
 }
 
 try {
+    // La restricción de claves foráneas impide borrar artistas con recitales asociados.
     $stmt = $pdo->prepare('DELETE FROM artists WHERE id = :id');
     $stmt->execute(['id' => $id]);
     setFlash('success', 'Artista eliminado.');

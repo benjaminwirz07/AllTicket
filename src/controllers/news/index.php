@@ -1,8 +1,10 @@
 <?php
+// Carga el contador de noticias y mensajes permitidos para la página pública.
 require_once __DIR__ . '/../../config/bootstrap.php';
 require_once __DIR__ . '/../../config/news.php';
 
 try {
+    // Valida el estado recibido para informar el resultado de una suscripción al boletín.
     $totalNoticias = (int) $pdo->query('SELECT COUNT(*) FROM posts')->fetchColumn();
     $estadosNewsletter = ['ok', 'invalid', 'error', 'rate_limited'];
     $estadoNewsletter = inputString($_GET, 'newsletter');
@@ -10,6 +12,7 @@ try {
         $estadoNewsletter = '';
     }
 
+    // Renderiza el buscador y listado de noticias.
     require_once __DIR__ . '/../../views/news/index.php';
 } catch (PDOException $e) {
     error_log('Error al consultar las noticias: ' . $e->getMessage());

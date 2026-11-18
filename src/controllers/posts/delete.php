@@ -1,4 +1,5 @@
 <?php
+// Elimina una publicación del panel y borra su imagen asociada si el borrado tuvo éxito.
 require_once __DIR__ . '/../../config/bootstrap.php';
 require_once __DIR__ . '/../../config/uploads.php';
 requireAuth();
@@ -14,6 +15,7 @@ if ($id === '') {
 }
 
 try {
+    // Recupera la ruta de imagen antes de borrar el registro y sus referencias.
     $stmt = $pdo->prepare('SELECT image FROM posts WHERE id = :id');
     $stmt->execute(['id' => $id]);
     $image = $stmt->fetchColumn();

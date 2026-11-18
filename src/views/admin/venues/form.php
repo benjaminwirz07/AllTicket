@@ -1,4 +1,5 @@
 <?php
+// Prepara valores y errores del formulario de alta o edición de lugares.
 require_once __DIR__ . '/../../../config/bootstrap.php';
 requireAuth();
 requireAdmin($pdo);
@@ -10,6 +11,7 @@ ob_start();
 ?>
 
 <main class="container-xl py-5 text-light">
+  <!-- Encabezado del formulario y enlace de regreso al listado de sedes. -->
   <header class="admin-page-header mb-4">
     <div>
       <p class="admin-page-kicker mb-1">ESPACIOS</p>
@@ -21,6 +23,7 @@ ob_start();
     </a>
   </header>
 
+  <!-- Datos de ubicación y capacidad con los errores de validación junto a cada campo. -->
   <form class="admin-form-panel admin-form-panel--narrow" method="POST" action="/src/controllers/admin/venues/save.php">
     <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
     <?php if ($editando): ?>
@@ -69,5 +72,6 @@ ob_start();
 </main>
 
 <?php
+// Envuelve el contenido para compartir encabezado, navegación y estilos globales.
 $pageContent = ob_get_clean();
 include __DIR__ . '/../../_layouts/layout.php';

@@ -1,10 +1,12 @@
 <?php
+// Expone una página JSON del catálogo público de noticias con búsqueda y categoría.
 require_once __DIR__ . '/../../config/bootstrap.php';
 require_once __DIR__ . '/../../config/news.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 
+// Normaliza los filtros y limita la paginación para acotar el trabajo de la consulta.
 $query = inputString($_GET, 'q');
 $query = mb_substr($query, 0, 100, 'UTF-8');
 $category = inputString($_GET, 'category');
@@ -12,12 +14,14 @@ $page = max(1, min(200, inputInt($_GET, 'page')));
 $pageSize = 6;
 
 if ($category !== '' && !in_array($category, NEWS_CATEGORIES, true)) {
+    // Evita construir consultas con categorías fuera del catálogo permitido.
     http_response_code(400);
     echo json_encode(['error' => 'Categoría no válida.'], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
 try {
+    // Arma condiciones enlazadas para buscar texto y filtrar por categoría.
     $conditions = [];
     $params = [];
     if ($category !== '') {
@@ -33,6 +37,7 @@ try {
     }
     $where = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
 
+    // Selecciona una noticia destacada y la excluye luego del conjunto paginado.
     $featuredWhere = $where !== '' ? $where . ' AND p.featured = 1' : 'WHERE p.featured = 1';
     $stmtFeatured = $pdo->prepare(
         "SELECT p.id, p.title, p.slug, p.content, p.summary, p.category, p.image,
@@ -68,12 +73,14 @@ try {
     $stmtArticles->bindValue(':limit', $pageSize + 1, PDO::PARAM_INT);
     $stmtArticles->bindValue(':offset', ($page - 1) * $pageSize, PDO::PARAM_INT);
     $stmtArticles->execute();
+    // Solicita una fila adicional para determinar si existe una página siguiente.
     $articles = $stmtArticles->fetchAll(PDO::FETCH_ASSOC);
     $hasMore = count($articles) > $pageSize;
     if ($hasMore) {
         array_pop($articles);
     }
 
+    // Reduce y normaliza cada registro para devolver únicamente campos de presentación.
     $formatPost = static function (array $post): array {
         $post['summary'] = newsSummary((string) ($post['summary'] ?? ''), (string) $post['content'], 500);
         $post['reading_minutes'] = max(1, (int) $post['reading_minutes']);
@@ -93,6 +100,7 @@ try {
         'page' => $page,
     ], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
 } catch (PDOException $e) {
+    // Oculta detalles internos de la base de datos en la respuesta pública.
     error_log('Error al consultar el listado público de noticias: ' . $e->getMessage());
     http_response_code(500);
     echo json_encode(['error' => 'No se pudieron cargar las noticias.'], JSON_UNESCAPED_UNICODE);

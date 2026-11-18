@@ -1,4 +1,5 @@
 <?php
+// Carga catálogos y datos existentes para el formulario de alta o edición de recitales.
 require_once __DIR__ . '/../../../config/bootstrap.php';
 requireAuth();
 requireAdmin($pdo);
@@ -7,12 +8,14 @@ $errors = $_SESSION['errors'] ?? [];
 $old    = $_SESSION['old'] ?? [];
 unset($_SESSION['errors'], $_SESSION['old']);
 
+// Los selectores necesitan las opciones disponibles de artistas y lugares.
 $artists = $pdo->query('SELECT id, name FROM artists ORDER BY name')->fetchAll(PDO::FETCH_ASSOC);
 $venues  = $pdo->query('SELECT id, name, city FROM venues ORDER BY name')->fetchAll(PDO::FETCH_ASSOC);
 
 $concert = null;
 
 if (isset($_GET['id'])) {
+    // En edición se valida el identificador, se carga el recital y sus tipos de entrada.
     $id = inputUuid($_GET, 'id');
     if ($id === '') {
         http_response_code(400);
@@ -38,7 +41,7 @@ if (isset($_GET['id'])) {
     ], $stmt->fetchAll(PDO::FETCH_ASSOC));
 }
 
-// Si hubo errores al guardar, mostramos lo que la persona había escrito
+// Tras un error conserva los valores enviados, pero mantiene imagen y estado persistidos.
 if (!empty($old)) {
     $imagenGuardada = $concert['image'] ?? null;
     $estadoGuardado = $concert['status'] ?? 'active';
@@ -47,4 +50,5 @@ if (!empty($old)) {
     $concert['status'] = $estadoGuardado;
 }
 
+// Presenta el formulario con catálogos, datos y posibles errores.
 require_once __DIR__ . '/../../../views/admin/concerts/form.php';

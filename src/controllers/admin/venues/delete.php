@@ -1,4 +1,5 @@
 <?php
+// Elimina un lugar con protección de método, sesión administrativa y token CSRF.
 require_once __DIR__ . '/../../../config/bootstrap.php';
 requireAuth();
 requireAdmin($pdo);
@@ -13,6 +14,7 @@ if ($id === '') {
 }
 
 try {
+    // Informa si no hubo coincidencia y respeta las referencias desde recitales existentes.
     $stmt = $pdo->prepare('DELETE FROM venues WHERE id = :id');
     $stmt->execute(['id' => $id]);
 

@@ -1,4 +1,5 @@
 <?php
+// Prepara etiquetas legibles para el estado de pago y los datos del comprador.
 require_once __DIR__ . '/../../../config/bootstrap.php';
 requireAuth();
 requireAdmin($pdo);
@@ -16,6 +17,7 @@ ob_start();
 ?>
 
 <main class="container-xl py-5 text-light">
+    <!-- Identifica el pedido y permite volver al reporte agrupado de ventas. -->
     <header class="admin-page-header mb-4">
         <div>
             <p class="admin-page-kicker mb-1">VENTAS / DETALLE</p>
@@ -33,12 +35,14 @@ ob_start();
         <div class="alert alert-<?= e($flash['type']) ?>" role="alert"><?= e($flash['msg']) ?></div>
     <?php endif; ?>
 
+    <!-- Explica si la compra de prueba sigue pagada o fue cancelada. -->
     <?php if ($sale['status'] === 'paid'): ?>
         <p class="alert alert-info" role="status">Esta compra se confirmó en modo demo. No se procesó ningún cobro y no se puede cancelar desde el panel.</p>
     <?php else: ?>
         <p class="alert alert-secondary" role="status">Esta compra fue cancelada. Sus entradas no son válidas.</p>
     <?php endif; ?>
 
+    <!-- Separa los datos personales y de pago del detalle de entradas y butacas. -->
     <div class="row g-4">
         <div class="col-12 col-lg-5">
             <div class="card bg-card-dark text-light border-0 rounded-4 shadow h-100">
@@ -124,5 +128,6 @@ ob_start();
 </main>
 
 <?php
+// Inserta el detalle en el layout general del área administrativa.
 $pageContent = ob_get_clean();
 include __DIR__ . '/../../_layouts/layout.php';

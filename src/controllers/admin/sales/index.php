@@ -1,9 +1,11 @@
 <?php
+// Construye el resumen administrativo de ventas, agrupado por recital y filtrable por estado.
 require_once __DIR__ . '/../../../config/bootstrap.php';
 requireAuth();
 requireAdmin($pdo);
 $flash = consumeFlash();
 $estadosValidos = ['paid', 'cancelled'];
+// Ignora filtros arbitrarios para limitar la consulta a estados de venta conocidos.
 $filtro = $_GET['status'] ?? '';
 if (!in_array($filtro, $estadosValidos, true)) {
     $filtro = '';
@@ -34,7 +36,7 @@ try {
         $comprasPorRecital[$compra['recital_id']][] = $compra;
     }
 
-    // Resumen por recital
+    // Agrega stock, entradas vendidas e ingresos pagados para cada recital.
     $resumen = $pdo->query(
         "SELECT c.id, c.name, c.date, c.time, c.status,
                 (SELECT COALESCE(SUM(t.stock), 0)

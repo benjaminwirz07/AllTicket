@@ -1,8 +1,10 @@
 <?php
+// Recupera las publicaciones para la tabla de gestión del contenido.
 require_once __DIR__ . '/../../config/bootstrap.php';
 requireAuth();
 requireAdmin($pdo);
 try {
+    // Incluye datos del autor y ordena las publicaciones desde la más reciente.
     $query = '
         SELECT
             p.*,
@@ -18,6 +20,7 @@ try {
 
     $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    // Pasa los resultados completos a la vista administrativa.
     require_once __DIR__ . '/../../views/posts/index.php';
 } catch (PDOException $e) {
     error_log('Error al consultar las publicaciones: ' . $e->getMessage());

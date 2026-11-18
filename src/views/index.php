@@ -656,30 +656,34 @@ ob_start();
             <div
                 class="filter-bar d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
 
-                <!-- Chips -->
-                <nav class="filter-chips" aria-label="Filtrar por categoría">
+                <!-- Chips de categoría con botones auxiliares para recorrer la fila en móvil. -->
+                <div class="filter-chips-wrapper">
+                    <button class="filter-scroll-button filter-scroll-button--previous" type="button"
+                        data-scroll-direction="-1" aria-label="Ver géneros anteriores" aria-controls="filter-chips">
+                        <i class="bi bi-chevron-left" aria-hidden="true"></i>
+                    </button>
+                    <nav id="filter-chips" class="filter-chips" aria-label="Filtrar por categoría">
 
-                    <!-- Chip "Todos": saca la categoría -->
-                    <a href="<?= e(armarLink($busqueda, '', $ciudad, $finde, $verTodos)) ?>"
-                        class="filter-chip <?= $categoria === '' ? 'active' : '' ?>">
-                        Todos
-                    </a>
+                        <!-- Un chip por cada categoría de la lista -->
+                        <?php foreach ($categorias as $slug => $nombre): ?>
+                            <a href="<?= e(armarLink($busqueda, $categoria === $slug ? '' : $slug, $ciudad, $finde, $verTodos)) ?>"
+                                class="filter-chip <?= $categoria === $slug ? 'active' : '' ?>">
+                                <?= e($nombre) ?>
+                            </a>
+                        <?php endforeach; ?>
 
-                    <!-- Un chip por cada categoría de la lista -->
-                    <?php foreach ($categorias as $slug => $nombre): ?>
-                        <a href="<?= e(armarLink($busqueda, $slug, $ciudad, $finde, $verTodos)) ?>"
-                            class="filter-chip <?= $categoria === $slug ? 'active' : '' ?>">
-                            <?= e($nombre) ?>
+                        <!-- Chip "Este fin de semana": se prende y se apaga -->
+                        <a href="<?= e(armarLink($busqueda, $categoria, $ciudad, !$finde, $verTodos)) ?>"
+                            class="filter-chip <?= $finde ? 'active' : '' ?>">
+                            <i class="bi bi-calendar-week me-1" aria-hidden="true"></i>Este fin de semana
                         </a>
-                    <?php endforeach; ?>
 
-                    <!-- Chip "Este fin de semana": se prende y se apaga -->
-                    <a href="<?= e(armarLink($busqueda, $categoria, $ciudad, !$finde, $verTodos)) ?>"
-                        class="filter-chip <?= $finde ? 'active' : '' ?>">
-                        <i class="bi bi-calendar-week me-1" aria-hidden="true"></i>Este fin de semana
-                    </a>
-
-                </nav>
+                    </nav>
+                    <button class="filter-scroll-button filter-scroll-button--next" type="button"
+                        data-scroll-direction="1" aria-label="Ver más géneros" aria-controls="filter-chips">
+                        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                    </button>
+                </div>
 
 
                 <!-- Selector de ciudad (se envía solo al cambiar) -->
@@ -1290,6 +1294,7 @@ ob_start();
 
 <!-- Números que cuentan al aparecer -->
 <script src="<?= e(url('/assets/js/contador.js')) ?>"></script>
+<script src="<?= e(url('/assets/js/filter-scroll.js')) ?>" defer></script>
 
 <?php
 $pageContent = ob_get_clean();

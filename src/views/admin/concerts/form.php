@@ -1,4 +1,5 @@
 <?php
+// Normaliza datos, errores y filas de entradas antes de renderizar el formulario.
 require_once __DIR__ . '/../../../config/bootstrap.php';
 requireAuth();
 requireAdmin($pdo);
@@ -15,6 +16,7 @@ $errorDe = fn(string $k) => isset($errors[$k]) ? '<div class="text-danger small 
 ob_start();
 ?>
 
+<!-- Encabezado con el modo de edición y el enlace al catálogo de recitales. -->
 <main class="container-xl py-5 text-light">
     <header class="admin-page-header mb-4">
         <div>
@@ -27,6 +29,7 @@ ob_start();
         </a>
     </header>
 
+    <!-- Avisa qué catálogos faltan para completar los selectores del recital. -->
     <?php if (empty($artists) || empty($venues)): ?>
         <div class="alert alert-warning">
             Para crear un recital primero tenés que cargar al menos un
@@ -35,6 +38,7 @@ ob_start();
         </div>
     <?php endif; ?>
 
+    <!-- Datos generales del evento: nombre, artista, lugar, fecha, estado e imagen. -->
     <form class="admin-form-panel" method="POST" action="/src/controllers/admin/concerts/save.php" enctype="multipart/form-data">
         <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
         <?php if ($editando): ?>
@@ -137,6 +141,7 @@ ob_start();
                 rows="4"><?= e($concert['description'] ?? '') ?></textarea>
         </div>
 
+        <!-- Filas dinámicas de tipos de entrada con precio, stock y errores por fila. -->
         <h2 class="h5 text-white mb-1">Entradas</h2>
         <p class="small text-secondary-custom mb-3">
             Hasta 3 tipos (por ejemplo General, Campo, VIP). Las filas vacías se ignoran.
@@ -180,6 +185,7 @@ ob_start();
         </div>
         <button class="btn btn-violet-glow rounded-pill px-4" type="submit">Guardar</button>
     </form>
+    <!-- La cancelación se mantiene como acción independiente del guardado del formulario. -->
     <?php if ($editando && ($concert['status'] ?? '') === 'active'): ?>
         <form class="mt-3" method="POST" action="/src/controllers/admin/concerts/cancel.php"
             onsubmit="return confirm('¿Cancelar este show? Las compras confirmadas permanecerán registradas; no se procesarán reembolsos.');">
@@ -191,5 +197,6 @@ ob_start();
 </main>
 
 <?php
+// Inserta el formulario terminado en el layout general.
 $pageContent = ob_get_clean();
 include __DIR__ . '/../../_layouts/layout.php';

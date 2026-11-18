@@ -1,4 +1,5 @@
 <?php
+// Cancela un recital activo dentro de una transacción para evitar cambios concurrentes inconsistentes.
 require_once __DIR__ . '/../../../config/bootstrap.php';
 requireAuth();
 requireAdmin($pdo);
@@ -7,12 +8,14 @@ requireMethod('POST');
 requireCsrfToken();
 
 $id = inputUuid($_POST, 'id');
+// Exige un UUID antes de iniciar la transacción.
 if ($id === '') {
     http_response_code(400);
     exit('Solicitud no válida');
 }
 
 try {
+    // Bloquea el recital, confirma su estado y evita cancelar un registro inexistente o ya cancelado.
     $pdo->beginTransaction();
 
     $stmt = $pdo->prepare('SELECT status FROM concerts WHERE id = :id FOR UPDATE');
@@ -42,6 +45,7 @@ try {
     $stmt->execute(['concert_id' => $id]);
     $ventasPagadas = (int) $stmt->fetchColumn();
 
+    // Confirma el cambio antes de informar que las ventas abonadas no se reembolsaron.
     $pdo->commit();
 
     $mensaje = 'Recital cancelado.';
@@ -50,11 +54,13 @@ try {
     }
     setFlash('success', $mensaje);
 } catch (RuntimeException $e) {
+    // Revierte cambios ante reglas de negocio incumplidas y muestra el motivo controlado.
     if ($pdo->inTransaction()) {
         $pdo->rollBack();
     }
     setFlash('danger', $e->getMessage());
 } catch (PDOException $e) {
+    // Revierte errores de base de datos y registra el detalle solo en el servidor.
     if ($pdo->inTransaction()) {
         $pdo->rollBack();
     }

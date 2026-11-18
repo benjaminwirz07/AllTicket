@@ -1,4 +1,5 @@
 <?php
+// Prepara el formulario de lugar para crear un registro o modificar uno existente.
 require_once __DIR__ . '/../../../config/bootstrap.php';
 requireAuth();
 requireAdmin($pdo);
@@ -10,6 +11,7 @@ unset($_SESSION['errors'], $_SESSION['old']);
 $venue = null;
 
 if (isset($_GET['id'])) {
+    // Valida el UUID solicitado y recupera el lugar antes de habilitar su edición.
     $id = inputUuid($_GET, 'id');
     if ($id === '') {
         http_response_code(400);
@@ -25,9 +27,10 @@ if (isset($_GET['id'])) {
     }
 }
 
-// Si hubo errores al guardar, mostramos lo que la persona había escrito
+// Restaura los datos ingresados cuando el controlador de guardado reportó errores.
 if (!empty($old)) {
     $venue = $old;
 }
 
+// Renderiza el mismo formulario en los modos de alta y edición.
 require_once __DIR__ . '/../../../views/admin/venues/form.php';

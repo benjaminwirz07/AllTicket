@@ -493,6 +493,9 @@
 
   .hero-action-row > .btn {
     order: 1;
+    width: min(100%, 14rem);
+    justify-content: center;
+    padding-inline: 1.5rem;
   }
 
   .trust-benefit-icon {
@@ -787,10 +790,22 @@
    SEARCH / FILTERS
    ========================================================================== */
 
+/* Agrupa las categorías y los controles de desplazamiento de la barra de filtros. */
+.filter-chips-wrapper {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 .filter-chips {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+}
+
+/* Los controles de scroll solo aparecen en el diseño móvil cuando hay desborde. */
+.filter-scroll-button {
+  display: none;
 }
  
 .filter-chip {
@@ -1055,15 +1070,65 @@
   /* Mobile: los chips van en una sola fila con scroll horizontal,
    así no ocupan media pantalla */
 @media (max-width: 767.98px) {
+  .filter-chips-wrapper {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
   .filter-chips {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 100%;
     flex-wrap: nowrap;
     overflow-x: auto;
-    padding-bottom: 0.25rem;
-    scrollbar-width: none;
+    padding: 0.25rem 0 0.5rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(192, 132, 252, .8) rgba(255, 255, 255, .08);
+  }
+
+  .filter-scroll-button {
+    position: static;
+    flex: 0 0 2rem;
+    display: flex;
+    width: 2rem;
+    height: 2rem;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border-subtle);
+    border-radius: 50%;
+    background: rgba(15, 10, 26, .95);
+    color: #fff;
+    cursor: pointer;
+  }
+
+  .filter-scroll-button--previous {
+    order: -1;
+  }
+
+  .filter-chips-wrapper.at-start .filter-scroll-button--previous,
+  .filter-chips-wrapper.at-end .filter-scroll-button--next {
+    display: none;
+  }
+
+  .filter-chips-wrapper:not(.has-overflow) .filter-scroll-button {
+    display: none;
   }
  
   .filter-chips::-webkit-scrollbar {
-    display: none;
+    height: 6px;
+  }
+
+  .filter-chips::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, .08);
+    border-radius: 999px;
+  }
+
+  .filter-chips::-webkit-scrollbar-thumb {
+    background: rgba(192, 132, 252, .8);
+    border-radius: 999px;
   }
  
   .filter-city-form {

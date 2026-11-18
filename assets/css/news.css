@@ -1,3 +1,4 @@
+/* Base del área de noticias y variables visuales locales a sus componentes. */
 .news-page {
     --news-bg: #121118;
     --news-card: #15132b;
@@ -14,6 +15,7 @@
     font-family: var(--font-body);
 }
 
+/* Encabezado editorial y herramientas de búsqueda y filtrado. */
 .news-page__inner {
     max-width: 1200px;
 }
@@ -154,6 +156,7 @@
     color: #121118;
 }
 
+/* Tarjeta destacada, portadas y recursos de respaldo por categoría. */
 .news-featured-section {
     margin-bottom: 3rem;
 }
@@ -249,6 +252,7 @@
     overflow-wrap: anywhere;
 }
 
+/* Metadatos, acciones de lectura y botones para compartir una publicación. */
 .news-feature-card__summary {
     display: -webkit-box;
     overflow: hidden;
@@ -324,6 +328,7 @@
     color: #25d366;
 }
 
+/* Encabezado de listado y cuadrícula de tarjetas de artículos. */
 .news-section-heading {
     display: flex;
     align-items: end;
@@ -439,6 +444,7 @@
     padding: 0 1rem 1rem;
 }
 
+/* Mensajes de estado, botón para cargar más y formulario del boletín. */
 .news-status {
     min-height: 1.5rem;
     margin: 1rem 0 0;
@@ -547,6 +553,7 @@
     color: #fde68a;
 }
 
+/* Estado vacío cuando no hay noticias que coincidan con los filtros. */
 .news-empty {
     padding: clamp(2rem, 8vw, 5rem) 1.5rem;
     border: 1px solid var(--news-border);
@@ -577,6 +584,7 @@
     color: var(--news-accent);
 }
 
+/* Esqueletos animados que representan las tarjetas durante la carga. */
 .news-featured__skeleton {
     display: grid;
     min-height: 350px;
@@ -652,6 +660,7 @@
     to { background-position: -200% 0; }
 }
 
+/* Indicadores de foco visibles para navegación mediante teclado. */
 .news-page :is(a, button, input):focus-visible {
     outline: 3px solid var(--news-accent);
     outline-offset: 3px;
@@ -661,6 +670,7 @@
     outline: none;
 }
 
+/* Reordena herramientas y contenido destacado en tabletas y teléfonos. */
 @media (max-width: 767.98px) {
     .news-toolbar {
         align-items: stretch;
@@ -700,6 +710,7 @@
     }
 }
 
+/* Reduce espacios y apila el formulario del boletín en teléfonos angostos. */
 @media (max-width: 575.98px) {
     .news-page {
         padding: 2rem 0 3rem;
@@ -724,6 +735,7 @@
     }
 }
 
+/* Desactiva animaciones y transiciones para usuarios con movimiento reducido. */
 @media (prefers-reduced-motion: reduce) {
     .news-page *,
     .news-page *::before,

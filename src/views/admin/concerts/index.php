@@ -1,4 +1,5 @@
 <?php
+// Presenta el catálogo de recitales al personal administrador.
 require_once __DIR__ . '/../../../config/bootstrap.php';
 requireAuth();
 requireAdmin($pdo);
@@ -7,6 +8,7 @@ $estados = ['active' => 'Activo', 'cancelled' => 'Cancelado', 'finished' => 'Fin
 ?>
 
 <main class="container-xl py-5 text-light">
+  <!-- Navegación, alta de recital y mensajes del último cambio realizado. -->
   <header class="admin-page-header mb-4">
     <div>
       <p class="admin-page-kicker mb-1">PROGRAMACIÓN</p>
@@ -25,6 +27,7 @@ $estados = ['active' => 'Activo', 'cancelled' => 'Cancelado', 'finished' => 'Fin
     <div class="alert alert-<?= e($flash['type']) ?>" role="alert"><?= e($flash['msg']) ?></div>
   <?php endif; ?>
 
+  <!-- Tabla de eventos o estado vacío cuando todavía no hay recitales. -->
   <?php if (!empty($concerts)): ?>
     <div class="table-responsive admin-table-wrap">
       <table class="table table-dark align-middle admin-table">
@@ -61,5 +64,6 @@ $estados = ['active' => 'Activo', 'cancelled' => 'Cancelado', 'finished' => 'Fin
 </main>
 
 <?php
+// Usa el layout compartido para navegación y recursos del panel.
 $pageContent = ob_get_clean();
 include __DIR__ . '/../../_layouts/layout.php';

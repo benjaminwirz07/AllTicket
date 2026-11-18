@@ -1,4 +1,5 @@
 <?php
+// Obtiene métricas generales para el inicio del panel de administración.
 require_once __DIR__ . '/../../config/bootstrap.php';
 requireAuth();
 requireAdmin($pdo);
@@ -10,6 +11,7 @@ $stats = [
 ];
 
 try {
+    // Calcula actividad futura, cantidad de ventas abonadas y recaudación total.
     $stats = $pdo->query(
         "SELECT
             (SELECT COUNT(*) FROM concerts WHERE status = 'active' AND date >= CURDATE()) AS recitales_activos,
@@ -22,4 +24,5 @@ try {
     exit('No se pudieron cargar las estadísticas.');
 }
 
+// Entrega las métricas agregadas a la vista del panel.
 require_once __DIR__ . '/../../views/admin/index.php';

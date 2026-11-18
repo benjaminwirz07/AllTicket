@@ -1,4 +1,5 @@
 <?php
+// Verifica permisos, carga el catálogo de artistas y presenta la tabla administrativa.
 require_once __DIR__ . '/../../../config/bootstrap.php';
 requireAuth();
 requireAdmin($pdo);
@@ -6,6 +7,7 @@ requireAdmin($pdo);
 $flash = consumeFlash();
 
 try {
+    // Ordena alfabéticamente los registros que consume la vista.
     $stmt = $pdo->query('SELECT * FROM artists ORDER BY name ASC');
     $artists = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
@@ -14,4 +16,5 @@ try {
     exit('No se pudieron cargar los artistas.');
 }
 
+// Entrega los resultados ya preparados a la plantilla.
 require_once __DIR__ . '/../../../views/admin/artists/index.php';

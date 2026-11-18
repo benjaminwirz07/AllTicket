@@ -1,4 +1,5 @@
 <?php
+// Atiende el historial y los mensajes JSON del asistente asociado a la sesión actual.
 require_once __DIR__ . '/../../config/bootstrap.php';
 
 header('Content-Type: application/json; charset=utf-8');
@@ -6,6 +7,7 @@ header('Cache-Control: no-store');
 
 function responderChatbot(array $data, int $status = 200): void
 {
+    // Centraliza el código HTTP y la serialización de todas las respuestas del endpoint.
     http_response_code($status);
     echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
     exit;
@@ -13,6 +15,7 @@ function responderChatbot(array $data, int $status = 200): void
 
 function normalizarMensajeChatbot(string $mensaje): string
 {
+    // Simplifica mayúsculas y vocales acentuadas antes de buscar palabras clave.
     $mensaje = mb_strtolower($mensaje, 'UTF-8');
     return strtr($mensaje, [
         'á' => 'a',
@@ -26,6 +29,7 @@ function normalizarMensajeChatbot(string $mensaje): string
 
 function generarRespuestaChatbot(PDO $pdo, string $mensaje): string
 {
+    // Clasifica la consulta y obtiene datos actuales cuando pregunta por noticias o eventos.
     $normalizado = normalizarMensajeChatbot($mensaje);
 
     if (preg_match('/\b(hola|buenas|buenos dias|buenas tardes|buenas noches)\b/', $normalizado)) {
@@ -94,11 +98,13 @@ function generarRespuestaChatbot(PDO $pdo, string $mensaje): string
     return 'No estoy seguro de haber entendido. Podés preguntarme por recitales, entradas, compras o noticias.';
 }
 
+// Usa un identificador aleatorio por sesión para separar historiales de conversación.
 if (!isset($_SESSION['chatbot_id']) || !is_string($_SESSION['chatbot_id'])) {
     $_SESSION['chatbot_id'] = bin2hex(random_bytes(32));
 }
 $chatId = $_SESSION['chatbot_id'];
 
+// GET devuelve los últimos mensajes guardados en orden cronológico.
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     try {
         $stmt = $pdo->prepare(
@@ -117,6 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     }
 }
 
+// El resto de solicitudes debe ser POST y validar el token CSRF de la sesión.
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     responderChatbot(['error' => 'Método no permitido.'], 405);
 }
@@ -132,6 +139,7 @@ if (
     responderChatbot(['error' => 'La sesión expiró. Recargá la página e intentá nuevamente.'], 403);
 }
 
+// Valida tipo y longitud del mensaje antes de guardar o generar una respuesta.
 $mensaje = $_POST['mensaje'] ?? null;
 if (!is_string($mensaje)) {
     responderChatbot(['error' => 'El mensaje no es válido.'], 400);
@@ -142,6 +150,7 @@ if ($mensaje === '' || mb_strlen($mensaje, 'UTF-8') > 1000) {
     responderChatbot(['error' => 'Escribí un mensaje de hasta 1000 caracteres.'], 400);
 }
 
+// Guarda el intercambio completo en una transacción para mantener el historial sincronizado.
 try {
     $pdo->beginTransaction();
 

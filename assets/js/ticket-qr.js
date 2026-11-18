@@ -1,6 +1,8 @@
 (() => {
+    // Guarda temporalmente el único bloque de entrada que se enviará a impresión.
     let printTarget = null;
 
+    // Restaura las clases temporales utilizadas para limitar la impresión al ticket elegido.
     const resetPrint = () => {
         document.body.classList.remove('ticket-printing');
         if (printTarget) {
@@ -9,6 +11,7 @@
         }
     };
 
+    // Genera los QR desde los datos de cada entrada o muestra un aviso si falta la librería.
     const qrElements = document.querySelectorAll('[data-ticket-qr]');
     if (qrElements.length > 0) {
         if (typeof window.QRCode !== 'function') {
@@ -32,6 +35,7 @@
         }
     }
 
+    // Imprime el ticket asociado al botón y limpia su estado al terminar o salir de la página.
     document.addEventListener('click', (event) => {
         const button = event.target.closest('[data-ticket-print-button]');
         if (!button) return;

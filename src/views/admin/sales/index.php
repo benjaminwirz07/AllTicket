@@ -1,4 +1,5 @@
 <?php
+// Define las etiquetas de estado y medio de pago que se usan en el resumen.
 require_once __DIR__ . '/../../../config/bootstrap.php';
 requireAuth();
 requireAdmin($pdo);
@@ -14,6 +15,7 @@ ob_start();
 ?>
 
 <main class="container-xl py-5 text-light">
+    <!-- Título del reporte y acceso de regreso al panel administrativo. -->
     <header class="admin-page-header mb-4">
         <div>
             <p class="admin-page-kicker mb-1">ADMINISTRACIÓN</p>
@@ -28,6 +30,7 @@ ob_start();
     <?php if (!empty($flash)): ?>
         <div class="alert alert-<?= e($flash['type']) ?>" role="alert"><?= e($flash['msg']) ?></div>
     <?php endif; ?>
+    <!-- Navegación para filtrar compras por estado sin alterar el resumen de recitales. -->
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
         <h2 class="h5 text-white mb-0">Resumen por recital</h2>
         <nav class="d-flex flex-wrap gap-2" aria-label="Filtrar compras por estado">
@@ -40,6 +43,7 @@ ob_start();
         </nav>
     </div>
 
+    <!-- Cada recital agrupa sus métricas y compras desplegables; si no hay eventos, muestra un estado vacío. -->
     <?php if (!empty($resumen)): ?>
         <div class="sales-concert-list mb-4">
             <?php foreach ($resumen as $r): ?>
@@ -116,5 +120,6 @@ ob_start();
 </main>
 
 <?php
+// Comparte el diseño del panel con el resto de páginas de administración.
 $pageContent = ob_get_clean();
 include __DIR__ . '/../../_layouts/layout.php';

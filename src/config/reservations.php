@@ -15,6 +15,7 @@ function textoButaca(string $codigo): string
 /** Comprueba que cada código identifica una butaca creada para el stock de la entrada. */
 function butacasDentroDelStock(array $butacas, int $stock): bool
 {
+    // Comprueba formato, rango de fila/columna e índice frente al stock habilitado.
     foreach ($butacas as $codigo) {
         if (!is_string($codigo) || preg_match('/^([1-9]\d{0,2})-([1-9]\d{0,2})$/', $codigo, $partes) !== 1) {
             return false;
@@ -53,6 +54,7 @@ function esNumerada(string $tipo): bool
 /** Días que faltan para una fecha 'Y-m-d' (negativo si ya pasó). */
 function diasRestantes(string $fecha): int
 {
+    // Compara fechas de calendario para devolver días positivos o negativos respecto de hoy.
     $hoy = strtotime(date('Y-m-d'));
     $dia = strtotime($fecha);
     return (int) round(($dia - $hoy) / 86400);

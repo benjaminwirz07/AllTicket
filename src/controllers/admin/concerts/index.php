@@ -1,4 +1,5 @@
 <?php
+// Carga los recitales y sus relaciones para el catálogo administrativo.
 require_once __DIR__ . '/../../../config/bootstrap.php';
 requireAuth();
 requireAdmin($pdo);
@@ -6,6 +7,7 @@ requireAdmin($pdo);
 $flash = consumeFlash();
 
 try {
+    // Ordena los eventos por fecha e incluye artista y lugar en una sola consulta.
     $stmt = $pdo->query(
         'SELECT c.id, c.name, c.date, c.time, c.status, c.genre,
                 a.name AS artist, v.name AS venue
@@ -21,4 +23,5 @@ try {
     exit('No se pudieron cargar los recitales.');
 }
 
+// Renderiza la tabla con estados y acciones disponibles para cada recital.
 require_once __DIR__ . '/../../../views/admin/concerts/index.php';

@@ -1,6 +1,8 @@
 <?php
+// Procesa el checkout de prueba: valida disponibilidad, registra la venta y genera tickets QR.
 require_once __DIR__ . '/../../config/bootstrap.php';
 
+// Recupera datos del comprador autenticado para el resumen y la confirmación.
 $loginUrl = url('/src/views/auth/login.php');
 $userId = currentUserId();
 $compradorNombre = '';
@@ -15,6 +17,7 @@ if ($userId !== null) {
     }
 }
 
+// Los medios disponibles son de demostración y nunca ejecutan un cobro real.
 $modoDemo = true;
 
 $metodos = [
@@ -23,6 +26,7 @@ $metodos = [
 
 $maxEntradas = 6;
 
+// Genera identificadores UUID v4 para las filas relacionadas creadas durante la compra.
 if (!function_exists('uuidv4')) {
     function uuidv4() {
         $d = random_bytes(16);
@@ -34,6 +38,7 @@ if (!function_exists('uuidv4')) {
 // esNumerada() y textoButaca() viven en
 // src/config/reservations.php (se cargan desde bootstrap.php).
 
+// Inicializa el estado de presentación y limita los métodos HTTP admitidos por el checkout.
 $csrf = csrfToken();
 
 $vista = 'resumen';
@@ -54,6 +59,7 @@ if ($metodo === 'POST') {
     exit('Método no permitido');
 }
 
+// GET con ID de venta muestra el resultado solo al comprador propietario de esa compra.
 if ($metodo === 'GET' && isset($_GET['ok'])) {
     $ventaIdGet = inputUuid($_GET, 'ok');
     if ($ventaIdGet === '') {
@@ -99,6 +105,7 @@ if ($metodo === 'GET' && isset($_GET['ok'])) {
             }
         }
     }
+// POST valida entradas y asientos antes de permitir la confirmación de la compra demo.
 } elseif ($metodo === 'POST') {
     $confirma = isset($_POST['confirmar']);
     $concertId = inputUuid($_POST, 'concert_id');
@@ -123,6 +130,7 @@ if ($metodo === 'GET' && isset($_GET['ok'])) {
     }
     $butacas = array_values($butacas);
 
+    // Rechaza códigos mal formados o una cantidad de asientos desproporcionada.
     if ($asientosInvalidos) {
         $errores[] = 'La selección de butacas no es válida. Volvé al recital y elegilas nuevamente.';
     }
@@ -134,6 +142,7 @@ if ($metodo === 'GET' && isset($_GET['ok'])) {
             $errores[] = 'La solicitud de compra no es válida.';
             $vista = 'error';
         } else {
+        // Recupera precio, stock y datos del recital para validar la selección actual.
         $stmt = $pdo->prepare(
             "SELECT t.id AS ticket_id, t.type, t.price, t.available, t.stock,
                     c.id AS concert_id, c.name, c.image, c.date, c.time, c.status,
@@ -172,6 +181,7 @@ if ($metodo === 'GET' && isset($_GET['ok'])) {
                 $errores[] = 'No quedan tantas entradas disponibles.';
             }
 
+            // Comprueba que ninguna butaca elegida haya sido tomada desde la carga del formulario.
             if ($numerada && $butacas && !$errores) {
                 $marcas = implode(',', array_fill(0, count($butacas), '?'));
                 $q = $pdo->prepare("SELECT seat_code FROM seat_reservations WHERE concert_id = ? AND status = 'confirmed' AND seat_code IN ($marcas)");
@@ -185,6 +195,7 @@ if ($metodo === 'GET' && isset($_GET['ok'])) {
         }
         }
 
+        // Conserva el resumen o muestra errores; solo confirma si el usuario lo solicitó.
         if ($errores) {
             $vista = 'error';
         } elseif ($confirma) {
@@ -193,6 +204,7 @@ if ($metodo === 'GET' && isset($_GET['ok'])) {
                 $vista = 'resumen';
             } else {
                 try {
+                    // Bloquea el stock y el estado del recital para impedir sobreventa concurrente.
                     $pdo->beginTransaction();
                     $lock = $pdo->prepare(
                         "SELECT t.available, c.status, c.date
@@ -215,6 +227,7 @@ if ($metodo === 'GET' && isset($_GET['ok'])) {
                         throw new RuntimeException('No quedan tantas entradas disponibles.');
                     }
 
+                    // Registra venta, detalle, entradas individuales y asientos dentro de la transacción.
                     $ventaId = uuidv4();
 
                     $pdo->prepare("INSERT INTO sales (id, user_id, total, status, payment_method) VALUES (?, ?, ?, 'paid', ?)")
@@ -245,23 +258,26 @@ if ($metodo === 'GET' && isset($_GET['ok'])) {
                         $insSeat->execute([uuidv4(), $concertId, $ticketId, $ventaId, $codigo]);
                     }
 
-                    // CAMBIO C: el descuento verifica el stock por sí mismo
+                    // El descuento condicional vuelve a comprobar disponibilidad antes de confirmar.
                     $upd = $pdo->prepare("UPDATE tickets SET available = available - ? WHERE id = ? AND available >= ?");
                     $upd->execute([$cantidad, $ticketId, $cantidad]);
                     if ($upd->rowCount() !== 1) {
                         throw new RuntimeException('No quedan tantas entradas disponibles.');
                     }
 
+                    // Confirma todos los registros antes de mostrar la pantalla de compra finalizada.
                     $pdo->commit();
                     redirectTo('/src/controllers/concerts/checkout.php?ok=' . urlencode($ventaId));
                 } catch (PDOException $e) {
-                    error_log('Error en checkout: ' . $e->getMessage()); // CAMBIO B: deja rastro en el log
+                    // Registra el detalle técnico, revierte la compra y presenta un mensaje seguro.
+                    error_log('Error en checkout: ' . $e->getMessage());
                     if ($pdo->inTransaction()) { $pdo->rollBack(); }
                     $errores[] = ($e->getCode() == '23000')
                         ? 'Alguna de las butacas se ocupó recién. Volvé y elegí otras.'
                         : 'No pudimos registrar la compra. Probá de nuevo.';
                     $vista = 'error';
                 } catch (RuntimeException $e) {
+                    // Revierte errores de disponibilidad o reglas de negocio comunicables al usuario.
                     if ($pdo->inTransaction()) { $pdo->rollBack(); }
                     $errores[] = $e->getMessage();
                     $vista = 'error';
@@ -270,8 +286,10 @@ if ($metodo === 'GET' && isset($_GET['ok'])) {
         }
     }
 } else {
+    // Una solicitud sin parámetros de compra vuelve al catálogo de eventos.
     redirectTo('/src/views/index.php#eventos');
 }
 
+// El controlador comparte el estado final con la plantilla de presentación del checkout.
 define('ALLTICKET_CHECKOUT_RENDER', true);
 require __DIR__ . '/../../views/concerts/checkout-content.php';

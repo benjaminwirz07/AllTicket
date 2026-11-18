@@ -1,4 +1,5 @@
 <?php
+// Traduce estados internos de compra a etiquetas y determina si la entrada admite ingreso.
 $listaEstados = [
     'cancelled' => ['Compra cancelada', 'danger'],
     'paid' => ['Pagada', 'success'],
@@ -10,6 +11,7 @@ $puedeIngresar = $entrada
 ob_start();
 ?>
 
+<!-- Pantalla de control de acceso para buscar y validar una entrada digital. -->
 <main class="container-xl py-5 text-light">
     <div class="mx-auto" style="max-width: 640px;">
         <header class="admin-page-header mb-4">
@@ -25,6 +27,7 @@ ob_start();
             </a>
         </header>
 
+        <!-- Permite buscar por identificador, informa entradas no halladas o muestra su ficha. -->
         <?php if ($entryId === ''): ?>
             <section class="card bg-card-dark text-light border border-secondary-subtle rounded-4">
                 <div class="card-body p-4">
@@ -73,6 +76,7 @@ ob_start();
                         <dd class="col-sm-7">#<?= e(strtoupper(substr($entrada['sale_id'], 0, 8))) ?></dd>
                     </dl>
 
+                    <!-- El estado de uso o pago define si se permite marcar el ingreso. -->
                     <?php if ($entrada['used_at'] !== null): ?>
                         <div class="alert alert-secondary mb-0" role="status">
                             Esta entrada ya se utilizó el <?= e($entrada['used_at']) ?>. No puede volver a ingresar.
@@ -97,5 +101,6 @@ ob_start();
 </main>
 
 <?php
+// Incluye la pantalla de validación dentro de la plantilla compartida.
 $pageContent = ob_get_clean();
 include __DIR__ . '/../_layouts/layout.php';

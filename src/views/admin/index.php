@@ -1,4 +1,5 @@
 <?php
+// Define accesos del panel usando una lista para compartir el mismo patrón de tarjeta.
 require_once __DIR__ . '/../../config/bootstrap.php';
 requireAuth();
 requireAdmin($pdo);
@@ -15,6 +16,7 @@ ob_start();
 ?>
 
 <main class="container-xl py-5 text-light admin-dashboard">
+    <!-- Saludo al personal administrador e indicación para validar QR desde un móvil. -->
     <header class="admin-page-header mb-4">
         <div>
             <p class="admin-page-kicker mb-1">ALLTICKET</p>
@@ -26,7 +28,7 @@ ob_start();
             Para validar una entrada, abrí esta opción desde el celular del personal y escaneá el QR con la cámara.
     </p>
 
-    <!-- Números -->
+    <!-- Indicadores agregados que enlazan a los listados relevantes. -->
     <div class="row g-3 mb-5">
         <div class="col-6 col-lg-4">
             <a class="admin-stat" href="/src/controllers/admin/concerts/index.php">
@@ -48,7 +50,7 @@ ob_start();
         </div>
     </div>
 
-    <!-- Secciones -->
+    <!-- Accesos de gestión generados a partir de la configuración de secciones. -->
     <h2 class="h5 text-white mb-3">Gestionar</h2>
     <div class="row g-4">
         <?php foreach ($secciones as [$url, $icono, $titulo, $texto]): ?>
@@ -68,5 +70,6 @@ ob_start();
 </main>
 
 <?php
+// Inserta el panel en el diseño compartido.
 $pageContent = ob_get_clean();
 include __DIR__ . '/../_layouts/layout.php';

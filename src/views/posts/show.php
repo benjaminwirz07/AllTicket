@@ -1,5 +1,9 @@
-<?php ob_start(); ?>
+<?php
+// Prepara la página pública de una publicación y captura su contenido para el layout.
+ob_start();
+?>
 
+<!-- Encabezado de la noticia, artículo y recomendaciones de la misma categoría. -->
 <main class="container-xl py-5 text-light">
   <header class="row mb-4">
     <div class="col">
@@ -10,6 +14,7 @@
     </div>
   </header>
 
+  <!-- Renderiza el contenido encontrado o informa que no existe el artículo solicitado. -->
   <?php if (!empty($post)): ?>
     <article class="card bg-card-dark text-light border-0 rounded-4 shadow">
       <div class="card-body p-4">
@@ -39,6 +44,7 @@
           <?php endif; ?>
         </div>
 
+        <!-- Escapa el texto editorial y conserva saltos de línea en la presentación. -->
         <p class="card-text"><?= nl2br(e($post['content'])) ?></p>
         <p class="text-secondary-custom mb-0">Publicado el <?= e($post['created_at']) ?></p>
       </div>
@@ -66,5 +72,6 @@
 </main>
 
 <?php
+// Entrega el contenido editorial al layout con navegación compartida.
 $pageContent = ob_get_clean();
 include __DIR__ . '/../_layouts/layout.php';

@@ -1,4 +1,5 @@
 <?php
+// Registra una cuenta después de validar los campos personales y las credenciales.
 require_once __DIR__ . '/../../config/bootstrap.php';
 
 requireMethod('POST');
@@ -21,6 +22,7 @@ $birthDateInput = inputString($_POST, 'birth_date');
 $birth_date  = inputDate($_POST, 'birth_date');
 
 $generosPermitidos = ['F', 'M', 'X'];
+// Acumula errores por campo para devolverlos juntos al formulario.
 $errors = [];
 
 if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -101,6 +103,7 @@ if ($password !== $repeatPassword) {
     $errors['repeatPassword'] = 'Las contraseñas no coinciden.';
 }
 
+// Conserva solo los datos no sensibles para restaurarlos si hay errores.
 $old = [
     'usuario'     => $usuario,
     'email'       => $email,
@@ -115,6 +118,7 @@ $old = [
     'birth_date'  => $birth_date,
 ];
 
+// Verifica que correo, DNI y nombre de usuario no estén registrados previamente.
 if (empty($errors['email'])) {
     $stmt = $pdo->prepare('SELECT id FROM users WHERE email = :email LIMIT 1');
     $stmt->execute(['email' => $email]);
@@ -140,12 +144,14 @@ if ($usuario !== '' && empty($errors['usuario'])) {
 }
 
 if (!empty($errors)) {
+    // Regresa al formulario con errores y datos visibles, nunca con la contraseña.
     $_SESSION['errors'] = $errors;
     $_SESSION['old']    = $old;
     redirectTo('/src/views/auth/register.php');
 }
 
 try {
+    // Guarda la cuenta con hash bcrypt y convierte opcionales vacíos a NULL.
     $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
 
     $stmt = $pdo->prepare(
@@ -180,6 +186,7 @@ try {
     redirectTo('/src/views/auth/login.php');
 
 } catch (PDOException $e) {
+    // Registra el fallo interno y muestra un mensaje seguro junto con los datos recuperables.
     error_log('Error al registrar usuario: ' . $e->getMessage());
     $_SESSION['errors'] = ['general' => 'Ocurrió un error en el servidor. Intentá nuevamente más tarde.'];
     $_SESSION['old']    = $old;

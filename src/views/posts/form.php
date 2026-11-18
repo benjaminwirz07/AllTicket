@@ -1,4 +1,5 @@
 <?php
+// Protege la vista y decide si sus campos representan un alta o una edición.
 require_once __DIR__ . '/../../config/bootstrap.php';
 requireAuth();
 requireAdmin($pdo);
@@ -8,6 +9,7 @@ ob_start();
 ?>
 
 <main class="container-xl py-5 text-light">
+  <!-- Mensajes temporales, título y enlace al listado de publicaciones. -->
   <?php $flash = consumeFlash(); ?>
   <?php if ($flash): ?>
     <div class="alert alert-<?= e(in_array($flash['type'], ['success', 'danger', 'warning', 'info'], true) ? $flash['type'] : 'info') ?>" role="alert">
@@ -25,6 +27,7 @@ ob_start();
     </a>
   </header>
 
+  <!-- Formulario editorial con campos de texto, categoría, destacado e imagen opcional. -->
   <form class="admin-form-panel" method="POST" enctype="multipart/form-data"
         action="<?= e(url($post ? '/src/controllers/posts/update.php' : '/src/controllers/posts/store.php')) ?>">
     <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
@@ -86,5 +89,6 @@ ob_start();
 </main>
 
 <?php
+// Renderiza el editor dentro del layout común del sitio.
 $pageContent = ob_get_clean();
 include __DIR__ . '/../_layouts/layout.php';

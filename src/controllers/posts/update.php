@@ -1,4 +1,5 @@
 <?php
+// Valida una edición, conserva la imagen anterior si no se reemplaza y actualiza la publicación.
 require_once __DIR__ . '/../../config/bootstrap.php';
 require_once __DIR__ . '/../../config/news.php';
 require_once __DIR__ . '/../../config/uploads.php';
@@ -14,6 +15,7 @@ $content = inputString($_POST, 'content', false);
 $summary = inputString($_POST, 'summary');
 $category = inputString($_POST, 'category');
 $featured = ($_POST['featured'] ?? '') === '1' ? 1 : 0;
+// Exige un UUID, límites de contenido válidos y una categoría admitida.
 if (
     $id === ''
     || $title === ''
@@ -28,6 +30,7 @@ $summary = newsSummary($summary, $content);
 
 $imageNew = null;
 try {
+    // Recupera la imagen vigente para preservarla si no se carga un archivo nuevo.
     $stmt = $pdo->prepare('SELECT image FROM posts WHERE id = :id');
     $stmt->execute(['id' => $id]);
     $imageCurrent = $stmt->fetchColumn();
@@ -36,6 +39,7 @@ try {
     }
 
     $imageNew = guardarImagen($_FILES['image_file'] ?? [], 'news');
+    // Actualiza el artículo y sus metadatos derivados con parámetros preparados.
     $stmt = $pdo->prepare(
         'UPDATE posts
             SET title = :title, slug = :slug, content = :content, summary = :summary,

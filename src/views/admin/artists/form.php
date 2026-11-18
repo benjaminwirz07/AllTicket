@@ -1,4 +1,5 @@
 <?php
+// Prepara el formulario común para crear o actualizar un artista.
 require_once __DIR__ . '/../../../config/bootstrap.php';
 requireAuth();
 requireAdmin($pdo);
@@ -9,6 +10,7 @@ $editando = !empty($artist['id']);
 ob_start();
 ?>
 
+<!-- Encabezado y navegación de regreso al catálogo de artistas. -->
 <main class="container-xl py-5 text-light">
     <header class="admin-page-header mb-4">
         <div>
@@ -21,6 +23,7 @@ ob_start();
         </a>
     </header>
 
+    <!-- El formulario conserva los valores, muestra errores y permite reemplazar la imagen. -->
     <form class="admin-form-panel admin-form-panel--narrow" method="POST"
         action="/src/controllers/admin/artists/save.php" enctype="multipart/form-data">
         <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
@@ -62,5 +65,6 @@ ob_start();
 </main>
 
 <?php
+// Envuelve el contenido preparado en la plantilla administrativa compartida.
 $pageContent = ob_get_clean();
 include __DIR__ . '/../../_layouts/layout.php';

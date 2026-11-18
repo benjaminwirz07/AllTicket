@@ -1,4 +1,5 @@
 <?php
+// Prepara la vista protegida para administrar las publicaciones existentes.
 require_once __DIR__ . '/../../config/bootstrap.php';
 requireAuth();
 requireAdmin($pdo);
@@ -6,6 +7,7 @@ ob_start();
 ?>
 
 <main class="container-xl py-5 text-light">
+  <!-- Encabezado del listado y navegación del panel. -->
   <header class="admin-page-header mb-4">
     <div>
       <p class="admin-page-kicker mb-1">CONTENIDO</p>
@@ -26,6 +28,7 @@ ob_start();
     <?php endif; ?>
   </header>
 
+  <!-- Muestra cada publicación con acciones administrativas o un mensaje vacío. -->
   <?php if (!empty($posts)): ?>
     <?php foreach ($posts as $post): ?>
       <article class="card bg-card-dark text-light border-0 rounded-4 shadow mb-3">
@@ -55,5 +58,6 @@ ob_start();
 </main>
 
 <?php
+// Inserta el listado dentro de la plantilla general.
 $pageContent = ob_get_clean();
 include __DIR__ . '/../_layouts/layout.php';

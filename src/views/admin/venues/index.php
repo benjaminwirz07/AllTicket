@@ -1,4 +1,5 @@
 <?php
+// Prepara el listado protegido de sedes y sus acciones administrativas.
 require_once __DIR__ . '/../../../config/bootstrap.php';
 requireAuth();
 requireAdmin($pdo);
@@ -6,6 +7,7 @@ ob_start();
 ?>
 
 <main class="container-xl py-5 text-light">
+  <!-- Navegación del catálogo y acceso directo a la creación de una sede. -->
   <header class="admin-page-header mb-4">
     <div>
       <p class="admin-page-kicker mb-1">ESPACIOS</p>
@@ -20,10 +22,12 @@ ob_start();
     </div>
   </header>
 
+  <!-- Mensaje temporal de confirmación o error de la última operación. -->
   <?php if (!empty($flash)): ?>
     <div class="alert alert-<?= e($flash['type']) ?>" role="alert"><?= e($flash['msg']) ?></div>
   <?php endif; ?>
 
+  <!-- Tabla editable de lugares o aviso cuando el catálogo aún está vacío. -->
   <?php if (!empty($venues)): ?>
     <div class="table-responsive admin-table-wrap">
       <table class="table table-dark align-middle admin-table">
@@ -66,5 +70,6 @@ ob_start();
 </main>
 
 <?php
+// Inserta el listado en la plantilla administrativa común.
 $pageContent = ob_get_clean();
 include __DIR__ . '/../../_layouts/layout.php';

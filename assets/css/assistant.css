@@ -1,3 +1,4 @@
+/* Botón flotante que abre y cierra el asistente de conversación. */
 .chatbot-launcher {
     position: fixed;
     right: 1.25rem;
@@ -22,6 +23,7 @@
     object-fit: cover;
 }
 
+/* Ventana del chat, con estado oculto controlado por el atributo hidden. */
 .chatbot-panel {
     position: fixed;
     right: 1.25rem;
@@ -42,6 +44,7 @@
     display: none;
 }
 
+/* Cabecera, identidad visual y nota informativa del panel. */
 .chatbot-header {
     display: flex;
     align-items: center;
@@ -83,6 +86,7 @@
     text-align: center;
 }
 
+/* Área desplazable del historial y estilos diferenciados por emisor. */
 .chatbot-log {
     display: flex;
     flex: 1;
@@ -115,6 +119,7 @@
     background: var(--bg-card);
 }
 
+/* Accesos rápidos que permiten enviar consultas frecuentes al asistente. */
 .chatbot-quick-access {
     display: grid;
     gap: .55rem;
@@ -177,6 +182,7 @@
     font-size: .65rem;
 }
 
+/* Avisos de error y controles del formulario de envío. */
 .chatbot-error {
     margin: 0;
     padding: 0 .85rem .55rem;
@@ -196,6 +202,7 @@
     flex: 1;
 }
 
+/* Ajusta el botón y el panel para que quepan en pantallas angostas. */
 @media (max-width: 480px) {
     .chatbot-launcher {
         right: 1rem;

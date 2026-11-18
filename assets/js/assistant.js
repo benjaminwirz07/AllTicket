@@ -1,6 +1,7 @@
 (function () {
     'use strict';
 
+    // Referencias al panel, formulario y controles que componen el chat flotante.
     var panel = document.getElementById('chatbotPanel');
     var launcher = document.getElementById('chatbotLauncher');
     var closeButton = document.getElementById('chatbotClose');
@@ -13,6 +14,7 @@
     var historyLoaded = false;
     var sending = false;
 
+    // Inserta mensajes como texto y mantiene los accesos rápidos al final del historial.
     function addMessage(text, sender) {
         var message = document.createElement('div');
         message.className = 'chatbot-message chatbot-message--' + sender;
@@ -25,6 +27,7 @@
         log.scrollTop = log.scrollHeight;
     }
 
+    // Construye una sola vez los botones de preguntas frecuentes del asistente.
     function addQuickAccess() {
         var existingQuickAccess = log.querySelector('.chatbot-quick-access');
         if (existingQuickAccess) {
@@ -77,11 +80,13 @@
         log.scrollTop = log.scrollHeight;
     }
 
+    // Expone errores de red o validación en el contenedor accesible del chat.
     function showError(text) {
         errorBox.textContent = text;
         errorBox.hidden = !text;
     }
 
+    // Convierte respuestas JSON y centraliza el mensaje alternativo ante fallos del servidor.
     async function readResponse(response, fallback) {
         var data;
         try {
@@ -95,6 +100,7 @@
         return data;
     }
 
+    // Carga el historial de sesión y habilita el envío después de una respuesta válida.
     async function loadHistory() {
         if (historyLoaded) {
             return;
@@ -121,6 +127,7 @@
         input.focus();
     }
 
+    // Abre el panel y recupera el historial solo la primera vez.
     async function openChat() {
         panel.hidden = false;
         launcher.setAttribute('aria-expanded', 'true');
@@ -138,12 +145,14 @@
         }
     }
 
+    // Cierra el panel y devuelve el foco al botón que lo abrió.
     function closeChat() {
         panel.hidden = true;
         launcher.setAttribute('aria-expanded', 'false');
         launcher.focus();
     }
 
+    // Alterna la apertura del chat y conecta sus controles de cierre y accesos rápidos.
     launcher.addEventListener('click', function () {
         if (panel.hidden) {
             openChat();
@@ -162,6 +171,7 @@
         form.requestSubmit();
     });
 
+    // Envía un único mensaje por vez y restablece los controles incluso si la petición falla.
     form.addEventListener('submit', async function (event) {
         event.preventDefault();
         var message = input.value.trim();
@@ -177,6 +187,7 @@
         addMessage(message, 'user');
 
         try {
+            // Codifica el mensaje y el token CSRF como datos de formulario.
             var body = new URLSearchParams({
                 mensaje: message,
                 csrf_token: csrfToken

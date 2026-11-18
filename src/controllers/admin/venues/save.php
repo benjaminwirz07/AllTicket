@@ -1,4 +1,5 @@
 <?php
+// Valida y persiste los datos del lugar enviado desde el panel administrativo.
 require_once __DIR__ . '/../../../config/bootstrap.php';
 requireAuth();
 requireAdmin($pdo);
@@ -7,6 +8,7 @@ requireMethod('POST');
 requireCsrfToken();
 
 $id = inputString($_POST, 'id');
+// Comprueba que el identificador de edición tenga el formato UUID esperado.
 if ($id !== '' && !isValidUuid($id)) {
     http_response_code(400);
     exit('Solicitud no válida');
@@ -22,6 +24,7 @@ $data = [
 
 $errors = [];
 
+// Valida campos obligatorios, longitudes y capacidad antes de preparar la escritura.
 if ($data['name'] === '' || mb_strlen($data['name']) > 150) {
     $errors['name'] = 'El nombre es obligatorio (máximo 150 caracteres).';
 }
@@ -43,6 +46,7 @@ if (
 }
 
 if (!empty($errors)) {
+    // Conserva los valores para que se puedan corregir sin volver a completar el formulario.
     $_SESSION['errors'] = $errors;
     $_SESSION['old']    = $data + ['id' => $id];
     $volver = '/src/controllers/admin/venues/form.php' . ($id !== '' ? '?id=' . urlencode($id) : '');
@@ -50,6 +54,7 @@ if (!empty($errors)) {
 }
 
 $params = [
+    // Normaliza los campos opcionales y convierte la capacidad a entero para SQL.
     'name'     => $data['name'],
     'address'  => $data['address'],
     'city'     => $data['city'],
@@ -58,6 +63,7 @@ $params = [
 ];
 
 try {
+    // Decide entre alta y edición según la presencia del identificador.
     if ($id === '') {
         $stmt = $pdo->prepare(
             'INSERT INTO venues (name, address, city, province, capacity)

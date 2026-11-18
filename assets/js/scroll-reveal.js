@@ -1,11 +1,14 @@
 (() => {
+    // Anima la entrada inicial del contenido principal cuando la página lo permite.
     const main = document.querySelector("#main-content main");
     if (main) {
         main.classList.add("page-enter");
     }
 
+    // Respeta la preferencia de movimiento reducido del sistema en todas las animaciones.
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+    // Rota los beneficios destacados solo mientras el módulo está visible en pantalla.
     const benefitRotator = document.querySelector("[data-benefit-rotator]");
     if (benefitRotator) {
         const benefitSlides = Array.from(benefitRotator.querySelectorAll(".trust-benefit-slide"));
@@ -62,10 +65,12 @@
         }
     }
 
+    // Omite las revelaciones al desplazarse si no hay movimiento permitido u observador.
     if (prefersReducedMotion || !("IntersectionObserver" in window)) {
         return;
     }
 
+    // Selecciona secciones y tarjetas que aparecerán al entrar en el área visible.
     const elements = document.querySelectorAll(
         "#main-content main > section, " +
         "#main-content main .event-card, " +
@@ -79,6 +84,7 @@
         return;
     }
 
+    // Ajusta umbral, margen y demora de animación para pantallas pequeñas.
     const isMobile = window.matchMedia("(max-width: 767.98px)").matches;
     const observer = new IntersectionObserver((entries, currentObserver) => {
         entries.forEach((entry) => {

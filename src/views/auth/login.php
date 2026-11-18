@@ -1,4 +1,5 @@
 <?php
+// Recupera errores y mensajes de sesión para mostrarlos en el formulario de acceso.
 require_once __DIR__ . '/../../config/bootstrap.php';
 
 requireGuest();
@@ -18,6 +19,7 @@ $e = static fn($value): string => htmlspecialchars(
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <!-- Metadatos, fuentes y hojas de estilo de la pantalla de autenticación. -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AllTicket - Iniciar Sesión</title>
@@ -29,6 +31,7 @@ $e = static fn($value): string => htmlspecialchars(
     <link rel="stylesheet" href="<?= e(url('/assets/css/loginRegistro.css')) ?>">
 </head>
 <body>
+    <!-- Formulario de inicio de sesión con mensajes por campo y enlace de registro. -->
     <main class="login-page">
         <div class="brand-logo-container text-center mb-4">
             <img src="<?= e(url('/assets/img/logo-Allticket2.png')) ?>" alt="AllTicket Logo" class="brand-logo img-fluid">
@@ -111,6 +114,7 @@ $e = static fn($value): string => htmlspecialchars(
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Permite mostrar u ocultar la contraseña con mouse o teclado. -->
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             document.querySelectorAll(".eye").forEach(icon => {

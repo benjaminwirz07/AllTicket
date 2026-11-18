@@ -1,4 +1,5 @@
 <?php
+// Valida los campos, prepara la imagen y crea una publicación de noticias.
 require_once __DIR__ . '/../../config/bootstrap.php';
 require_once __DIR__ . '/../../config/news.php';
 require_once __DIR__ . '/../../config/uploads.php';
@@ -13,6 +14,7 @@ $content = inputString($_POST, 'content', false);
 $summary = inputString($_POST, 'summary');
 $category = inputString($_POST, 'category');
 $featured = ($_POST['featured'] ?? '') === '1' ? 1 : 0;
+// Rechaza campos requeridos o categorías que no pertenezcan al catálogo establecido.
 if (
     $title === ''
     || mb_strlen($title, 'UTF-8') > 255
@@ -24,6 +26,7 @@ if (
 }
 $summary = newsSummary($summary, $content);
 
+// Genera el slug y persiste el contenido junto con los metadatos calculados.
 $image = null;
 try {
     $image = guardarImagen($_FILES['image_file'] ?? [], 'news');
@@ -49,6 +52,7 @@ try {
 
     redirectWithFlash('/src/controllers/posts/index.php', 'success', 'Publicación creada correctamente.');
 } catch (RuntimeException $e) {
+    // Los errores de carga se muestran al usuario; los errores SQL se registran en servidor.
     redirectWithFlash('/src/controllers/posts/form.php', 'danger', $e->getMessage());
 } catch (PDOException $e) {
     borrarImagenSubida($image);

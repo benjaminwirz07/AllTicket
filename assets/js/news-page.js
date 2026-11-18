@@ -1,4 +1,5 @@
 (() => {
+    // Busca el contenedor de noticias y termina si esta página no incluye el navegador dinámico.
     const browser = document.querySelector('[data-news-browser]');
     if (!browser) return;
 
@@ -12,6 +13,7 @@
     const categoryButtons = Array.from(browser.querySelectorAll('[data-news-category]'));
     if (!apiUrl || !featuredRoot || !grid || !status || !loadMore || !searchForm || !searchInput) return;
 
+    // Estado de filtros, paginación y control de respuestas fuera de orden.
     let activeCategory = '';
     let searchQuery = '';
     let currentPage = 0;
@@ -19,6 +21,7 @@
     let requestId = 0;
     let debounceTimer;
 
+    // Funciones pequeñas para crear nodos usando texto seguro en lugar de insertar HTML.
     const create = (tag, className, text) => {
         const element = document.createElement(tag);
         if (className) element.className = className;
@@ -26,12 +29,14 @@
         return element;
     };
 
+    // Formatea fechas del servidor según la convención regional de la interfaz.
     const formatDate = (date) => {
         const parsed = new Date(String(date).replace(' ', 'T'));
         if (Number.isNaN(parsed.getTime())) return '';
         return new Intl.DateTimeFormat('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(parsed);
     };
 
+    // Construye los controles accesibles para compartir o copiar una noticia.
     const makeShareButton = (kind, label, icon) => {
         const button = create('button', `news-share-button news-share-button--${kind}`);
         button.type = 'button';
@@ -55,6 +60,7 @@
         return tools;
     };
 
+    // Piezas de presentación para fechas, portadas y tarjetas de noticias.
     const createDate = (date) => {
         const paragraph = create('p', 'news-meta');
         const icon = create('i', 'bi bi-calendar3');
@@ -80,6 +86,7 @@
         return cover;
     };
 
+    // Renderiza la noticia destacada o la oculta si los filtros no devolvieron una.
     const renderFeatured = (post) => {
         featuredRoot.replaceChildren();
         if (!post) {
@@ -110,6 +117,7 @@
         featuredRoot.append(article);
     };
 
+    // Genera una tarjeta de artículo con enlace, datos editoriales y acciones para compartir.
     const createStoryCard = (post) => {
         const article = create('article', 'news-story-card');
         const link = create('a', 'news-story-card__link');
@@ -131,6 +139,7 @@
         return article;
     };
 
+    // Placeholders visuales que comunican la carga mientras llega la respuesta de la API.
     const makeSkeleton = () => {
         const card = create('div', 'news-card-skeleton news-skeleton');
         card.setAttribute('aria-hidden', 'true');
@@ -138,6 +147,7 @@
         return card;
     };
 
+    // Sincroniza el filtro seleccionado con el estado visual y aria-pressed de los botones.
     const setActiveCategory = (category) => {
         activeCategory = category;
         categoryButtons.forEach((button) => {
@@ -162,6 +172,7 @@
 
     const clearSkeletons = () => grid.querySelectorAll('.news-card-skeleton').forEach((item) => item.remove());
 
+    // Descarga la página solicitada, descarta respuestas obsoletas y actualiza la lista.
     const fetchPage = async (page, append = false) => {
         const currentRequest = ++requestId;
         setLoading(append);
@@ -222,6 +233,7 @@
         }
     };
 
+    // Los filtros y el buscador reinician la paginación; la búsqueda se retrasa al escribir.
     categoryButtons.forEach((button) => {
         button.addEventListener('click', () => {
             setActiveCategory(button.dataset.newsCategory ?? '');
@@ -247,6 +259,7 @@
         if (hasMore) fetchPage(currentPage + 1, true);
     });
 
+    // Gestiona acciones de compartir y copiar mediante delegación sobre el navegador.
     browser.addEventListener('click', async (event) => {
         const button = event.target.closest('[data-news-share]');
         if (!button) return;
@@ -283,5 +296,6 @@
         }
     });
 
+    // Primera carga con los filtros iniciales.
     fetchPage(1);
 })();

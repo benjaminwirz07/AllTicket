@@ -1,4 +1,5 @@
 <?php
+// Verifica permisos antes de construir el listado administrativo.
 require_once __DIR__ . '/../../../config/bootstrap.php';
 requireAuth();
 requireAdmin($pdo);
@@ -6,6 +7,7 @@ ob_start();
 ?>
 
 <main class="container-xl py-5 text-light">
+  <!-- Título de sección, regreso al panel y acceso al alta de artistas. -->
   <header class="admin-page-header mb-4">
     <div>
       <p class="admin-page-kicker mb-1">CATÁLOGO</p>
@@ -20,10 +22,12 @@ ob_start();
     </div>
   </header>
 
+  <!-- Mensaje temporal de resultado de la última operación, si existe. -->
   <?php if (!empty($flash)): ?>
     <div class="alert alert-<?= e($flash['type']) ?>" role="alert"><?= e($flash['msg']) ?></div>
   <?php endif; ?>
 
+  <!-- Tabla con acciones por artista o mensaje cuando el catálogo está vacío. -->
   <?php if (!empty($artists)): ?>
     <div class="table-responsive admin-table-wrap">
       <table class="table table-dark align-middle admin-table">
@@ -69,5 +73,6 @@ ob_start();
 </main>
 
 <?php
+// Renderiza la tabla dentro del diseño común del panel.
 $pageContent = ob_get_clean();
 include __DIR__ . '/../../_layouts/layout.php';

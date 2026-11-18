@@ -1,4 +1,5 @@
 <?php
+// Carga las compras autenticadas y prepara entradas y códigos QR asociados.
 require_once __DIR__ . '/../../config/bootstrap.php';
 requireAuth();
 
@@ -8,6 +9,7 @@ $entradasPorCompra = [];
 $butacasPorEntrada = [];
 
 try {
+    // Recupera las ventas propias del usuario; las consultas posteriores solo se ejecutan si existen.
     $stmt = $pdo->prepare(
         'SELECT s.id, s.sale_date, s.total, s.status, s.payment_method,
                 u.first_name, u.last_name
@@ -20,6 +22,7 @@ try {
     $compras = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     if ($compras !== []) {
+        // Agrupa los detalles comprados y los datos del recital para cada compra.
         $stmt = $pdo->prepare(
             'SELECT s.id AS sale_id, d.id AS sale_detail_id, d.ticket_id, d.quantity, d.price,
                     t.type, c.name AS concert, c.image, a.name AS artist, c.date, c.time,
@@ -38,6 +41,7 @@ try {
             $entradasPorCompra[$entrada['sale_id']][] = $entrada;
         }
 
+        // Agrupa los asientos por venta y tipo de entrada.
         $stmt = $pdo->prepare(
             'SELECT r.sale_id, r.ticket_id, r.seat_code, r.status
                FROM seat_reservations r
@@ -50,6 +54,7 @@ try {
             $butacasPorEntrada[$butaca['sale_id']][$butaca['ticket_id']][] = $butaca;
         }
 
+        // Genera entradas individuales de forma idempotente para cada detalle pagado.
         $pdo->beginTransaction();
         $crearEntrada = $pdo->prepare(
             'INSERT IGNORE INTO ticket_entries
@@ -76,6 +81,7 @@ try {
         }
         $pdo->commit();
 
+        // Carga identificadores y estado de uso para renderizar los QR de cada entrada.
         $stmt = $pdo->prepare(
             'SELECT te.id, te.sale_detail_id, te.entry_number, te.seat_code, te.used_at
                FROM ticket_entries te
@@ -91,6 +97,7 @@ try {
         }
     }
 } catch (PDOException $e) {
+    // Revierte cualquier generación parcial antes de responder con un error controlado.
     if ($pdo->inTransaction()) {
         $pdo->rollBack();
     }
@@ -99,4 +106,5 @@ try {
     exit('No se pudieron cargar tus entradas.');
 }
 
+// Presenta compras, asientos y códigos QR en el área personal.
 require_once __DIR__ . '/../../views/tickets/index.php';

@@ -2,11 +2,12 @@
 const IMG_MAX_BYTES = 2 * 1024 * 1024; // 2 MB
 
 /**
- * Guarda una imagen subida y devuelve su ruta (ej: assets/img/uploads/concerts/ab12.jpg).
- * Devuelve null si no se subió ningún archivo. Lanza RuntimeException si hay un problema.
+ * Valida formato y tamaño, guarda la imagen con nombre aleatorio y devuelve su ruta relativa.
+ * Devuelve null si no se envió archivo y lanza RuntimeException ante errores de carga.
  */
 function guardarImagen(array $archivo, string $subcarpeta): ?string
 {
+    // Limita carpetas de destino y traduce códigos de error de PHP a mensajes controlados.
     if (!in_array($subcarpeta, ['artists', 'concerts', 'news'], true)) {
         throw new InvalidArgumentException('Carpeta de destino no válida.');
     }
@@ -27,6 +28,7 @@ function guardarImagen(array $archivo, string $subcarpeta): ?string
         throw new RuntimeException('Archivo no válido.');
     }
 
+    // Convierte advertencias de lectura de imagen en una excepción que se puede informar.
     set_error_handler(static function (int $severity, string $message): bool {
         throw new ErrorException($message, 0, $severity);
     });
@@ -38,6 +40,7 @@ function guardarImagen(array $archivo, string $subcarpeta): ?string
         restore_error_handler();
     }
 
+    // Contrasta tipo MIME y dimensiones para aceptar únicamente imágenes seguras y acotadas.
     $finfo = new finfo(FILEINFO_MIME_TYPE);
     $mime = $finfo->file($temporaryPath);
     $permitidos = [
@@ -56,6 +59,7 @@ function guardarImagen(array $archivo, string $subcarpeta): ?string
         throw new RuntimeException('Formato no válido. Subí un JPG, PNG o WebP.');
     }
 
+    // Crea el directorio requerido y mueve el archivo con un nombre impredecible.
     $carpeta = dirname(__DIR__, 2) . '/assets/img/uploads/' . $subcarpeta;
     if (!is_dir($carpeta) && !mkdir($carpeta, 0755, true)) {
         throw new RuntimeException('No se pudo crear la carpeta de imágenes.');

@@ -1,4 +1,5 @@
 <?php
+// Valida y guarda un recital junto con sus tipos de entrada como una operación coherente.
 require_once __DIR__ . '/../../../config/bootstrap.php';
 requireAuth();
 requireAdmin($pdo);
@@ -8,6 +9,7 @@ requireMethod('POST');
 requireCsrfToken();
 
 $id = inputString($_POST, 'id');
+// Solo se acepta un identificador vacío para altas o un UUID válido para ediciones.
 if ($id !== '' && !isValidUuid($id)) {
     http_response_code(400);
     exit('Solicitud no válida');
@@ -24,7 +26,7 @@ $data = [
     'status'      => inputString($_POST, 'status') ?: 'active',
 ];
 
-// Entradas: tickets[0..n][id|type|price|stock]
+// Limita la estructura recibida y normaliza cada fila de entradas antes de validarla.
 $ticketsInput = $_POST['tickets'] ?? [];
 if (!is_array($ticketsInput) || count($ticketsInput) > 50) {
     http_response_code(400);
@@ -45,6 +47,7 @@ foreach ($ticketsInput as $row) {
 }
 $data['tickets'] = $tickets;
 
+// Valida los campos principales del recital y su estado permitido.
 $errors = [];
 
 if ($data['artist_id'] === '') {
@@ -77,7 +80,7 @@ if (!in_array($data['status'], ['active', 'cancelled', 'finished'], true)) {
     $errors['status'] = 'Estado no válido.';
 }
 
-// Validación de entradas
+// Separa las entradas a guardar de las filas vacías que se pueden eliminar.
 $aGuardar    = [];   // filas con datos
 $aBorrar     = [];   // filas existentes que se vaciaron
 $tiposUsados = [];
@@ -121,7 +124,7 @@ if (empty($aGuardar)) {
     $errors['general'] = 'Cargá al menos un tipo de entrada.';
 }
 
-// Estado e imagen actuales (si estamos editando)
+// Recupera imagen y estado persistidos para preservar la imagen y respetar cancelaciones.
 $imagenActual = null;
 $estadoActual = null;
 if ($id !== '') {
@@ -142,8 +145,7 @@ if ($data['status'] === 'cancelled' && $estadoActual !== 'cancelled') {
     $errors['status'] = 'Un recital cancelado no se puede reactivar desde este formulario.';
 }
 
-// Imagen nueva: solo se guarda si todo lo demás es válido,
-// para no dejar archivos sueltos en el disco
+// Sube la imagen solo después de validar los demás campos para evitar archivos huérfanos.
 $imagenNueva = null;
 if (empty($errors)) {
     try {
@@ -160,6 +162,7 @@ if (empty($errors)) {
 $volver = '/src/controllers/admin/concerts/form.php' . ($id !== '' ? '?id=' . urlencode($id) : '');
 
 if (!empty($errors)) {
+    // Limpia cualquier archivo temporalmente subido y devuelve errores y datos al formulario.
     borrarImagenSubida($imagenNueva);
     $_SESSION['errors'] = $errors;
     $_SESSION['old']    = $data + ['id' => $id];
@@ -167,6 +170,7 @@ if (!empty($errors)) {
 }
 
 $params = [
+    // Normaliza campos opcionales y prepara el conjunto común de valores para la consulta.
     'artist_id'   => $data['artist_id'],
     'venue_id'    => $data['venue_id'],
     'name'        => $data['name'],
@@ -179,6 +183,7 @@ $params = [
 ];
 
 try {
+    // Guarda el recital y sus entradas dentro de una transacción para mantener la integridad.
     $pdo->beginTransaction();
 
     if ($id === '') {
@@ -204,7 +209,7 @@ try {
         $msg = 'Recital actualizado correctamente.';
     }
 
-    // 1) Borrar entradas vaciadas (solo si nunca se vendieron ni reservaron)
+    // Elimina solo entradas vaciadas que todavía no tengan ventas ni reservas.
     foreach ($aBorrar as $ticketId) {
         $stmt = $pdo->prepare(
             'SELECT (SELECT COUNT(*) FROM sale_details WHERE ticket_id = :a)
@@ -220,7 +225,7 @@ try {
         $stmt->execute(['id' => $ticketId, 'c' => $concertId]);
     }
 
-    // 2) Crear o actualizar entradas
+    // Crea entradas nuevas o actualiza las existentes sin reducir lo ya vendido o reservado.
     foreach ($aGuardar as $tk) {
         $stock = (int) $tk['stock'];
 
@@ -269,13 +274,14 @@ try {
 
     $pdo->commit();
 
-    // Recién ahora, con todo guardado, se borra la imagen anterior
+    // Reemplaza la imagen anterior únicamente después de confirmar todos los cambios.
     if ($imagenNueva !== null && $imagenActual !== null) {
         borrarImagenSubida($imagenActual);
     }
 
     setFlash('success', $msg);
 } catch (RuntimeException $e) {
+    // Revierte la transacción y recupera el formulario ante una regla de negocio incumplida.
     borrarImagenSubida($imagenNueva);
     if ($pdo->inTransaction()) {
         $pdo->rollBack();
@@ -284,6 +290,7 @@ try {
     $_SESSION['old']    = $data + ['id' => $id];
     redirectTo($volver);
 } catch (PDOException $e) {
+    // Ante errores SQL, elimina la imagen nueva y registra el detalle en el servidor.
     borrarImagenSubida($imagenNueva);
     if ($pdo->inTransaction()) {
         $pdo->rollBack();

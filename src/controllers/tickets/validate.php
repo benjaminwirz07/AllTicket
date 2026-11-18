@@ -1,4 +1,5 @@
 <?php
+// Permite al personal consultar una entrada y marcarla como utilizada una sola vez.
 require_once __DIR__ . '/../../config/bootstrap.php';
 requireAuth();
 requireAdmin($pdo);
@@ -6,6 +7,7 @@ requireAdmin($pdo);
 $entryId = inputUuid($_GET, 'id');
 $entrada = null;
 
+// POST valida el token y consume la entrada bajo bloqueo transaccional.
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     requireMethod('POST');
     requireCsrfToken();
@@ -17,6 +19,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 
     try {
         $pdo->beginTransaction();
+        // Comprueba venta pagada y estado de uso antes de registrar el ingreso.
         $stmt = $pdo->prepare(
             "SELECT te.used_at, s.status AS sale_status
                FROM ticket_entries te
@@ -68,12 +71,14 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     }
 }
 
+// Solo se acepta GET para consultar o POST para confirmar el ingreso.
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') {
     http_response_code(405);
     header('Allow: GET, POST');
     exit('Método no permitido');
 }
 
+// En GET reúne datos de comprador y evento para mostrar el resultado de la validación.
 if ($entryId !== '') {
     try {
         $stmt = $pdo->prepare(
@@ -103,4 +108,5 @@ if ($entryId !== '') {
     }
 }
 
+// Renderiza la pantalla de escaneo y el estado actual de la entrada.
 require_once __DIR__ . '/../../views/tickets/validate.php';

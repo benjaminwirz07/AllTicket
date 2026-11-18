@@ -1,5 +1,5 @@
 <?php
-// Valores de la conexión: salen del archivo '.env' (ver nota sobre su ubicación en el informe de auditoría)
+// Carga los parámetros de conexión desde el archivo local de entorno.
 $env = @parse_ini_file(__DIR__ . '/../../.env');
 
 // Si falta el .env o le faltan claves, se corta con un mensaje genérico y el detalle va al log
@@ -9,6 +9,7 @@ if ($env === false) {
     http_response_code(500);
     die('No se pudo conectar con el servicio. Intentá nuevamente más tarde.');
 }
+// Falla de forma controlada cuando falta una clave necesaria para conectarse.
 foreach ($requeridas as $clave) {
     if (!array_key_exists($clave, $env)) {
         error_log('database.php: falta la clave ' . $clave . ' en el .env');
@@ -23,8 +24,7 @@ $user    = $env['DB_USER'];
 $pass    = $env['DB_PASS'];
 $charset = $env['DB_CHARSET'] ?? 'utf8mb4';
 
-# Data Source Name (DSN): driver (mysql), host, base de datos y charset.
-# Es el string que se usa al crear la conexión con new PDO(...)
+# El DSN define el servidor, esquema y codificación de la conexión PDO.
 $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
 $options = [
     PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
@@ -33,6 +33,7 @@ $options = [
 ];
 
 try {
+    // Configura PDO y alinea la zona horaria de MySQL con la de la aplicación.
     $pdo = new PDO($dsn, $user, $pass, $options);
     // Misma zona horaria que PHP (Argentina no tiene horario de verano, el offset fijo es seguro)
     $pdo->exec("SET time_zone = '-03:00'");

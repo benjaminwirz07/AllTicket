@@ -1,10 +1,12 @@
 <?php
+// Procesa altas al boletín con protección CSRF, validación de email y límite por IP.
 require_once __DIR__ . '/../../config/bootstrap.php';
 
 requireMethod('POST');
 
 requireCsrfToken();
 
+// Solo admite destinos internos conocidos y conserva el ancla del formulario de origen.
 $returnTo = inputString($_POST, 'return_to');
 $destino = $returnTo === '/src/controllers/news/index.php'
     ? '/src/controllers/news/index.php'
@@ -20,6 +22,7 @@ if (!is_string($ip) || filter_var($ip, FILTER_VALIDATE_IP) === false) {
 }
 $ipHash = hash('sha256', $ip);
 
+// Incrementa de forma atómica los intentos dentro de una ventana de quince minutos.
 try {
     $pdo->beginTransaction();
     $insert = $pdo->prepare(
@@ -88,9 +91,11 @@ try {
 }
 
 if ($email === '' || strlen($email) > 254 || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    // Evita guardar direcciones vacías, demasiado largas o con formato inválido.
     redirectTo($resultadoUrl('invalid'));
 }
 
+// INSERT IGNORE permite tratar una suscripción repetida como una respuesta exitosa.
 try {
     $stmt = $pdo->prepare('INSERT IGNORE INTO newsletter_subscribers (email) VALUES (:email)');
     $stmt->execute(['email' => strtolower($email)]);

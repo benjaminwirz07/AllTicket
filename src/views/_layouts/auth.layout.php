@@ -1,8 +1,10 @@
 <?php
+// Layout reducido para pantallas de acceso que no usan la navegación principal.
 require_once __DIR__ . '/../../config/bootstrap.php';
 requireGuest();
 ?>
 
+<!-- Estructura mínima de autenticación con recursos Bootstrap. -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
